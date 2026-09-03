@@ -40,15 +40,27 @@ h1{margin:0;font-size:19px;font-weight:700;letter-spacing:-.3px}
 .tools button.lock.on{background:#f3ede2;opacity:1}
 .tools button:active{background:#e6dcc6}
 
-/* 규칙·표현 카드 */
-.bigcard{margin-bottom:8px;padding:11px 12px 12px;cursor:pointer}
-.bigcard .rname{font-size:15.5px;font-weight:700;margin-top:3px}
-.bigcard .term{font-size:11px;color:var(--ink3);font-weight:600;margin-left:5px}
-.bigcard .rdesc{font-size:12.5px;color:var(--ink2);margin-top:2px}
-.bigcard .rhint{font-size:11px;color:var(--ink3);margin-top:6px}
-.bigcard.showing{border-color:var(--mark)}
-#cRule{background:linear-gradient(180deg,#fffdf8,#fff);border-color:#e6dcc6}
-#cExpr{background:linear-gradient(180deg,#fdfbff,#fff);border-color:#e0dae8}
+/* 첫 화면 큰 버튼 */
+.hero{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.hero button{padding:16px 8px;border-radius:13px;font-size:15.5px;font-weight:700;
+  background:var(--surface);border:1px solid var(--line);box-shadow:0 2px 8px rgba(80,70,55,.06)}
+.hero button:active{transform:scale(.98)}
+#heroPlay{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+/* 규칙·표현 한 줄 */
+#tags{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin-bottom:12px}
+.tag{font-size:12.5px;font-weight:700;color:var(--ink2);background:var(--surface);
+  border:1px solid var(--line);border-radius:9px;padding:7px 10px;line-height:1.3}
+.tag .term{font-size:10.5px;color:var(--ink3);font-weight:600;margin-left:4px}
+.tag.on{border-color:var(--mark);color:var(--mark);background:#fdf5f3}
+.tagd{font-size:11px;background:#f3ede2;border-radius:8px;padding:7px 8px;color:var(--ink2)}
+.tagd:active{background:#e6dcc6}
+
+/* 음표에 마우스를 올리면 뜨는 설명 */
+#tip{position:fixed;z-index:40;background:var(--ink);color:#fff;font-size:12px;line-height:1.45;
+  padding:7px 10px;border-radius:8px;pointer-events:none;opacity:0;transition:opacity .12s;max-width:210px}
+#tip.on{opacity:1}
+#tip b{display:block;font-size:12.5px;margin-bottom:1px}
 
 .setrow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
 .chords{display:flex;gap:5px;margin-top:5px}
@@ -116,29 +128,18 @@ h2{font-size:12px;font-weight:700;color:var(--ink3);margin:16px 0 8px;letter-spa
 <body>
 <div id="app">
   <h1>오늘의 마에스트로</h1>
-  <p class="sub">악보를 뽑아가며 만드는 음악 카드 장난감</p>
+  <p class="sub">카드를 뽑으면 곡이 하나 만들어집니다</p>
+
+  <div class="hero">
+    <button id="heroDraw">🎲 곡 뽑기</button>
+    <button id="heroPlay">▶ 들어보기</button>
+  </div>
 
   <div class="modes" id="modes">
     <button data-m="0">🌱 처음<small>쉬운 악보</small></button>
     <button data-m="1" class="on">🎵 자유<small>기본</small></button>
     <button data-m="2">🎩 클래식<small>장식음까지</small></button>
     <button data-m="3">🎪 괴짜<small>낯선 소리</small></button>
-  </div>
-
-  <div class="card bigcard" id="cRule">
-    <span class="lab">🎴 오늘의 규칙</span>
-    <div class="tools"><button data-re="rule" title="규칙만 다시 뽑기">🎲</button></div>
-    <div class="rname" id="ruleName"></div>
-    <div class="rdesc" id="ruleDesc"></div>
-    <div class="rhint" id="ruleHint">눌러서 악보에서 찾기</div>
-  </div>
-
-  <div class="card bigcard" id="cExpr">
-    <span class="lab">🎭 오늘의 표현</span>
-    <div class="tools"><button data-re="expr" title="표현만 다시 뽑기">🎲</button></div>
-    <div class="rname" id="exprName"></div>
-    <div class="rdesc" id="exprDesc"></div>
-    <div class="rhint" id="exprHint">눌러서 악보에서 찾기</div>
   </div>
 
   <div class="setrow">
@@ -174,6 +175,14 @@ h2{font-size:12px;font-weight:700;color:var(--ink3);margin:16px 0 8px;letter-spa
     </div>
   </div>
   <div id="sheet"></div>
+
+  <div id="tags">
+    <button class="tag" id="tagRule" title="눌러서 악보에서 찾기"></button>
+    <button class="tagd" data-re="rule" title="규칙만 다시 뽑기">🎲</button>
+    <button class="tag" id="tagExpr" title="눌러서 악보에서 찾기"></button>
+    <button class="tagd" data-re="expr" title="표현만 다시 뽑기">🎲</button>
+  </div>
+
   <div id="info">
     <div class="t" id="infoT"></div>
     <div class="d" id="infoD"></div>
@@ -202,6 +211,7 @@ h2{font-size:12px;font-weight:700;color:var(--ink3);margin:16px 0 8px;letter-spa
   </div>
 </div></div>
 <div id="toast"></div>
+<div id="tip"></div>
 
 <script>
 /* =========================================================
@@ -629,14 +639,11 @@ function tripletMark(x0,x1,small){
 function render(){
   const r=RHYTHMS[song.rhythm], c=CHORDS[song.chord], rule=RULES[song.rule], ex=EXPRS[song.expr];
 
-  document.getElementById('ruleName').textContent = rule.name;
-  document.getElementById('ruleDesc').textContent = rule.shortDescription;
-  document.getElementById('exprName').innerHTML = ex.name + `<span class="term">${ex.term}</span>`;
-  document.getElementById('exprDesc').textContent = ex.shortDescription;
-  document.getElementById('ruleHint').textContent = show==='rule' ? '표시된 곳이 규칙이 적용된 자리 · 다시 누르면 숨김' : '눌러서 악보에서 찾기';
-  document.getElementById('exprHint').textContent = show==='expr' ? '표시된 곳이 표현이 적용된 자리 · 다시 누르면 숨김' : '눌러서 악보에서 찾기';
-  document.getElementById('cRule').classList.toggle('showing', show==='rule');
-  document.getElementById('cExpr').classList.toggle('showing', show==='expr');
+  const tr=document.getElementById('tagRule'), te=document.getElementById('tagExpr');
+  tr.textContent = '🎴 ' + rule.name;
+  te.innerHTML = '🎭 ' + ex.name + `<span class="term">${ex.term}</span>`;
+  tr.classList.toggle('on', show==='rule');
+  te.classList.toggle('on', show==='expr');
   document.getElementById('meterLab').textContent = song.meter.label;
 
   document.getElementById('beatView').innerHTML = Array.from({length:8},(_,i)=>{
@@ -687,31 +694,51 @@ function bind(){
   document.querySelectorAll('[data-solobar]').forEach(b=>b.onclick=e=>{
     e.stopPropagation(); playSong({ drum:false, chord:false, mel:true, onlyBar:+b.dataset.solobar });
   });
-  document.querySelectorAll('#sheet .hit, #mel .hit').forEach(g=>g.onclick=e=>{
-    e.stopPropagation(); openInfo(+g.dataset.b, +g.dataset.n);
+  document.querySelectorAll('#sheet .hit, #mel .hit').forEach(g=>{
+    g.onclick = e=>{ e.stopPropagation(); openInfo(+g.dataset.b, +g.dataset.n); };
+    g.onmouseenter = e=>showTip(e, +g.dataset.b, +g.dataset.n);
+    g.onmousemove  = moveTip;
+    g.onmouseleave = hideTip;
   });
 }
+
+/* ---------- 음표에 마우스를 올리면 뜨는 설명 ---------- */
+// 이 음이 무슨 기호를 달고 있는지 찾는다 (설명창과 툴팁이 같은 판단을 쓴다)
+function symbolOf(n){
+  if(!n) return null;
+  if(n.rest) return SYM.rest;
+  if(n.fermata) return SYM.fermata;
+  if(n.orn) return SYM[n.orn];
+  if(n.triplet) return SYM.triplet;
+  if(n.art) return SYM[n.art];
+  if(n.odd) return SYM.odd;
+  if(song.dyn) return SYM[song.dyn];
+  return null;
+}
+const $tip = () => document.getElementById('tip');
+function showTip(e, bi, ni){
+  const n = song.mel[bi] && song.mel[bi][ni];
+  const s = symbolOf(n);
+  const t = $tip();
+  t.innerHTML = s ? `<b>${s.t}</b>${s.d}` : `<b>보통 음</b>특별한 기호가 없어요.`;
+  t.classList.add('on'); moveTip(e);
+}
+function moveTip(e){
+  const t = $tip();
+  const x = Math.min(e.clientX + 14, window.innerWidth - t.offsetWidth - 10);
+  const y = Math.max(8, e.clientY - t.offsetHeight - 12);
+  t.style.left = x + 'px'; t.style.top = y + 'px';
+}
+function hideTip(){ $tip().classList.remove('on'); }
 
 /* ---------- 이게 뭐지? ---------- */
 let infoTarget=null;
 function openInfo(bi,ni){
   const n=song.mel[bi] && song.mel[bi][ni]; if(!n) return;
-  let key=null;
-  if(n.rest) key='rest';
-  else if(n.fermata) key='fermata';
-  else if(n.orn) key=n.orn;
-  else if(n.triplet) key='triplet';
-  else if(n.art) key=n.art;
-  else if(n.odd) key='odd';
-  else if(song.dyn) key=song.dyn;
+  const s=symbolOf(n);
   const box=document.getElementById('info');
-  if(!key){
-    document.getElementById('infoT').textContent = `${bi+1}번 마디 ${ni+1}번째 음`;
-    document.getElementById('infoD').textContent = '특별한 기호가 없는 보통 음이에요.';
-  }else{
-    document.getElementById('infoT').textContent = SYM[key].t;
-    document.getElementById('infoD').textContent = SYM[key].d;
-  }
+  document.getElementById('infoT').textContent = s ? s.t : `${bi+1}번 마디 ${ni+1}번째 음`;
+  document.getElementById('infoD').textContent = s ? s.d : '특별한 기호가 없는 보통 음이에요.';
   infoTarget={bi,ni};
   box.classList.add('on');
   box.scrollIntoView({block:'nearest',behavior:'smooth'});
@@ -894,8 +921,10 @@ document.querySelectorAll('[data-solo]').forEach(b=>b.onclick=e=>{
   playSong({drum:k==='drum',chord:k==='chord',mel:k==='mel'});
   toast(k==='drum'?'리듬만':(k==='chord'?'반주만':'멜로디만'));
 });
-document.getElementById('cRule').onclick=()=>{ show = show==='rule'?null:'rule'; render(); };
-document.getElementById('cExpr').onclick=()=>{ show = show==='expr'?null:'expr'; render(); };
+document.getElementById('tagRule').onclick=()=>{ show = show==='rule'?null:'rule'; render(); };
+document.getElementById('tagExpr').onclick=()=>{ show = show==='expr'?null:'expr'; render(); };
+document.getElementById('heroDraw').onclick=()=>{ stopAll(); show=null; build('all'); toast('새 곡을 뽑았습니다'); };
+document.getElementById('heroPlay').onclick=()=>playSong();
 document.querySelectorAll('.sw button').forEach(b=>b.onclick=()=>{
   sw[b.dataset.s]=!sw[b.dataset.s]; b.classList.toggle('on',sw[b.dataset.s]);
 });
