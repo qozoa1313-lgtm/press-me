@@ -149,47 +149,265 @@
   .nh{cursor:pointer}
   .nh:hover ellipse,.nh:hover path,.nh:hover circle{fill:var(--accent)}
   ellipse.play,path.play{fill:var(--accent)!important}
+
+  /* =====================================================================
+     [개편] 토스풍 화면 스타일 + 새 화면 구조
+     화면 뼈대(배경·버튼·카드·여백)만 깔끔한 모바일 앱처럼 바꾼다.
+     악보 영역만 종이 느낌을 그대로 둔다.
+     아래는 위 규칙을 덮어쓰는 블록이라 순서를 바꾸면 안 된다.
+     ===================================================================== */
+  :root{
+    --bg:#ffffff; --sub:#f2f4f6; --ink:#191f28; --ink2:#8b95a1;
+    --line:#e5e8eb; --blue:#3182f6; --blue-d:#1b64da; --paper:#fdf9ee;
+  }
+  body{
+    background:var(--bg);color:var(--ink);letter-spacing:-.2px;
+    font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic","맑은 고딕",
+                -apple-system,system-ui,sans-serif;
+  }
+  .app{max-width:440px;padding:14px 20px 72px}
+  h1{font-family:inherit;font-weight:800;letter-spacing:-.9px;color:var(--ink)}
+  h1::before{content:none}
+  h2{font-size:15px;font-weight:700;color:var(--ink);margin:26px 2px 10px;letter-spacing:-.3px}
+
+  .big{
+    border:none;background:var(--blue);color:#fff;border-radius:14px;
+    padding:17px 10px;font-size:16.5px;font-weight:700;box-shadow:none;letter-spacing:-.3px;
+  }
+  .big:active{background:var(--blue-d);transform:none}
+  .big.alt{background:var(--sub);color:var(--ink)}
+
+  /* 화면 전환 */
+  .view[hidden]{display:none}
+  .topbar{display:flex;align-items:center;gap:8px;margin:0 0 18px}
+  .back{background:none;border:none;padding:6px 2px;color:var(--ink2);font-size:15px;font-weight:600;white-space:nowrap}
+  .vtitle{flex:1;text-align:center;font-size:15px;font-weight:700;color:var(--ink)}
+  .tbright{
+    background:var(--sub);border:none;border-radius:10px;padding:8px 11px;
+    font-size:12.5px;font-weight:600;color:var(--ink);white-space:nowrap;
+  }
+
+  /* 첫 화면 */
+  .home{text-align:center;padding:56px 2px 0}
+  .home h1{font-size:26px;margin:0}
+  .home-q{
+    font-family:inherit;font-weight:800;font-size:25px;line-height:1.45;
+    letter-spacing:-1px;margin:30px 0 14px;color:var(--ink);
+  }
+  .home-s{font-size:15px;line-height:1.65;color:var(--ink2);margin:0 0 40px}
+  .home .big{width:100%;display:block;padding:18px 8px;font-size:17px}
+  .home .big+.big{margin-top:10px}
+  .home-foot{color:var(--ink2);font-size:12.5px;margin-top:24px;line-height:1.7}
+
+  /* 악보 — 여기만 종이 */
+  .score-wrap{background:var(--paper);border:1px solid #efe6d2;border-radius:16px;box-shadow:none;padding:12px 6px 6px}
+  .score-wrap::after{content:none}
+  .caption{color:#a1977f;font-size:11.5px}
+  .hint{color:var(--ink2);font-size:12.5px;margin-top:12px}
+
+  .actions{display:flex;gap:10px;margin-top:12px}
+  .actions .big{flex:1;padding:15px 8px;font-size:15.5px}
+  .playnote{text-align:center;font-size:12.5px;color:var(--ink2);margin:12px 0 0;min-height:17px}
+  .playnote b{color:var(--blue)}
+
+  .players button{background:var(--sub);border:none;border-radius:12px;padding:13px 2px;font-size:12.5px;font-weight:600;color:var(--ink)}
+  .players button.on{background:var(--blue);color:#fff}
+  .stoprow button{background:var(--sub);border:none;border-radius:12px;padding:14px;color:var(--ink2);font-size:14px;font-weight:600;width:100%}
+
+  .card{background:var(--sub);border:none;border-radius:16px;padding:14px 16px;box-shadow:none}
+  .clabel{font-size:12px;color:var(--ink2);font-weight:600;letter-spacing:0}
+  .ctrls button{background:#fff;border:none;border-radius:10px;width:34px;height:32px;font-size:14px}
+  .cval{font-size:16px;font-weight:700;letter-spacing:-.3px}
+  .cdesc{color:var(--ink2);font-size:12.5px;margin-top:3px}
+  .term{color:var(--blue);font-size:11.5px}
+
+  #btnSave,#btnSaveEdit{width:100%;background:var(--sub);border:none;border-radius:14px;padding:16px;color:var(--ink);font-size:15.5px;font-weight:700}
+  .saved{background:var(--sub);border:none;border-radius:16px;padding:13px 14px;margin-bottom:8px}
+  .saved .t1{font-size:15px;font-weight:700;letter-spacing:-.3px}
+  .saved .t2{color:var(--ink2);font-size:12.5px}
+  .saved button{background:#fff;border:none;border-radius:10px;width:36px;height:34px}
+  .empty{color:var(--ink2);font-size:13.5px;padding:20px 4px;text-align:center}
+  .tip{border-radius:12px;background:#191f28;font-size:13px}
+  .tip b{color:#8ab4ff}
+  .toast{background:#191f28;border-radius:12px;font-size:13.5px}
+
+  /* ---------- 우연의 강도 ---------- */
+  .chaosbox{background:var(--sub);border-radius:16px;padding:16px 16px 14px;margin-top:20px}
+  .chaoshead{display:flex;align-items:center;gap:7px;margin-bottom:6px}
+  .boxlabel{font-size:15px;font-weight:700;letter-spacing:-.3px;flex:1}
+  .qbtn{width:23px;height:23px;border-radius:50%;background:#fff;color:var(--ink2);font-size:12.5px;font-weight:700;border:none;line-height:1}
+  #chaosRange{
+    -webkit-appearance:none;appearance:none;width:100%;height:5px;border-radius:3px;
+    background:linear-gradient(90deg,#c9d3e0,#3182f6);outline:none;margin:12px 0 8px;
+  }
+  #chaosRange::-webkit-slider-thumb{
+    -webkit-appearance:none;width:26px;height:26px;border-radius:50%;background:#fff;
+    border:2.5px solid var(--blue);box-shadow:0 1px 4px rgba(0,0,0,.18);
+  }
+  #chaosRange::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:#fff;border:2.5px solid var(--blue)}
+  .chaosends{display:flex;justify-content:space-between;font-size:12px;color:var(--ink2)}
+  .chaosends b{color:var(--blue);font-size:12.5px}
+  .chaosnote{font-size:12px;color:var(--ink2);margin:10px 0 0;line-height:1.55}
+  .chaosnote b{color:var(--ink)}
+
+  /* ---------- 마디 탭 + 선택된 한 마디 ---------- */
+  .mtabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px}
+  .mtabs button{
+    background:var(--sub);border:none;border-radius:12px;padding:12px 2px;
+    font-size:13.5px;font-weight:700;color:var(--ink2);position:relative;
+  }
+  .mtabs button.on{background:var(--blue);color:#fff}
+  .mtabs button i{font-style:normal;font-size:8px;color:var(--blue);position:absolute;top:6px;right:8px}
+  .mtabs button.on i{color:#fff}
+
+  .mpanel{background:var(--sub);border-radius:16px;padding:14px}
+  .mpanel.tuned{background:#e8f0fe}
+  .mhead{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+  .mname{font-size:16px;font-weight:800;letter-spacing:-.3px}
+  .mtag{font-size:11.5px;color:var(--ink2);flex:1}
+  .mtag.on{color:var(--blue);font-weight:600}
+  .mgear{width:32px;height:30px;border-radius:9px;background:#fff;border:none;font-size:14px}
+  .mgear.on{background:var(--blue);color:#fff}
+  .miniscore{background:var(--paper);border:1px solid #efe6d2;border-radius:12px;padding:6px 4px 2px;margin-bottom:10px}
+  .mbtns3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:6px}
+  .mbtns3 button{background:#fff;border:none;border-radius:11px;padding:13px 2px;font-size:13px;font-weight:700;color:var(--ink)}
+  .mbtns3 button:active{background:#dbe8fd}
+  .mlisten{width:100%;background:#fff;border:none;border-radius:11px;padding:12px;font-size:13.5px;font-weight:600;color:var(--blue)}
+  .mset{margin-top:12px;padding-top:12px;border-top:1px solid #dfe3e9}
+  .msetlabel{font-size:12px;color:var(--ink2);margin-bottom:7px}
+  .mset label{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:10px;background:#fff;margin-bottom:5px;font-size:13.5px}
+  .mset label.sel{background:var(--blue);color:#fff}
+  .mset input{accent-color:var(--blue);margin:0}
+
+  /* ---------- [개편] 악보에서 마디 눌러 고치기 ---------- */
+  .medit{cursor:pointer}
+  .medit:active text{fill:var(--blue)}
+  .editguide{
+    background:var(--sub);border-radius:14px;padding:14px 16px;margin:20px 0 0;
+    font-size:13.5px;color:var(--ink2);line-height:1.6;text-align:center;
+  }
+  .editguide b{color:var(--ink)}
+  .chip{
+    display:inline-block;background:#e8f0fe;color:var(--blue);font-weight:700;
+    border-radius:7px;padding:2px 7px;font-size:12.5px;
+  }
+
+  /* 수정창 */
+  .modal[hidden]{display:none}
+  .modal{position:fixed;inset:0;z-index:110;display:flex;align-items:flex-end;justify-content:center}
+  .modalbg{position:absolute;inset:0;background:rgba(25,31,40,.45)}
+  .modalbox{
+    position:relative;width:100%;max-width:440px;background:#fff;
+    border-radius:20px 20px 0 0;padding:8px 18px 26px;max-height:92vh;overflow-y:auto;
+    box-shadow:0 -6px 30px rgba(0,0,0,.18);
+  }
+  .modalgrip{width:38px;height:4px;border-radius:2px;background:#dde1e7;margin:8px auto 14px}
+  .modalclose{
+    width:100%;background:var(--sub);border:none;border-radius:12px;padding:14px;
+    margin-top:12px;font-size:14.5px;font-weight:700;color:var(--ink);
+  }
+
+  /* [개편] 보조 버튼 — 곡을 통째로 새로 뽑는 건 이제 주된 행동이 아니다 */
+  .subbtn{
+    width:100%;background:none;border:none;padding:18px 4px 2px;
+    font-size:14px;font-weight:600;color:var(--ink2);
+  }
+  .subbtn:active{color:var(--blue)}
+
+  /* 되돌리기 */
+  #btnUndo{
+    width:100%;background:#fff;border:1.5px solid var(--blue);border-radius:14px;
+    padding:13px;margin-top:8px;font-size:14px;font-weight:700;color:var(--blue);
+  }
+  #btnUndo[hidden]{display:none}
+
+  /* 곡 화면 안내문 */
+  .editguide{margin:14px 0 0}
+
+  .fold{width:100%;background:none;border:none;padding:20px 4px 12px;font-size:14px;font-weight:600;color:var(--ink2);text-align:left}
+  .foldhint{font-size:12px;color:var(--ink2);margin:18px 2px 8px}
+  #moreBox[hidden]{display:none}
 </style>
 </head>
 <body>
 <div class="app">
 
-  <header>
-    <h1>오늘의 마에스트로</h1>
-    <p class="sub">카드를 뽑으면 곡이 하나 만들어집니다</p>
-    <div class="mainbtns">
-      <button class="big" id="btnDraw">🎲 곡 뽑기</button>
-      <button class="big alt" id="btnPlayAll">▶ 들어보기</button>
+  <!-- ===== 화면 1 · 첫 화면 : 고를 것 없이 버튼 두 개만 ===== -->
+  <section class="view" data-view="home">
+    <div class="home">
+      <h1>오늘의 마에스트로</h1>
+      <p class="home-q">음악을 하나도 몰라도<br>작곡할 수 있을까?</p>
+      <p class="home-s">박자부터 멜로디까지,<br>오늘은 전부 우연에 맡겨봅니다.</p>
+      <button class="big" id="btnFirst">🎲 첫 곡 뽑기</button>
+      <button class="big alt" id="btnLib">🎼 저장한 곡 보기</button>
+      <p class="home-foot">누르면 바로 한 곡이 만들어지고<br>두 번 들려드립니다</p>
     </div>
-  </header>
-
-  <section class="diff">
-    <div class="difftabs" id="diffTabs"></div>
-    <p class="diffdesc" id="diffDesc"></p>
   </section>
 
-  <section class="score-wrap">
-    <div id="scoreHost"></div>
-    <p class="caption" id="caption"></p>
+  <!-- ===== 화면 2 · 뽑은 곡 : 우선 듣게 한다 ===== -->
+  <!-- ===== 화면 2 · 오늘의 곡 =====
+       [개편] 별도의 '수정하기' 화면을 없앴다. 여기서 바로 고친다.
+       흐름: 곡 듣기 → 악보에서 마음에 안 드는 마디 누르기 → 수정창 -->
+  <section class="view" data-view="song" hidden>
+    <div class="topbar">
+      <button class="back" data-go="home">← 처음으로</button>
+      <span class="vtitle">오늘의 곡</span>
+      <button class="tbright" data-lib="1">🎼 저장한 곡</button>
+    </div>
+
+    <div class="score-wrap">
+      <div id="scoreHost"></div>
+      <p class="caption" id="caption"></p>
+    </div>
+    <p class="editguide">마디를 눌러 원하는 부분만 바꿔보세요</p>
+    <p class="playnote" id="playNote"></p>
+
+    <div class="actions">
+      <button class="big" data-part="all">🎧 전체 듣기</button>
+      <button class="big alt" id="btnStop">⏹ 멈춤</button>
+    </div>
+
+    <div class="save"><button id="btnSave">💾 저장하기</button></div>
+
+    <!-- 보조 버튼 : 지금 곡을 통째로 버리고 새로 뽑기 -->
+    <button id="btnAgain" class="subbtn">🎲 다른 곡 뽑기</button>
+    <button id="btnUndo" hidden>↩ 방금 곡으로 되돌리기</button>
+
+    <div class="chaosbox">
+      <div class="chaoshead">
+        <span class="boxlabel">우연의 강도</span>
+        <button class="qbtn" data-tip="&lt;b&gt;우연의 강도란?&lt;/b&gt;||랜덤으로 다시 뽑을 때 얼마나 익숙한 음악의 규칙을 따를지 정합니다.||왼쪽으로 갈수록 익숙하고 듣기 편한 음과 리듬이 많이 나옵니다.||오른쪽으로 갈수록 예상하기 어려운 음, 리듬, 움직임이 등장합니다.||· 얌전하게 : 웬만하면 자연스럽게||· 중간 : 익숙함과 우연을 반반||· 제멋대로 : 이상해져도 상관없이 자유롭게">?</button>
+      </div>
+      <input type="range" id="chaosRange" min="0" max="100" step="1" value="40" aria-label="우연의 강도">
+      <div class="chaosends"><span>얌전하게</span><b id="chaosNow"></b><span>제멋대로</span></div>
+      <p class="chaosnote">지금 곡은 그대로 둡니다. <b>앞으로 🎲 를 누를 때부터</b> 적용됩니다.</p>
+    </div>
+
+    <button class="fold" id="foldMore">⌄ 곡 전체를 더 바꿔보기</button>
+    <div id="moreBox" hidden>
+      <section class="cards" id="cards"></section>
+      <p class="foldhint">파트별로 나눠 듣기</p>
+      <section class="players" id="players">
+        <button data-part="drum">🥁 드럼만</button>
+        <button data-part="chord">🎹 반주만</button>
+        <button data-part="melody">🎼 멜로디만</button>
+        <button data-part="all">🎧 전체</button>
+      </section>
+    </div>
   </section>
-  <p class="hint">음표나 기호를 눌러 보면 무슨 뜻인지 알려줍니다</p>
 
-  <section class="players" id="players">
-    <button data-part="drum">🥁 리듬만</button>
-    <button data-part="chord">🎹 반주만</button>
-    <button data-part="melody">🎼 멜로디만</button>
-    <button data-part="all">🎧 전체</button>
-  </section>
-  <div class="stoprow"><button id="btnStop">⏹ 음악 끄기</button></div>
-
-  <section class="cards" id="cards"></section>
-
-  <section class="save">
-    <button id="btnSave">💾 이 곡 저장하기</button>
-    <h2>저장한 곡</h2>
+  <!-- ===== 화면 4 · 저장한 곡 ===== -->
+  <section class="view" data-view="library" hidden>
+    <div class="topbar"><button class="back" id="libBack">← 뒤로</button><span class="vtitle">저장한 곡</span></div>
     <div id="savedList"></div>
   </section>
 
+</div>
+
+<!-- [개편] 마디 수정창 — 악보의 「N마디 ✏️」를 누르면 여기가 뜬다 -->
+<div class="modal" id="mEdit" hidden>
+  <div class="modalbg" data-mclose="1"></div>
+  <div class="modalbox" id="mEditBox"></div>
 </div>
 
 <div class="tip" id="tip" hidden></div>
@@ -278,12 +496,8 @@ const EXPRS = [
   {id:"forte",   name:"확 크게",         term:"Forte (f)",      desc:"세게"}
 ];
 
-const DIFFS = [
-  {id:"seed",   emoji:"🌱", name:"처음",   desc:"5음 음계 — 도레미솔라만 씁니다. 뭘 뽑아도 어색하지 않아요."},
-  {id:"free",   emoji:"🎵", name:"자유",   desc:"도레미파솔라시 7음 — 우리가 아는 보통의 음계입니다."},
-  {id:"classic",emoji:"🎩", name:"클래식", desc:"7음에 꾸밈음·셋잇단 같은 장식이 자주 붙습니다."},
-  {id:"wild",   emoji:"🎪", name:"괴짜",   desc:"반음 12개 전부 — 낯설고 이상한 소리가 섞입니다."}
-];
+/* [개편] 옛 4단계(처음/자유/클래식/괴짜)는 「우연의 강도」 슬라이더로 대체됐다.
+   클래식은 나중에 '곡의 성격' 기능으로 되살릴 수 있게 정의만 남겨둔다. */
 
 /* 박자표·난이도별 미리 만들어 둔 리듬 묶음 (단위: 4/4·3/4=4분음표, 6/8=8분음표) */
 const RHYTHM_POOLS = {
@@ -301,9 +515,10 @@ const RHYTHM_POOLS = {
     plus  :[[2,1,2,1],[1,2,1,2],[1,1,1,2,1],[2,1,1,1,1],[1,2,3]]
   }
 };
-function poolFor(meterId,diff){
+/* [개편] 복잡한 리듬 묶음을 고를 확률이 우연의 강도에 따라 올라간다 */
+function poolPick(meterId,c){
   const p=RHYTHM_POOLS[meterId];
-  return diff==="seed" ? p.simple.slice() : p.simple.concat(p.plus);
+  return pick( rnd() < Math.max(0,(c-0.18))*1.25 ? p.plus : p.simple );
 }
 const longRhythm = (meterId)=>[meterOf(meterId).units];
 
@@ -319,16 +534,22 @@ function noteEn(midi){ return PC_EN[((midi%12)+12)%12]+(Math.floor(midi/12)-1); 
 const freqOf = (m)=>440*Math.pow(2,(m-69)/12);
 
 /* ---------------- 음계 ---------------- */
-function scaleFor(diff){
-  if(diff==="seed") return [0,2,4,7,9];
-  if(diff==="wild") return [0,1,2,3,4,5,6,7,8,9,10,11];
-  return [0,2,4,5,7,9,11];
-}
-function allowedPitches(diff){
-  const sc=scaleFor(diff), out=[];
+/* [개편] 우연의 강도 (chaos) — 0(얌전하게) ~ 1(제멋대로) 연속값.
+   기존 4단계(처음/자유/클래식/괴짜)를 대신한다. 단계를 갈아끼우는 게 아니라
+   확률이 조금씩 미끄러진다. 실제로 손대는 곳은 넷뿐이다.
+     ① 쓸 수 있는 음의 종류   ② 반음으로 벗어날 확률
+     ③ 음이 움직이는 거리     ④ 복잡한 리듬을 고를 확률(poolPick) */
+const CHAOS_DEFAULT = 0.40;                            // 중앙보다 약간 왼쪽
+const CHAOS_STEPS = {calm:0.15, free:0.50, wild:0.90}; // 마디별 3단계
+
+function chaosName(c){ return c<0.28?"얌전하게" : (c<0.68?"중간":"제멋대로"); }
+function scaleForChaos(c){ return c<0.30 ? [0,2,4,7,9] : [0,2,4,5,7,9,11]; }
+function allowedPitches(c){
+  const sc=scaleForChaos(c), out=[];
   for(let m=60;m<=81;m++){ if(sc.indexOf(((m-60)%12+12)%12)>=0) out.push(m); }
   return out;
 }
+function chromaticChance(c){ return Math.max(0,(c-0.55))*0.62; }
 function chordToneIdx(allowed,chName){
   const set=CHORDS[chName].n, out=[];
   for(let i=0;i<allowed.length;i++){ if(set.indexOf(((allowed[i]-60)%12+12)%12)>=0) out.push(i); }
@@ -341,25 +562,50 @@ function nearestIn(list,target){
 }
 
 /* ---------------- 멜로디 생성 ---------------- */
-function stepFor(ruleId,diff){
+/* ③ 음이 움직이는 거리. chaos 가 높을수록 멀리 뛴다. */
+function stepFor(ruleId,c){
   let s;
   if(ruleId==="steps"){ s = rnd()<0.85 ? 1 : 2; }
   else{
     const r=rnd();
-    s = r<0.50?1 : r<0.80?2 : r<0.93?3 : 4;
+    const p1=0.60-0.34*c, p2=p1+(0.28-0.10*c), p3=p2+(0.09+0.10*c), p4=p3+(0.03+0.16*c);
+    s = r<p1?1 : r<p2?2 : r<p3?3 : r<p4?4 : (5+Math.floor(rnd()*3));
   }
-  if(diff==="wild") s = Math.max(1,Math.round(s*1.8));
   return rnd()<0.5 ? -s : s;
 }
 
+/* [개편] 마디 하나의 음 높이를 채운다. 리듬은 바깥에서 정해 준다.
+   → 「음만 다시 뽑기」와 「리듬만 다시 뽑기」가 같은 함수를 쓴다. */
+function fillMeasurePitches(rhythm,chordName,chaos,ruleId,startNear,keepPitches){
+  const allowed=allowedPitches(chaos);
+  const idxOf=(p)=>{ let b=0,bd=1e9; for(let i=0;i<allowed.length;i++){const d=Math.abs(allowed[i]-p);if(d<bd){bd=d;b=i;}} return b; };
+  const ct=chordToneIdx(allowed,chordName);
+  const chrom=chromaticChance(chaos);
+
+  let cur=nearestIn(ct,(startNear===undefined?Math.floor(allowed.length*0.45):idxOf(startNear)));
+  const notes=[{p:allowed[cur],d:rhythm[0]}];
+  for(let i=1;i<rhythm.length;i++){
+    if(keepPitches && keepPitches[i]!==undefined && keepPitches[i]!==null){
+      cur=idxOf(keepPitches[i]);                      // 리듬만 바꿀 때: 기존 음을 순서대로 재사용
+      notes.push({p:keepPitches[i],d:rhythm[i]});
+      continue;
+    }
+    cur=clamp(cur+stepFor(ruleId,chaos),0,allowed.length-1);
+    let p=allowed[cur];
+    if(rnd()<chrom){ notes.push({p:p+(rnd()<0.5?-1:1),d:rhythm[i],odd:true}); continue; }
+    notes.push({p:p,d:rhythm[i]});
+  }
+  return notes;
+}
+
 function genMelody(song){
-  const M=meterOf(song.meter), diff=song.diff;
-  const allowed=allowedPitches(diff);
-  const pool=poolFor(song.meter,diff);
+  const M=meterOf(song.meter);
+  const c=songChaos(song);
+  const allowed=allowedPitches(c);
   const rule=song.ruleId, chords=PROGS.find(p=>p.id===song.progId).ch;
 
   /* 1) 리듬: 미리 만들어 둔 묶음에서만 고른다 → 마디의 박이 절대 안 깨짐 */
-  const rh=[pick(pool),pick(pool),null,pick(pool)];
+  const rh=[poolPick(song.meter,c),poolPick(song.meter,c),null,poolPick(song.meter,c)];
   rh[2]=rh[0].slice();                                   // 반복 장치: 3마디 = 1마디
   if(rule==="longEnd")  rh[3]=longRhythm(song.meter);
   if(rule==="repeat")   rh[3]=rh[1].slice();
@@ -376,14 +622,11 @@ function genMelody(song){
     cur = nearestIn(ct,cur);
     const notes=[{p:allowed[cur],d:rh[m][0]}];
     for(let i=1;i<rh[m].length;i++){
-      cur = clamp(cur+stepFor(rule,diff),0,allowed.length-1);
+      cur = clamp(cur+stepFor(rule,c),0,allowed.length-1);
       notes.push({p:allowed[cur],d:rh[m][i]});
     }
     measures.push({chord:chords[m],notes:notes});
   }
-
-  /* 4) 반복 장치 — 3마디는 1마디를 그대로 */
-  measures[2].notes = measures[0].notes.map(n=>({p:n.p,d:n.d}));
 
   /* 5) 규칙 카드 변형 */
   const idxOf=(p)=>{ let b=0,bd=1e9; for(let i=0;i<allowed.length;i++){const d=Math.abs(allowed[i]-p); if(d<bd){bd=d;b=i;}} return b; };
@@ -441,6 +684,16 @@ function genMelody(song){
     ns[0].p = allowed[nearestIn(ct,idxOf(ns[0].p))];
   }
 
+  /* 6-2) 반복 장치 — 3마디는 1마디를 그대로.
+     ★ 반드시 착지 보정·규칙 카드 '뒤'에 와야 한다. 앞에 두면 뒤 단계가
+     3마디를 다시 건드려 반복이 깨진다(실측: 음까지 같은 경우가 38%뿐이었다). */
+  measures[2].notes = measures[0].notes.map(n=>{
+    const c2={p:n.p,d:n.d};
+    if(n.odd) c2.odd=true;
+    if(n.leap) c2.leap=true;
+    return c2;
+  });
+
   /* 7) 마지막 음 — 60% 확률로 높은 도(C5) */
   const last=measures[3].notes[measures[3].notes.length-1];
   if(rule==="qa"){ last.p=72; last.land=true; }
@@ -453,8 +706,78 @@ function genMelody(song){
 
   song.measures=measures;
   song.spans=[];
+  song.linked13=true;          // 1마디=3마디 연결. 개별 재추첨하면 풀린다.
   applyExpression(song);
   return song;
+}
+
+/* =========================================================================
+   [개편] 마디별 재추첨 — 여기서는 genMelody() 를 절대 부르지 않는다.
+   손댄 마디 하나만 새로 만들고 나머지 세 마디는 객체 그대로 둔다.
+   ========================================================================= */
+function songChaos(song){
+  return (song && typeof song.chaos==="number") ? song.chaos : CHAOS_DEFAULT;
+}
+/* 그 마디에 실제 적용될 강도 (마디 설정이 있으면 그것, 없으면 전체 설정) */
+function measureChaos(song,mi){
+  const per = song.mchaos && song.mchaos[mi];
+  return (per && CHAOS_STEPS[per]!==undefined) ? CHAOS_STEPS[per] : songChaos(song);
+}
+/* 앞 마디 마지막 음 — 새 마디가 뜬금없는 높이에서 시작하지 않게 이어준다 */
+function prevPitch(song,mi){
+  if(mi<=0) return undefined;
+  const ns=song.measures[mi-1].notes;
+  for(let i=ns.length-1;i>=0;i--) if(ns[i].p!==null) return ns[i].p;
+  return undefined;
+}
+/* 4마디 끝음은 곡을 닫아야 한다 — 60% 확률로 높은 도 */
+function landLastNote(song){
+  const ns=song.measures[3].notes, last=ns[ns.length-1];
+  if(rnd()<0.6){ last.p=72; last.land=true; }
+  else{
+    const allowed=allowedPitches(measureChaos(song,3));
+    const ct=chordToneIdx(allowed,song.measures[3].chord);
+    let b=ct[0],bd=1e9; const t=(last.p===null?67:last.p);
+    for(const i of ct){ const d=Math.abs(allowed[i]-t); if(d<bd){bd=d;b=i;} }
+    last.p=allowed[b]; delete last.land;
+  }
+}
+function unlink13(song,mi){
+  if((mi===0||mi===2) && song.linked13){
+    song.linked13=false;
+    toast("이제 1마디와 3마디가 따로 움직입니다");
+  }
+}
+function refreshExpression(song){ applyExpression(song); }
+
+/* ① 음만 다시 — 리듬(음표 길이·개수)은 그대로 */
+function rerollMeasurePitches(song,mi){
+  unlink13(song,mi);
+  const c=measureChaos(song,mi);
+  const rhythm=song.measures[mi].notes.map(n=>n.d);
+  song.measures[mi].notes=fillMeasurePitches(rhythm,song.measures[mi].chord,c,song.ruleId,prevPitch(song,mi));
+  if(mi===3) landLastNote(song);
+  refreshExpression(song);
+}
+/* ② 리듬만 다시 — 음 높이는 순서대로 최대한 재사용 */
+function rerollMeasureRhythm(song,mi){
+  unlink13(song,mi);
+  const c=measureChaos(song,mi);
+  const old=song.measures[mi].notes.map(n=>n.p);
+  const rhythm=poolPick(song.meter,c);
+  const keep=rhythm.map((d,i)=> i<old.length ? old[i] : undefined);
+  song.measures[mi].notes=fillMeasurePitches(rhythm,song.measures[mi].chord,c,song.ruleId,prevPitch(song,mi),keep);
+  if(mi===3) landLastNote(song);
+  refreshExpression(song);
+}
+/* ③ 전부 다시 — 그 마디의 음과 리듬 둘 다 */
+function rerollWholeMeasure(song,mi){
+  unlink13(song,mi);
+  const c=measureChaos(song,mi);
+  const rhythm=poolPick(song.meter,c);
+  song.measures[mi].notes=fillMeasurePitches(rhythm,song.measures[mi].chord,c,song.ruleId,prevPitch(song,mi));
+  if(mi===3) landLastNote(song);
+  refreshExpression(song);
 }
 
 /* ---------------- 표현 카드 적용 ---------------- */
@@ -486,13 +809,16 @@ function applyExpression(song){
       const three=[0,1,2].map(k=>({p:base.p+(k===1?(rnd()<0.5?2:1):0),d:base.d/3,tg:gid}));
       ns.splice(i,1,three[0],three[1],three[2]);
     };
-    let done=false;
-    for(let mi=0;mi<2&&!done;mi++){
+    /* [개편] 이미 셋잇단이 있으면 다시 만들지 않는다. 마디를 다시 뽑을 때마다
+       이 함수를 부르므로, 이 검사가 없으면 음표가 계속 세 개씩 쪼개져 늘어난다.
+       1마디(index 0)는 제외한다 — 3마디와 같아야 하기 때문이다. */
+    let done = ms.some(m=>m.notes.some(n=>n.tg));
+    for(let mi=1;mi<2&&!done;mi++){
       const i=ms[mi].notes.findIndex(n=>Math.abs(n.d-target)<1e-6&&n.p!==null);
       if(i>=0){ split(mi,i); done=true; }
     }
     if(!done){ // 딱 맞는 길이가 없으면 가장 긴 음을 셋으로 쪼갠다
-      for(let mi=0;mi<2&&!done;mi++){
+      for(let mi=1;mi<2&&!done;mi++){
         const ns=ms[mi].notes;
         let bi=-1,bd=0;
         ns.forEach((n,i)=>{ if(n.p!==null&&n.d>bd){bd=n.d;bi=i;} });
@@ -537,14 +863,18 @@ const durKoBeat={0.25:"¼박",0.5:"½박",0.75:"¾박",1:"한 박",1.5:"1박 반
 
 function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;");}
 
-function renderScore(song){
+/* [개편] only 에 마디 번호를 주면 그 마디 하나만 그린다.
+   마디 탭 안에 넣는 '미니 악보'용. 그리는 방식은 전체 악보와 똑같다. */
+function renderScore(song,only,editable){
   const M=meterOf(song.meter);
   const ex=EXPRS.find(e=>e.id===song.exprId);
+  const list=(only===undefined)?[0,1,2,3]:[only];
   let out=[];
-  out.push('<svg class="score" viewBox="0 0 '+SW+' '+(SYS_H*4+14)+'" xmlns="http://www.w3.org/2000/svg" font-family="Georgia, serif">');
+  out.push('<svg class="score" viewBox="0 0 '+SW+' '+(SYS_H*list.length+14)+'" xmlns="http://www.w3.org/2000/svg" font-family="Georgia, serif">');
 
-  for(let mi=0;mi<4;mi++){
-    const off=mi*SYS_H+6;
+  for(let slot=0;slot<list.length;slot++){
+    const mi=list[slot];
+    const off=slot*SYS_H+6;
     out.push('<g transform="translate(0,'+off+')">');
 
     /* 오선 */
@@ -555,21 +885,35 @@ function renderScore(song){
     /* 높은음자리표 */
     out.push('<text class="nh" data-tip="'+esc("<b>높은음자리표 (Treble clef)</b>이 오선이 어느 높이인지 알려주는 표시입니다. 아래에서 둘째 줄이 솔(G4).")+'" x="18" y="'+(STAFF_TOP+34)+'" font-size="46" fill="#4a3f2e" font-family="Segoe UI Symbol, Bravura, Georgia, serif">\u{1D11E}</text>');
 
-    /* 박자표 (첫 마디만) */
-    if(mi===0){
+    /* 박자표 (전체 악보는 첫 마디에만 / 미니 악보는 항상) */
+    if(slot===0){
       out.push('<g class="nh" data-tip="'+esc("<b>박자표 "+M.id+"</b>"+M.desc)+'">'
         +'<text x="48" y="'+(STAFF_TOP+14)+'" font-size="20" font-weight="bold" fill="#4a3f2e" text-anchor="middle">'+M.top+'</text>'
         +'<text x="48" y="'+(STAFF_TOP+31)+'" font-size="20" font-weight="bold" fill="#4a3f2e" text-anchor="middle">'+M.bot+'</text></g>');
     }
 
-    /* 마디 번호 + 코드 이름 */
+    /* 마디 번호 + 코드 이름
+       [개편] editable 이면 마디 번호가 '누르는 버튼'이 된다.
+       음표는 눌러도 뜻 말풍선만 뜨게 그대로 두어 서로 부딪히지 않는다. */
     const ch=song.measures[mi].chord;
-    out.push('<text x="14" y="'+(STAFF_TOP-20)+'" font-size="10" fill="#a2937a">'+(mi+1)+'마디</text>');
-    out.push('<text class="nh" data-tip="'+esc("<b>반주 코드 "+ch+"</b>이 마디에는 "+CHORDS[ch].ko+" 세 음이 아래에 깔립니다. 마디의 첫 음은 이 안에서 고릅니다.")+'" x="'+X0+'" y="'+(STAFF_TOP-16)+'" font-size="15" font-weight="bold" fill="'+"#a5622c"+'">'+ch+'</text>');
+    if(editable){
+      /* 누르는 영역은 마디 위쪽 띠 전체(투명)로 넓게 잡고,
+         눈에 보이는 것은 회색 마디 번호와 오른쪽 끝의 작은 ✎ 뿐이다.
+         악보가 가장 중요하므로 색 면적을 쓰지 않는다. */
+      out.push('<g class="medit" data-medit="'+mi+'">'
+        +'<rect x="8" y="'+(STAFF_TOP-32)+'" width="346" height="28" fill="transparent"/>'
+        +'<text x="14" y="'+(STAFF_TOP-16)+'" font-size="11.5" fill="#a2937a">'+(mi+1)+'마디</text>'
+        +'<text x="348" y="'+(STAFF_TOP-14)+'" font-size="15" fill="#bcb2a1" text-anchor="end">✎</text>'
+        +'</g>');
+    }else{
+      out.push('<text x="14" y="'+(STAFF_TOP-16)+'" font-size="11.5" fill="#a2937a">'+(mi+1)+'마디</text>');
+    }
+    const chX = X0;
+    out.push('<text class="nh" data-tip="'+esc("<b>반주 코드 "+ch+"</b>이 마디에는 "+CHORDS[ch].ko+" 세 음이 아래에 깔립니다. 마디의 첫 음은 이 안에서 고릅니다.")+'" x="'+chX+'" y="'+(STAFF_TOP-16)+'" font-size="15" font-weight="bold" fill="'+"#a5622c"+'">'+ch+'</text>');
 
     /* 마디선 */
     out.push('<line x1="'+(X0-10)+'" y1="'+STAFF_TOP+'" x2="'+(X0-10)+'" y2="'+(STAFF_TOP+32)+'" stroke="#8d7c5e" stroke-width="1.4"/>');
-    if(mi<3){
+    if(!(mi===3 && only===undefined)){
       out.push('<line x1="'+(X1+6)+'" y1="'+STAFF_TOP+'" x2="'+(X1+6)+'" y2="'+(STAFF_TOP+32)+'" stroke="#8d7c5e" stroke-width="1.4"/>');
     }else{
       out.push('<line x1="'+(X1+1)+'" y1="'+STAFF_TOP+'" x2="'+(X1+1)+'" y2="'+(STAFF_TOP+32)+'" stroke="#8d7c5e" stroke-width="1.4"/>');
@@ -784,7 +1128,14 @@ function stopAll(){
   playState.on=false;
   document.querySelectorAll(".play").forEach(e=>e.classList.remove("play"));
   document.querySelectorAll("#players button").forEach(b=>b.classList.remove("on"));
+  ["playNote"].forEach(id=>{
+    const pn=document.getElementById(id); if(pn) pn.innerHTML="";
+  });
 }
+
+/* [개편] 전체 재생은 2회 반복. 한 번 듣고 끝나면 멜로디가 기억에 안 남는다.
+   파트별 듣기는 확인용이라 1회만. */
+const LOOP_GAP = 0.35;      // 1·2회차 사이 공백(초). 길면 두 곡처럼 들린다.
 
 function play(part){
   stopAll();
@@ -792,62 +1143,99 @@ function play(part){
   const song=STATE.song, M=meterOf(song.meter);
   const drum=DRUMS.find(d=>d.id===song.drumId);
   const unit=(60/drum.bpm)/(M.eighthUnit?2:1);
-  const barSec=unit*M.units;
+  const barSec=unit*M.units, songSec=barSec*4;
   const t0=c.currentTime+0.12;
   const ex=song.exprId;
   const gGain = ex==="pp"?0.55 : ex==="forte"?1.35 : 1;
-
-  /* 드럼 */
-  if(part==="drum"||part==="all"){
-    const p=drum.pat[song.meter];
-    for(let m=0;m<4;m++){
-      const b=t0+m*barSec;
-      p.k.forEach(u=>kick(b+u*unit));
-      p.s.forEach(u=>snare(b+u*unit));
-      if(p.h>0) for(let u=0;u<M.units-1e-6;u+=p.h) hat(b+u*unit);
-    }
-  }
-  /* 반주 */
-  if(part==="chord"||part==="all"){
-    for(let m=0;m<4;m++){
-      const ch=CHORDS[song.measures[m].chord].n;
-      const mids=[48+ch[0], 60+ch[1], 60+ch[2], 55+ch[0]];
-      const half=barSec/2;
-      chordVoice(t0+m*barSec,      mids, half*0.95);
-      chordVoice(t0+m*barSec+half, mids, half*0.95);
-    }
-  }
-  /* 멜로디 */
+  const loops = (part==="all") ? 2 : 1;
   const sched=[];
-  if(part==="melody"||part==="all"){
-    for(let m=0;m<4;m++){
-      let t=0;
-      const ns=song.measures[m].notes;
-      for(let i=0;i<ns.length;i++){
-        const n=ns[i], st=t0+m*barSec+t*unit;
-        let dur=n.d*unit*0.92, gain=gGain;
-        const fl=n.fl||{};
-        if(fl.stac) dur*=0.5;                       // 톡톡 끊어서 → 길이 절반
-        if(fl.acc)  gain*=1.5;                      // 여기만 강하게 → 음량 1.5배
-        if(fl.fer)  dur*=1.8;                       // 잠깐 멈춰 → 1.8배 길게
-        if(ex==="legato") dur*=1.15;
-        if(ex==="cresc"&&m===1) gain*= 0.7+0.7*(t/M.units);
-        if(ex==="dim"  &&m===3) gain*= 1.4-0.7*(t/M.units);
-        if(n.p!==null){
-          if(n.grace!==undefined) melodyVoice(st-0.075,freqOf(n.grace),0.07,gain*0.8);
-          melodyVoice(st,freqOf(n.p),dur,gain);
-          sched.push({t:st-t0,dur:dur,key:m+"-"+i});
+
+  function schedulePass(base){
+    if(part==="drum"||part==="all"){
+      const p=drum.pat[song.meter];
+      for(let m=0;m<4;m++){
+        const b=base+m*barSec;
+        p.k.forEach(u=>kick(b+u*unit));
+        p.s.forEach(u=>snare(b+u*unit));
+        if(p.h>0) for(let u=0;u<M.units-1e-6;u+=p.h) hat(b+u*unit);
+      }
+    }
+    if(part==="chord"||part==="all"){
+      for(let m=0;m<4;m++){
+        const ch=CHORDS[song.measures[m].chord].n;
+        const mids=[48+ch[0], 60+ch[1], 60+ch[2], 55+ch[0]];
+        const half=barSec/2;
+        chordVoice(base+m*barSec,      mids, half*0.95);
+        chordVoice(base+m*barSec+half, mids, half*0.95);
+      }
+    }
+    if(part==="melody"||part==="all"){
+      for(let m=0;m<4;m++){
+        let t=0;
+        const ns=song.measures[m].notes;
+        for(let i=0;i<ns.length;i++){
+          const n=ns[i], st=base+m*barSec+t*unit;
+          let dur=n.d*unit*0.92, gain=gGain;
+          const fl=n.fl||{};
+          if(fl.stac) dur*=0.5;                       // 톡톡 끊어서 → 길이 절반
+          if(fl.acc)  gain*=1.5;                      // 여기만 강하게 → 음량 1.5배
+          if(fl.fer)  dur*=1.8;                       // 잠깐 멈춰 → 1.8배 길게
+          if(ex==="legato") dur*=1.15;
+          if(ex==="cresc"&&m===1) gain*= 0.7+0.7*(t/M.units);
+          if(ex==="dim"  &&m===3) gain*= 1.4-0.7*(t/M.units);
+          if(n.p!==null){
+            if(n.grace!==undefined) melodyVoice(st-0.075,freqOf(n.grace),0.07,gain*0.8);
+            melodyVoice(st,freqOf(n.p),dur,gain);
+            sched.push({t:st-t0,dur:dur,key:m+"-"+i});
+          }
+          t+=n.d;
         }
-        t+=n.d;
       }
     }
   }
+  for(let L=0;L<loops;L++) schedulePass(t0 + L*(songSec+LOOP_GAP));
 
-  const total=barSec*4+0.6;
-  playState={on:true,t0:t0,notes:sched,dur:total};
+  const total = loops*songSec + (loops-1)*LOOP_GAP + 0.6;
+  playState={on:true,t0:t0,notes:sched,dur:total,loops:loops,pass:songSec+LOOP_GAP};
   document.querySelectorAll('#players button[data-part="'+part+'"]').forEach(b=>b.classList.add("on"));
   playTimer=setTimeout(stopAll,total*1000+200);
-  if(sched.length) tickHighlight();
+  showPlayNote(1,loops);
+  tickHighlight();
+}
+
+/* [개편] 마디 하나만 듣기 — 고친 자리를 바로 확인하기 위한 것이라 1회만 */
+function playMeasure(mi){
+  stopAll();
+  const c=ctx(), song=STATE.song, M=meterOf(song.meter);
+  const drum=DRUMS.find(d=>d.id===song.drumId);
+  const unit=(60/drum.bpm)/(M.eighthUnit?2:1);
+  const barSec=unit*M.units, t0=c.currentTime+0.1, sched=[];
+
+  const p=drum.pat[song.meter];
+  p.k.forEach(u=>kick(t0+u*unit));
+  p.s.forEach(u=>snare(t0+u*unit));
+  if(p.h>0) for(let u=0;u<M.units-1e-6;u+=p.h) hat(t0+u*unit);
+
+  const ch=CHORDS[song.measures[mi].chord].n;
+  chordVoice(t0,[48+ch[0],60+ch[1],60+ch[2],55+ch[0]],barSec*0.95);
+
+  let t=0; const ns=song.measures[mi].notes;
+  for(let i=0;i<ns.length;i++){
+    const n=ns[i], st=t0+t*unit, dur=n.d*unit*0.92;
+    if(n.p!==null){ melodyVoice(st,freqOf(n.p),dur,1); sched.push({t:st-t0,dur:dur,key:mi+"-"+i}); }
+    t+=n.d;
+  }
+  playState={on:true,t0:t0,notes:sched,dur:barSec+0.5,loops:1,pass:barSec};
+  playTimer=setTimeout(stopAll,(barSec+0.5)*1000);
+  tickHighlight();
+}
+
+/* 지금 몇 번째로 듣고 있는지 (곡 화면·수정 화면 둘 다) */
+function showPlayNote(n,loops){
+  const txt = loops>1 ? ("<b>"+n+"번째</b> 듣는 중 · 전체 "+loops+"번 들려드립니다") : "듣는 중";
+  ["playNote"].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.innerHTML=txt;
+  });
 }
 
 function tickHighlight(){
@@ -856,10 +1244,13 @@ function tickHighlight(){
   document.querySelectorAll(".play").forEach(e=>e.classList.remove("play"));
   for(const s of playState.notes){
     if(el>=s.t&&el<s.t+Math.max(s.dur,0.12)){
-      const g=document.querySelector('[data-key="'+s.key+'"]');
-      if(g) g.querySelectorAll("ellipse").forEach(e=>e.classList.add("play"));
+      /* 악보가 전체·미니 두 곳에 있을 수 있어 전부 칠한다 */
+      document.querySelectorAll('[data-key="'+s.key+'"]').forEach(g=>{
+        g.querySelectorAll("ellipse").forEach(e2=>e2.classList.add("play"));
+      });
     }
   }
+  if(playState.loops>1) showPlayNote(Math.min(playState.loops,Math.floor(el/playState.pass)+1),playState.loops);
   rafId=requestAnimationFrame(tickHighlight);
 }
 
@@ -867,94 +1258,182 @@ function tickHighlight(){
    상태 · 화면
    ========================================================================= */
 const STATE={
+  view:"home",        // home | song | edit | library
+  editM:null,         // [개편] 지금 수정창이 열린 마디 (0~3), 닫혀 있으면 null
+  gearOpen:null,      // ⚙ 설정이 열린 마디
+  libBack:"home",
   song:null,
+  prevSong:null,      // [개편] 「다시 뽑기」 직전 곡. 되돌리기용 (한 단계)
   locks:{meter:false,prog:false,drum:false,rule:false,expr:false,melody:false}
 };
 
 function newSong(base){
   const s = base ? JSON.parse(JSON.stringify(base)) : {};
-  s.diff   = s.diff   || "free";
+  /* 새 곡은 지금 슬라이더 값을 이어받고, 마디별 설정은 초기화한다 */
+  if(typeof s.chaos!=="number")
+    s.chaos = (STATE.song&&typeof STATE.song.chaos==="number") ? STATE.song.chaos : CHAOS_DEFAULT;
+  s.mchaos = {};
   s.meter  = s.meter  || pick(METERS).id;
   s.progId = s.progId || pick(PROGS).id;
   s.drumId = s.drumId || pick(DRUMS).id;
   s.ruleId = s.ruleId || pick(RULES).id;
   s.exprId = s.exprId || pick(EXPRS).id;
+  STATE.editM=null; STATE.gearOpen=null;
   return genMelody(s);
 }
 
-function drawAll(){
-  const s=STATE.song, L=STATE.locks;
-  const before=s.meter;
-  if(!L.meter) s.meter=pick(METERS).id;
-  if(!L.prog)  s.progId=pick(PROGS).id;
-  if(!L.drum)  s.drumId=pick(DRUMS).id;
-  if(!L.rule)  s.ruleId=pick(RULES).id;
-  if(!L.expr)  s.exprId=pick(EXPRS).id;
-
-  if(!L.melody) genMelody(s);
-  else if(before!==s.meter){ genMelody(s); toast("박자표가 바뀌어서 멜로디도 다시 뽑았습니다"); }
-  else applyExpression(s);
-  render();
-}
-
+/* [개편] 전체 요소를 다시 뽑을 때도 지금 곡을 최대한 보존한다.
+   예전에는 무엇을 눌러도 genMelody() 로 4마디를 통째로 다시 만들었다. */
 function reroll(slot){
   const s=STATE.song;
-  if(slot==="meter"){ s.meter=pick(METERS.filter(m=>m.id!==s.meter)).id; genMelody(s); }
-  if(slot==="prog"){  s.progId=pick(PROGS.filter(p=>p.id!==s.progId)).id; genMelody(s); }
-  if(slot==="drum"){  s.drumId=pick(DRUMS.filter(d=>d.id!==s.drumId)).id; }
-  if(slot==="rule"){  s.ruleId=pick(RULES.filter(r=>r.id!==s.ruleId)).id; genMelody(s); }
-  if(slot==="expr"){  s.exprId=pick(EXPRS.filter(e=>e.id!==s.exprId)).id; applyExpression(s); }
-  if(slot==="melody"){ genMelody(s); }
+
+  if(slot==="drum"){          // 드럼·빠르기만. 악보는 손도 대지 않는다.
+    s.drumId=pick(DRUMS.filter(d=>d.id!==s.drumId)).id;
+  }
+  if(slot==="expr"){          // 표현만. 음과 리듬은 그대로.
+    s.exprId=pick(EXPRS.filter(e=>e.id!==s.exprId)).id;
+    s.measures.forEach(m=>m.notes.forEach(n=>{ delete n.tg; }));   // 옛 셋잇단 표시 해제
+    applyExpression(s);
+  }
+  if(slot==="rule"){          // 규칙 카드만 교체. 지금 멜로디는 두고 다음 🎲 부터 반영.
+    s.ruleId=pick(RULES.filter(r=>r.id!==s.ruleId)).id;
+    toast("새 규칙은 앞으로 다시 뽑을 때부터 적용됩니다");
+  }
+  if(slot==="prog"){          // 코드 진행만 교체. 멜로디는 두고 각 마디 첫 음만 최소 보정.
+    s.progId=pick(PROGS.filter(p=>p.id!==s.progId)).id;
+    const ch=PROGS.find(p=>p.id===s.progId).ch;
+    for(let m=0;m<4;m++){
+      s.measures[m].chord=ch[m];
+      const ns=s.measures[m].notes;
+      if(!ns.length||ns[0].p===null) continue;
+      const allowed=allowedPitches(measureChaos(s,m));
+      const ct=chordToneIdx(allowed,ch[m]);
+      let b=ct[0],bd=1e9;
+      for(const i of ct){ const d=Math.abs(allowed[i]-ns[0].p); if(d<bd){bd=d;b=i;} }
+      ns[0].p=allowed[b];
+    }
+    refreshExpression(s);
+    toast("반주만 바꿨습니다 — 멜로디는 그대로입니다");
+  }
+  if(slot==="meter"){         // 박자는 예외. 리듬 구조와 직결이라 음표 리듬을 다시 만든다.
+    s.meter=pick(METERS.filter(m=>m.id!==s.meter)).id;
+    for(let m=0;m<4;m++) rerollMeasureRhythm(s,m);
+    s.linked13=false;
+    toast("박자를 바꿔서 악보의 리듬도 다시 만들었습니다");
+  }
+  if(slot==="melody"){ genMelody(s); }   // 이것만은 곡 전체를 새로 만든다
   render();
 }
 
+/* [개편] 「리듬」이라는 이름을 드럼에서 떼어냈다.
+   마디별 「리듬 🎲」 = 음표의 길이·배치.  아래 「드럼 리듬」 = 반주 드럼 패턴. */
 const CARD_DEFS=[
-  {slot:"meter", label:"박자표"},
+  {slot:"meter", label:"박자"},
   {slot:"prog",  label:"반주 (코드 진행)"},
-  {slot:"drum",  label:"리듬 (드럼)"},
+  {slot:"drum",  label:"드럼 리듬"},
   {slot:"rule",  label:"규칙 카드"},
   {slot:"expr",  label:"표현 카드"},
-  {slot:"melody",label:"멜로디"}
+  {slot:"melody",label:"멜로디 전체 새로 만들기"}
 ];
+
+/* [개편] 마디를 세로로 4개 늘어놓지 않는다.
+   탭으로 하나만 고르고, 그 마디 악보를 버튼 바로 위에 둔다.
+   → 고치는 자리와 확인하는 자리가 같아져 스크롤 왕복이 없어진다. */
+const MCHAOS_OPTS=[
+  {v:"inherit", t:"전체 설정 따르기"},
+  {v:"calm",    t:"🌱 얌전하게"},
+  {v:"free",    t:"🎲 자유롭게"},
+  {v:"wild",    t:"🎪 제멋대로"}
+];
+function renderMeasurePanel(s,mi){
+  const per=(s.mchaos&&s.mchaos[mi])||"inherit";
+  const open=(STATE.gearOpen===mi);
+  const tuned=per!=="inherit";
+  const tag = tuned ? MCHAOS_OPTS.find(o=>o.v===per).t
+                    : ((s.linked13 && (mi===0||mi===2)) ? "1마디와 3마디가 같습니다" : "");
+
+  let out='<div class="modalgrip"></div>'
+    +'<div class="mpanel'+(tuned?" tuned":"")+'">'
+    +'<div class="mhead"><span class="mname">'+(mi+1)+'마디</span>'
+    +'<span class="mtag'+(tuned?" on":"")+'">'+esc(tag)+'</span>'
+    +'<button class="mgear'+(open?" on":"")+'" data-gear="'+mi+'" title="이 마디의 우연의 강도">⚙</button></div>'
+    +'<div class="miniscore">'+renderScore(s,mi)+'</div>'
+    +'<div class="mbtns3">'
+    +'<button data-mroll="pitch:'+mi+'">음 🎲</button>'
+    +'<button data-mroll="rhythm:'+mi+'">리듬 🎲</button>'
+    +'<button data-mroll="all:'+mi+'">전부 🎲</button>'
+    +'</div>'
+    +'<button class="mlisten" data-mplay="'+mi+'">▶ 이 마디 듣기</button>';
+
+  if(open){
+    out+='<div class="mset"><div class="msetlabel">'+(mi+1)+'마디 우연의 강도</div>'
+      + MCHAOS_OPTS.map(o=>
+          '<label class="'+(per===o.v?"sel":"")+'">'
+          +'<input type="radio" name="mch'+mi+'" data-mchaos="'+o.v+':'+mi+'"'+(per===o.v?" checked":"")+'>'
+          +'<span>'+o.t+'</span></label>').join("")
+      +'</div>';
+  }
+  return out+'</div><button class="modalclose" data-mclose="1">닫기</button>';
+}
 
 function cardValue(slot){
   const s=STATE.song;
-  if(slot==="meter"){ const m=meterOf(s.meter); return {v:m.id, d:m.desc}; }
-  if(slot==="prog"){  const p=PROGS.find(x=>x.id===s.progId); return {v:p.name, d:p.ch.join(" → ")+" · "+p.desc}; }
-  if(slot==="drum"){  const d=DRUMS.find(x=>x.id===s.drumId); return {v:d.name, d:d.desc+" · 빠르기 "+d.bpm}; }
-  if(slot==="rule"){  const r=RULES.find(x=>x.id===s.ruleId); return {v:r.name, d:r.desc}; }
+  if(slot==="meter"){ const m=meterOf(s.meter); return {v:m.id, d:m.desc+" · ⚠ 바꾸면 악보 리듬도 다시 만들어집니다"}; }
+  if(slot==="prog"){  const p=PROGS.find(x=>x.id===s.progId); return {v:p.name, d:p.ch.join(" → ")+" · 멜로디는 그대로 둡니다"}; }
+  if(slot==="drum"){  const d=DRUMS.find(x=>x.id===s.drumId); return {v:d.name, d:d.desc+" · 빠르기 "+d.bpm+" · 악보는 안 바뀝니다"}; }
+  if(slot==="rule"){  const r=RULES.find(x=>x.id===s.ruleId); return {v:r.name, d:r.desc+" · 다음에 다시 뽑을 때부터 적용"}; }
   if(slot==="expr"){  const e=EXPRS.find(x=>x.id===s.exprId); return {v:e.name, d:e.desc, t:e.term}; }
   const cnt=s.measures.reduce((a,m)=>a+m.notes.filter(n=>n.p!==null).length,0);
   const rests=s.measures.reduce((a,m)=>a+m.notes.filter(n=>n.p===null).length,0);
-  return {v:"4마디 · 음표 "+cnt+"개"+(rests?" · 쉼표 "+rests+"개":""), d:"1마디와 3마디가 같습니다 (반복 장치)"};
+  return {v:"음표 "+cnt+"개"+(rests?" · 쉼표 "+rests+"개":""),
+          d:"⚠ 4마디를 통째로 다시 만듭니다. 지금 곡은 사라집니다"};
+}
+
+/* [개편] 화면 전환 — 한 번에 한 화면만 보인다 */
+function go(view){
+  STATE.view=view;
+  document.querySelectorAll(".view").forEach(el=>{
+    el.hidden = (el.getAttribute("data-view")!==view);
+  });
+  window.scrollTo(0,0);
+  render();
 }
 
 function render(){
   const s=STATE.song;
+  renderSaved();
+  if(!s) return;                       // 첫 화면에는 아직 곡이 없다
 
-  /* 난이도 */
-  $("#diffTabs").innerHTML = DIFFS.map(d=>
-    '<button data-diff="'+d.id+'" class="'+(s.diff===d.id?"on":"")+'">'+d.emoji+'<b>'+d.name+'</b></button>').join("");
-  $("#diffDesc").textContent = DIFFS.find(d=>d.id===s.diff).desc;
+  /* 우연의 강도 — 값만 비춘다. 이걸 움직여도 지금 곡은 안 바뀐다 */
+  const cv=songChaos(s), cr=$("#chaosRange");
+  if(cr && document.activeElement!==cr) cr.value=Math.round(cv*100);
+  $("#chaosNow").textContent=chaosName(cv);
 
-  /* 악보 */
-  $("#scoreHost").innerHTML = renderScore(s);
+  /* [개편] 악보는 한 곳뿐이고, 마디마다 「N마디 ✏️」 버튼이 붙는다(세 번째 인자).
+     별도 수정 화면이 없어져서 여기서 바로 고친다. */
   const p=PROGS.find(x=>x.id===s.progId), dr=DRUMS.find(x=>x.id===s.drumId);
-  $("#caption").textContent = "C장조 · "+s.meter+" · "+p.ch.join("–")+" · "+dr.name+" ♩="+dr.bpm;
+  $("#scoreHost").innerHTML = (STATE.view==="song") ? renderScore(s,undefined,true) : "";
+  $("#caption").textContent = (STATE.view==="song")
+    ? ("C장조 · "+s.meter+" · "+p.ch.join("–")+" · "+dr.name+" ♩="+dr.bpm) : "";
 
-  /* 카드 */
+  /* 마디 수정창 (열려 있을 때만) */
+  const modal=$("#mEdit");
+  if(STATE.editM===null||STATE.editM===undefined){ modal.hidden=true; }
+  else{ modal.hidden=false; $("#mEditBox").innerHTML=renderMeasurePanel(s,STATE.editM); }
+
+  /* 되돌리기 버튼은 되돌릴 곡이 있을 때만 보인다 */
+  $("#btnUndo").hidden = !STATE.prevSong;
+
+  /* 전체 요소 카드 — 잠금은 UI에서만 감춘다(로직 STATE.locks 는 보존) */
   $("#cards").innerHTML = CARD_DEFS.map(c=>{
-    const v=cardValue(c.slot), lk=STATE.locks[c.slot];
-    return '<div class="card '+(lk?"locked":"")+'">'
+    const v=cardValue(c.slot);
+    return '<div class="card">'
       + '<div class="cardhead"><span class="clabel">'+c.label+'</span><span class="ctrls">'
-      + '<button class="'+(lk?"lk":"")+'" data-lock="'+c.slot+'" title="잠그기">'+(lk?"🔒":"🔓")+'</button>'
       + '<button data-roll="'+c.slot+'" title="이것만 다시 뽑기">🎲</button>'
       + '</span></div>'
       + '<div class="cval">'+esc(v.v)+(v.t?' <span class="term">'+esc(v.t)+'</span>':'')
       + '<div class="cdesc">'+esc(v.d)+'</div></div></div>';
   }).join("");
-
-  renderSaved();
 }
 
 /* ---------------- 저장 ---------------- */
@@ -1018,31 +1497,77 @@ document.addEventListener("click",(e)=>{
   }
   hideTip();
 
-  if(t.closest("#btnDraw")){ drawAll(); return; }
-  if(t.closest("#btnPlayAll")){ play("all"); return; }
-  if(t.closest("#btnStop")){ stopAll(); return; }
-  if(t.closest("#btnSave")){ saveSong(); return; }
+  /* 화면 이동 */
+  const gb=t.closest("[data-go]");
+  if(gb){ stopAll(); go(gb.getAttribute("data-go")); return; }
+  if(t.closest("[data-lib]")){ stopAll(); STATE.libBack=STATE.view; go("library"); return; }
+  if(t.closest("#libBack")){  go(STATE.libBack||"home"); return; }
 
-  const pb=t.closest("#players button");
+  /* 첫 곡 뽑기 / 다시 뽑기 — 만들고, 곡 화면으로 가고, 바로 2번 들려준다 */
+  if(t.closest("#btnFirst")){
+    STATE.prevSong=null; STATE.song=newSong(null); go("song"); play("all"); return; }
+  if(t.closest("#btnAgain")){
+    STATE.prevSong=JSON.parse(JSON.stringify(STATE.song));   // 되돌릴 수 있게 보관
+    STATE.song=newSong(null); go("song"); play("all"); return; }
+  /* [개편] 되돌리기 — 지금 곡과 방금 곡을 맞바꾼다(다시 누르면 원상복구) */
+  if(t.closest("#btnUndo")){
+    if(!STATE.prevSong) return;
+    const cur=JSON.parse(JSON.stringify(STATE.song));
+    STATE.song=STATE.prevSong; STATE.prevSong=cur;
+    STATE.editM=null; go("song"); play("all");
+    toast("방금 곡으로 되돌렸습니다"); return; }
+
+  /* [개편] 악보에서 마디를 눌러 수정창 열기 / 닫기 */
+  const me=t.closest("[data-medit]");
+  if(me){ stopAll(); STATE.editM=+me.getAttribute("data-medit"); STATE.gearOpen=null; render(); return; }
+  if(t.closest("[data-mclose]")){ stopAll(); STATE.editM=null; render(); return; }
+
+  if(t.closest("#btnStop")||t.closest(".stopbtn")){ stopAll(); return; }
+  if(t.closest("#btnSave")||t.closest("#btnSaveEdit")){ saveSong(); return; }
+
+  /* 접었다 펴기 */
+  if(t.closest("#foldMore")){
+    const box=$("#moreBox"); box.hidden=!box.hidden;
+    $("#foldMore").textContent=(box.hidden?"⌄":"⌃")+" 곡 전체를 더 바꿔보기";
+    return;
+  }
+
+  /* 마디 탭 */
+  /* 마디별 재추첨 — 이 마디 하나만 바뀌고, 바뀐 결과를 바로 한 번 들려준다 */
+  const mr=t.closest("[data-mroll]");
+  if(mr){
+    const a=mr.getAttribute("data-mroll").split(":"), kind=a[0], i=+a[1], s=STATE.song;
+    if(kind==="pitch")  rerollMeasurePitches(s,i);
+    if(kind==="rhythm") rerollMeasureRhythm(s,i);
+    if(kind==="all")    rerollWholeMeasure(s,i);
+    render();
+    playMeasure(i);
+    return;
+  }
+  const mp=t.closest("[data-mplay]");
+  if(mp){ playMeasure(+mp.getAttribute("data-mplay")); return; }
+
+  const gr=t.closest("[data-gear]");
+  if(gr){ const i=+gr.getAttribute("data-gear");
+          STATE.gearOpen=(STATE.gearOpen===i)?null:i; render(); return; }
+
+  const mc=t.closest("[data-mchaos]");
+  if(mc){ const a=mc.getAttribute("data-mchaos").split(":"), s=STATE.song;
+          s.mchaos=s.mchaos||{}; s.mchaos[+a[1]]=a[0]; render(); return; }
+
+  const pb=t.closest("[data-part]");
   if(pb){ play(pb.getAttribute("data-part")); return; }
-
-  const db=t.closest("[data-diff]");
-  if(db){ STATE.song.diff=db.getAttribute("data-diff"); genMelody(STATE.song); render(); return; }
 
   const rb=t.closest("[data-roll]");
   if(rb){ reroll(rb.getAttribute("data-roll")); return; }
 
-  const lb=t.closest("[data-lock]");
-  if(lb){ const k=lb.getAttribute("data-lock"); STATE.locks[k]=!STATE.locks[k]; render();
-          toast(STATE.locks[k]?"잠갔습니다 — 다시 뽑아도 안 바뀝니다":"잠금을 풀었습니다"); return; }
-
   const ld=t.closest("[data-load]");
   if(ld){ const it=loadSaved().find(x=>x.id===ld.getAttribute("data-load"));
-          if(it){ STATE.song=it.song; render(); toast("불러왔습니다"); } return; }
+          if(it){ stopAll(); STATE.song=it.song; STATE.editM=null; STATE.prevSong=null; go("song"); toast("불러왔습니다"); } return; }
 
   const ps=t.closest("[data-playsaved]");
   if(ps){ const it=loadSaved().find(x=>x.id===ps.getAttribute("data-playsaved"));
-          if(it){ STATE.song=it.song; render(); play("all"); } return; }
+          if(it){ STATE.song=it.song; STATE.editM=null; STATE.prevSong=null; go("song"); play("all"); } return; }
 
   const dl=t.closest("[data-del]");
   if(dl){ const id=dl.getAttribute("data-del");
@@ -1058,9 +1583,17 @@ document.addEventListener("mouseout",(e)=>{
 });
 window.addEventListener("scroll",hideTip,{passive:true});
 
+/* [개편] 우연의 강도 슬라이더. 값만 저장하고 지금 곡은 절대 다시 만들지 않는다. */
+document.addEventListener("input",(e)=>{
+  if(e.target && e.target.id==="chaosRange" && STATE.song){
+    STATE.song.chaos=(+e.target.value)/100;
+    $("#chaosNow").textContent=chaosName(STATE.song.chaos);
+  }
+});
+
 /* ---------------- 시작 ---------------- */
-STATE.song=newSong(null);
-render();
+/* 처음엔 곡을 만들지 않는다. 첫 화면에서 고를 것이 없어야 한다. */
+go("home");
 </script>
 </body>
 </html>
