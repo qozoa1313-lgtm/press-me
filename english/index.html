@@ -1,0 +1,703 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>오늘 딱 한 문장</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#FAF8F4">
+<style>
+:root{
+  --paper:#FAF8F4; --ink:#2B2723; --soft:#8A817A; --line:#E8E1D8;
+  --card:#FFFFFF; --band:#F2EDE5; --accent:#3E7C76;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper); color:var(--ink); font-size:16px; line-height:1.6;
+  font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  padding-bottom:calc(72px + env(safe-area-inset-bottom));
+}
+button{font:inherit;color:inherit;border:none;background:none;cursor:pointer}
+.wrap{max-width:460px;margin:0 auto;padding:18px 18px 28px}
+
+/* ───── 공통 ───── */
+.hd{display:flex;align-items:center;justify-content:space-between;margin:6px 0 18px}
+.hd .date{font-size:12px;letter-spacing:.14em;color:var(--soft);font-weight:700}
+.hd .cnt{font-size:12px;color:var(--soft)}
+.hd .cnt b{color:var(--accent);font-size:15px}
+h2.sec{font-size:13px;color:var(--soft);font-weight:700;margin:26px 0 10px;letter-spacing:.02em}
+.btn{
+  display:block;width:100%;padding:16px;border-radius:16px;background:var(--accent);
+  color:#fff;font-size:16px;font-weight:700;text-align:center;margin-top:10px;
+}
+.btn.ghost{background:var(--band);color:var(--ink)}
+.btn.line{background:none;border:1.5px solid var(--line);color:var(--soft);font-weight:600}
+.row{display:flex;gap:10px}
+.row>*{flex:1}
+.mini{font-size:13px;color:var(--soft);text-align:center;padding:12px;display:block;width:100%}
+
+/* ───── 카드 ───── */
+.card{
+  background:var(--card);border:1.5px solid var(--line);border-radius:22px;
+  padding:26px 22px;position:relative;
+}
+.card.today{border-color:var(--accent);border-width:2px}
+.badge{
+  display:inline-block;font-size:11px;font-weight:700;letter-spacing:.1em;
+  color:#fff;background:var(--accent);padding:4px 9px;border-radius:7px;
+}
+.en{font-size:27px;font-weight:700;line-height:1.35;margin:18px 0 0;letter-spacing:-.02em}
+.ko{font-size:17px;margin:14px 0 0}
+.spk{
+  display:block;margin:18px 0 0;margin-left:auto;font-size:24px;
+  width:52px;height:52px;border-radius:50%;background:var(--band);
+}
+.lead{font-size:14px;color:var(--soft);margin:0}
+
+/* ───── 펼친 내용 ───── */
+.open{margin-top:18px;border-top:1px solid var(--line);padding-top:18px;font-size:15px}
+.open h3{font-size:12px;color:var(--soft);font-weight:700;margin:20px 0 8px;letter-spacing:.02em}
+.open h3:first-child{margin-top:0}
+.bd{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;align-items:baseline}
+.bd b{font-weight:700}
+.bd span{color:var(--soft);font-size:14px}
+.when{background:var(--band);border-radius:14px;padding:14px 16px;font-size:14.5px;line-height:1.65}
+.ex{font-size:14.5px;line-height:1.9;font-family:ui-monospace,Consolas,monospace}
+.sim{font-size:14.5px;color:var(--soft);line-height:1.9}
+.rd{font-size:16px;letter-spacing:.02em;background:var(--band);border-radius:12px;padding:12px 14px;margin:0}
+
+/* ───── 결과 ───── */
+.heard{font-size:15px;margin:14px 0 0;line-height:1.8}
+.heard i{font-style:normal;color:#C0C0C0}
+.heard b{font-weight:700;color:var(--accent)}
+.ok{text-align:center;padding:30px 0}
+.ok .big{font-size:21px;font-weight:700}
+.ok .sub{font-size:14px;color:var(--soft);margin-top:8px}
+.pledge{font-size:14px;color:var(--soft);margin-top:26px;text-align:center;line-height:1.8}
+
+/* ───── 문장함 ───── */
+.item{
+  display:flex;gap:12px;align-items:flex-start;padding:14px 0;border-bottom:1px solid var(--line);
+}
+.item .gr{font-size:18px;width:26px;flex:none;text-align:center}
+.item .tx{flex:1;min-width:0}
+.item .tx b{display:block;font-size:15.5px;font-weight:700}
+.item .tx span{display:block;font-size:13px;color:var(--soft)}
+.item .dy{font-size:11px;color:var(--soft);flex:none}
+
+/* ───── 기록 ───── */
+.stat{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat div{background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:16px}
+.stat b{display:block;font-size:24px;font-weight:700}
+.stat span{font-size:12.5px;color:var(--soft)}
+
+/* ───── 탭바 ───── */
+nav{
+  position:fixed;left:0;right:0;bottom:0;background:rgba(250,248,244,.96);
+  backdrop-filter:blur(8px);border-top:1px solid var(--line);
+  padding-bottom:env(safe-area-inset-bottom);
+}
+nav .in{max-width:460px;margin:0 auto;display:flex}
+nav button{flex:1;padding:11px 0 13px;color:var(--soft);font-size:11px;font-weight:600}
+nav button .ic{display:block;font-size:17px;margin-bottom:3px}
+nav button.on{color:var(--accent)}
+
+/* ───── 설정 / 처음 켤 때 ───── */
+.field{margin:18px 0}
+.field label{display:block;font-size:13px;color:var(--soft);font-weight:700;margin-bottom:7px}
+select,input[type=text],input[type=time]{
+  width:100%;padding:14px;border:1.5px solid var(--line);border-radius:14px;
+  background:var(--card);font:inherit;color:inherit;
+}
+.pl{font-size:20px;line-height:1.9;font-weight:700;text-align:center;margin:10px 0 24px}
+.pl em{font-style:normal;color:var(--accent);border-bottom:2px solid var(--accent)}
+.hide{display:none!important}
+.toast{
+  position:fixed;left:50%;bottom:92px;transform:translateX(-50%) translateY(10px);
+  background:var(--ink);color:#fff;padding:12px 20px;border-radius:12px;font-size:14px;
+  opacity:0;pointer-events:none;transition:.22s;z-index:50;white-space:nowrap;
+}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<!-- ══════════ 처음 켤 때 ══════════ -->
+<div class="wrap" id="setup">
+  <h1 style="font-size:23px;margin:30px 0 6px">오늘 딱 한 문장</h1>
+  <p class="lead" style="margin-bottom:30px">하루에 영어 한 문장. 30일이면 내 이야기가 됩니다.</p>
+
+  <p class="lead">시작하기 전에 약속 하나만 정해요.</p>
+  <div class="pl">
+    나는 <em id="plT">아침 7시</em>에<br>
+    <em id="plC">이불에서 나오기 전</em><br>
+    카드 한 장을 연다.
+  </div>
+
+  <div class="field">
+    <label>몇 시에</label>
+    <select id="setTime">
+      <option value="06:00">아침 6시</option>
+      <option value="07:00" selected>아침 7시</option>
+      <option value="08:00">아침 8시</option>
+      <option value="09:00">아침 9시</option>
+      <option value="12:00">점심 12시</option>
+      <option value="21:00">밤 9시</option>
+      <option value="23:00">밤 11시</option>
+    </select>
+  </div>
+  <div class="field">
+    <label>무엇을 할 때</label>
+    <select id="setCue">
+      <option>이불에서 나오기 전</option>
+      <option>양치하고 나서</option>
+      <option>커피 마시며</option>
+      <option>출근 버스에서</option>
+      <option>점심 먹고 나서</option>
+      <option>자기 전에</option>
+    </select>
+  </div>
+  <button class="btn" id="startBtn">이걸로 시작하기</button>
+  <p class="lead" style="margin-top:16px;text-align:center;font-size:13px">
+    「꾸준한 사람이 되자」보다<br>「언제·무엇을」 정해둔 쪽이 두 배 잘 지켜집니다.
+  </p>
+</div>
+
+<!-- ══════════ 본 화면 ══════════ -->
+<div id="app" class="hide">
+
+  <!-- ─── 오늘 ─── -->
+  <div class="wrap tab" id="tabToday">
+    <div class="hd">
+      <span class="date" id="hdDate">OCT 06</span>
+      <span class="cnt"><b id="hdCnt">0</b>장 모음 · <span id="hdStreak">—</span></span>
+    </div>
+    <div id="todayBody"></div>
+  </div>
+
+  <!-- ─── 문장함 ─── -->
+  <div class="wrap tab hide" id="tabBox">
+    <div class="hd">
+      <span class="date">문장함</span>
+      <span class="cnt"><b id="boxCnt">0</b>장</span>
+    </div>
+    <div id="boxBody"></div>
+  </div>
+
+  <!-- ─── 기록 ─── -->
+  <div class="wrap tab hide" id="tabLog">
+    <div class="hd">
+      <span class="date">기록</span>
+      <button class="cnt" id="gearBtn" style="font-size:19px">⚙</button>
+    </div>
+    <div id="logBody"></div>
+  </div>
+
+  <!-- ─── 설정 ─── -->
+  <div class="wrap tab hide" id="tabSet">
+    <div class="hd">
+      <span class="date">설정</span>
+      <button class="cnt" id="setClose">닫기</button>
+    </div>
+    <div id="setBody"></div>
+  </div>
+
+  <nav><div class="in">
+    <button class="on" data-tab="Today"><span class="ic">◉</span>오늘</button>
+    <button data-tab="Box"><span class="ic">♡</span>문장함</button>
+    <button data-tab="Log"><span class="ic">▦</span>기록</button>
+  </div></nav>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="sentences.js"></script>
+<script>
+/* ═══════════════ 저장 ═══════════════ */
+const KEY = 'oneline.v1';
+const DAYCOLOR = ['#A08049','#3E7C76','#6E6AA8','#6E7C43','#96694A','#3F6E96','#8C4F63']; // 일~토
+const MON = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+
+const todayStr = (d) => {
+  d = d || new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+};
+const addDays = (s, n) => { const d = new Date(s + 'T00:00:00'); d.setDate(d.getDate()+n); return todayStr(d); };
+const diffDays = (a, b) => Math.round((new Date(b+'T00:00:00') - new Date(a+'T00:00:00')) / 86400000);
+
+let DB = load();
+function load(){
+  try{
+    const r = JSON.parse(localStorage.getItem(KEY));
+    if(r && r.cards) return r;
+  }catch(e){}
+  return null;
+}
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(DB)); }catch(e){ toast('저장하지 못했습니다'); } }
+function fresh(time, cue){
+  return { pledge:{time,cue}, startDate:todayStr(), cards:{}, days:{}, bestStreak:0, version:1 };
+}
+
+/* ═══════════════ 공통 ═══════════════ */
+let tt;
+function toast(m){
+  const t = document.getElementById('toast');
+  t.textContent = m; t.classList.add('on');
+  clearTimeout(tt); tt = setTimeout(()=>t.classList.remove('on'), 2000);
+}
+function paintAccent(){
+  document.documentElement.style.setProperty('--accent', DAYCOLOR[new Date().getDay()]);
+}
+const byDay = d => SENTENCES.find(s => s.day === d);
+
+/* 오늘 배울 새 문장 (아직 안 배운 가장 빠른 Day) */
+function newToday(){
+  const t = todayStr();
+  for(const k in DB.days){ if(k === t && DB.days[k].newCard) return byDay(DB.cards[DB.days[k].newCard].day); }
+  for(const s of SENTENCES){ if(!DB.cards[s.id]) return s; }
+  return null;
+}
+/* 오늘 돌아올 카드 */
+function dueToday(){
+  const t = todayStr();
+  return Object.values(DB.cards)
+    .filter(c => c.step < LADDER.length && c.due <= t)
+    .sort((a,b) => a.day - b.day);
+}
+function maturity(step){
+  if(step <= 0) return ['🌱','갓 심은 것'];
+  if(step <= 1) return ['🌿','자라는 중'];
+  if(step <= 3) return ['🌳','익어감'];
+  return ['✦','내 것이 됨'];
+}
+function streakInfo(){
+  const days = Object.keys(DB.days).filter(k => DB.days[k].done).sort();
+  if(!days.length) return { total:0, run:0 };
+  let run = 1;
+  for(let i = days.length-1; i > 0; i--){
+    if(diffDays(days[i-1], days[i]) === 1) run++; else break;
+  }
+  const last = days[days.length-1], t = todayStr();
+  if(diffDays(last, t) > 1) run = 0;
+  if(run > (DB.bestStreak||0)){ DB.bestStreak = run; }
+  return { total: days.length, run };
+}
+
+/* ═══════════════ 소리 ═══════════════ */
+function speak(text){
+  if(!('speechSynthesis' in window)) return toast('이 브라우저는 읽어주기를 지원하지 않습니다');
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'en-US'; u.rate = 0.88;
+  speechSynthesis.speak(u);
+}
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+function listen(onResult, onFail){
+  if(!SR){ onFail('이 브라우저는 마이크 받아쓰기를 지원하지 않습니다'); return null; }
+  const r = new SR();
+  r.lang = 'en-US'; r.interimResults = false; r.maxAlternatives = 3;
+  r.onresult = e => {
+    const alts = [];
+    for(let i = 0; i < e.results[0].length; i++) alts.push(e.results[0][i].transcript);
+    onResult(alts);
+  };
+  r.onerror = e => onFail(e.error === 'not-allowed' ? '마이크 권한이 필요합니다' : '잘 안 들렸어요. 다시 해볼까요?');
+  try{ r.start(); }catch(e){ onFail('마이크를 열지 못했습니다'); return null; }
+  return r;
+}
+const norm = s => s.toLowerCase().replace(/[^a-z0-9' ]/g,' ').replace(/\s+/g,' ').trim();
+function compare(target, heard){
+  const want = norm(target).split(' ').filter(Boolean);
+  const got  = norm(heard).split(' ').filter(Boolean);
+  const pool = got.slice();
+  const marks = want.map(w => {
+    const i = pool.indexOf(w);
+    if(i >= 0){ pool.splice(i,1); return true; }
+    return false;
+  });
+  const hit = marks.filter(Boolean).length;
+  return { marks, want, rate: want.length ? hit / want.length : 0 };
+}
+
+/* ═══════════════ 오늘 화면 ═══════════════ */
+let stage = null;   // {mode:'new'|'review'|'done', queue:[], idx}
+
+function renderToday(){
+  paintAccent();
+  const d = new Date();
+  document.getElementById('hdDate').textContent = MON[d.getMonth()] + ' ' + String(d.getDate()).padStart(2,'0');
+  document.getElementById('hdCnt').textContent = Object.keys(DB.cards).length;
+  const si = streakInfo();
+  document.getElementById('hdStreak').textContent = si.run ? ('총 ' + si.total + '일 중 ' + si.run + '일 연속') : ('총 ' + si.total + '일');
+
+  const body = document.getElementById('todayBody');
+  const t = todayStr();
+  if(!DB.days[t]) DB.days[t] = { opened:true };
+
+  if(!stage){
+    const n = newToday();
+    const due = dueToday();
+    if(n && !DB.days[t].newDone) stage = { mode:'new', card:n };
+    else if(due.length)          stage = { mode:'review', queue:due, idx:0 };
+    else                         stage = { mode:'done' };
+  }
+
+  if(stage.mode === 'new')         body.innerHTML = viewNew(stage.card);
+  else if(stage.mode === 'review') body.innerHTML = viewReview(stage.queue[stage.idx]);
+  else                             body.innerHTML = viewDone();
+
+  wireToday();
+  save();
+}
+
+/* ─── 새 문장 ─── */
+function viewNew(s){
+  return `
+  <p class="lead">오늘 딱 한 문장</p>
+  <div class="card today">
+    <span class="badge">DAY ${s.day}</span>
+    <p class="en">${s.en}</p>
+    <button class="spk" data-speak="${esc(s.en)}">🔊</button>
+    <div id="opened" class="open hide">
+      <h3>뜻</h3>
+      <p class="ko" style="margin:0;font-weight:700">${s.ko}</p>
+      <h3>단어 쪼개보기</h3>
+      <div class="bd">${s.bd.map(p=>`<b>${p[0]}</b><span>${p[1]}</span>`).join('')}</div>
+      <h3>💬 이런 순간에</h3>
+      <div class="when">${s.when}</div>
+      <h3>이렇게 써요</h3>
+      <p class="ex">${s.ex.join('<br>')}</p>
+      <h3>비슷한 표현</h3>
+      <p class="sim">${s.sim.map(x=>'‹ '+x+' ›').join('<br>')}</p>
+      <h3 id="rdH" class="hide">한글 발음</h3>
+      <p id="rdP" class="rd hide">${s.rd}</p>
+      <div class="row" style="margin-top:18px">
+        <button class="btn line" id="rdBtn">발음 도움</button>
+        <button class="btn line" id="ygBtn">📺 영상에서 보기</button>
+      </div>
+    </div>
+  </div>
+  <button class="btn ghost" id="openBtn">뜻 보기</button>
+  <button class="btn" id="micBtn">🎙 내가 읽기</button>
+  <div id="micOut"></div>
+  <button class="mini" id="skipBtn">다른 거 줘</button>`;
+}
+
+/* ─── 돌아온 카드 ─── */
+function viewReview(c){
+  const s = byDay(c.day);
+  const left = stage.queue.length - stage.idx;
+  const [gr] = maturity(c.step);
+  return `
+  <p class="lead">돌아온 카드 · ${left}장 남음</p>
+  <div class="card">
+    <span class="badge">${gr} DAY ${s.day}</span>
+    <p class="en" style="font-size:21px">${s.ko}</p>
+    <p class="lead" style="margin-top:14px">영어로 뭐였죠? 먼저 입으로 말해보세요.</p>
+    <div id="ansBox" class="open hide">
+      <p class="en" style="margin:0">${s.en}</p>
+      <button class="spk" data-speak="${esc(s.en)}">🔊</button>
+    </div>
+  </div>
+  <button class="btn ghost" id="ansBtn">답 보기</button>
+  <div id="markBox" class="hide">
+    <button class="btn" data-mark="ok">✓ 바로 말했다</button>
+    <div class="row">
+      <button class="btn ghost" data-mark="mid">△ 헷갈렸다</button>
+      <button class="btn ghost" data-mark="no">✕ 못 말했다</button>
+    </div>
+  </div>`;
+}
+
+/* ─── 다 끝 ─── */
+function viewDone(){
+  const si = streakInfo();
+  const n = Object.keys(DB.cards).length;
+  const p = DB.pledge;
+  return `
+  <div class="ok">
+    <p class="big">나는 오늘도 했다.</p>
+    <p class="sub">${n}장째 · 총 ${si.total}일 중 ${si.run}일 연속${DB.bestStreak>si.run?' (최고 '+DB.bestStreak+'일)':''}</p>
+  </div>
+  <button class="btn ghost" id="goBox">문장함 열어보기</button>
+  <p class="pledge">나는 ${timeLabel(p.time)}에 ${p.cue}<br>카드 한 장을 연다.</p>`;
+}
+function timeLabel(t){
+  const h = +t.split(':')[0];
+  return h < 12 ? ('아침 '+h+'시') : (h === 12 ? '점심 12시' : '밤 '+(h-12)+'시');
+}
+const esc = s => s.replace(/"/g,'&quot;');
+
+/* ─── 오늘 화면 동작 ─── */
+function wireToday(){
+  document.querySelectorAll('[data-speak]').forEach(b =>
+    b.onclick = () => speak(b.dataset.speak));
+
+  const openBtn = document.getElementById('openBtn');
+  if(openBtn) openBtn.onclick = () => {
+    document.getElementById('opened').classList.remove('hide');
+    openBtn.classList.add('hide');
+    document.getElementById('rdBtn').onclick = () => {
+      document.getElementById('rdH').classList.remove('hide');
+      document.getElementById('rdP').classList.remove('hide');
+      document.getElementById('rdBtn').classList.add('hide');
+    };
+    document.getElementById('ygBtn').onclick = () => {
+      const s = stage.card;
+      window.open('https://youglish.com/pronounce/' + encodeURIComponent(s.en.replace(/[^\w\s']/g,'')) + '/english', '_blank');
+    };
+  };
+
+  const micBtn = document.getElementById('micBtn');
+  if(micBtn) micBtn.onclick = () => {
+    const s = stage.card, out = document.getElementById('micOut');
+    micBtn.textContent = '🎙 듣는 중…';
+    listen(alts => {
+      micBtn.textContent = '🎙 내가 읽기';
+      let best = { rate:-1 };
+      alts.forEach(a => { const r = compare(s.en, a); if(r.rate > best.rate) best = r; });
+      out.innerHTML = '<p class="heard">' +
+        best.want.map((w,i) => best.marks[i] ? '<b>'+w+'</b>' : '<i>'+w+'</i>').join(' ') +
+        '</p><p class="lead">' + Math.round(best.rate*100) + '% 들렸어요' +
+        (best.rate >= 0.8 ? ' · 통과!' : ' · 한 번 더 해볼까요?') + '</p>';
+      if(best.rate >= 0.8) finishNew(s);
+      else out.innerHTML += '<button class="mini" id="forceBtn">그래도 넘어가기</button>',
+           document.getElementById('forceBtn').onclick = () => finishNew(s);
+    }, msg => {
+      micBtn.textContent = '🎙 내가 읽기';
+      out.innerHTML = '<p class="lead" style="text-align:center;margin-top:14px">' + msg + '</p>' +
+        '<button class="mini" id="forceBtn">마이크 없이 넘어가기</button>';
+      document.getElementById('forceBtn').onclick = () => finishNew(s);
+    });
+  };
+
+  const skip = document.getElementById('skipBtn');
+  if(skip) skip.onclick = () => {
+    const pool = SENTENCES.filter(x => !DB.cards[x.id] && x.day !== stage.card.day);
+    if(!pool.length) return toast('남은 문장이 없어요');
+    stage.card = pool[Math.floor(Math.random()*pool.length)];
+    renderToday();
+  };
+
+  const ansBtn = document.getElementById('ansBtn');
+  if(ansBtn) ansBtn.onclick = () => {
+    document.getElementById('ansBox').classList.remove('hide');
+    document.getElementById('markBox').classList.remove('hide');
+    ansBtn.classList.add('hide');
+    document.querySelectorAll('[data-speak]').forEach(b => b.onclick = () => speak(b.dataset.speak));
+    document.querySelectorAll('[data-mark]').forEach(b => b.onclick = () => mark(b.dataset.mark));
+  };
+
+  const goBox = document.getElementById('goBox');
+  if(goBox) goBox.onclick = () => switchTab('Box');
+}
+
+function finishNew(s){
+  const t = todayStr();
+  DB.cards[s.id] = { day:s.day, learnedOn:t, step:0, due:addDays(t,LADDER[0]), log:[{d:t,m:'new'}], fav:false };
+  DB.days[t] = Object.assign(DB.days[t]||{}, { newCard:s.id, newDone:true, done:true });
+  stage = null; save(); renderToday();
+  toast('문장함에 꽂혔습니다');
+}
+
+function mark(m){
+  const c = stage.queue[stage.idx], t = todayStr();
+  c.log.push({ d:t, m });
+  if(m === 'ok'){
+    c.step++;
+    c.due = c.step < LADDER.length ? addDays(t, LADDER[c.step] - (LADDER[c.step-1]||0)) : addDays(t, 365);
+  }else{
+    c.due = addDays(t, 1);
+    if(m === 'no' && c.step > 0) c.step--;
+  }
+  DB.days[t] = Object.assign(DB.days[t]||{}, { done:true });
+  stage.idx++;
+  if(stage.idx >= stage.queue.length) stage = { mode:'done' };
+  save(); renderToday();
+}
+
+/* ═══════════════ 문장함 ═══════════════ */
+function renderBox(){
+  const cards = Object.values(DB.cards).sort((a,b) => b.day - a.day);
+  document.getElementById('boxCnt').textContent = cards.length;
+  const b = document.getElementById('boxBody');
+  if(!cards.length){ b.innerHTML = '<p class="lead" style="text-align:center;padding:50px 0">아직 비어 있어요.<br>오늘 카드를 열면 여기에 쌓입니다.</p>'; return; }
+  b.innerHTML = cards.map(c => {
+    const s = byDay(c.day), [gr, lab] = maturity(c.step);
+    return `<div class="item">
+      <span class="gr" title="${lab}">${gr}</span>
+      <span class="tx"><b>${s.en}</b><span>${s.ko}</span></span>
+      <span class="dy">DAY ${s.day}</span>
+    </div>`;
+  }).join('') +
+  `<p class="lead" style="margin-top:22px;font-size:13px;text-align:center">
+     🌱 갓 심은 것 · 🌿 자라는 중 · 🌳 익어감 · ✦ 내 것이 됨
+   </p>`;
+}
+
+/* ═══════════════ 기록 ═══════════════ */
+function renderLog(){
+  const t = todayStr(), d = new Date();
+  const mon = addDays(t, -((d.getDay()+6)%7));
+  const cards = Object.values(DB.cards);
+  const si = streakInfo();
+
+  let newN = 0, revN = 0, hardN = 0;
+  cards.forEach(c => c.log.forEach(l => {
+    if(l.d < mon) return;
+    if(l.m === 'new') newN++;
+    else { revN++; if(l.m !== 'ok') hardN++; }
+  }));
+  const young = cards.filter(c => c.step <= 0).map(c => byDay(c.day).en);
+
+  document.getElementById('logBody').innerHTML = `
+    <p class="lead">이번 주 (${mon.slice(5).replace('-','/')} ~ ${addDays(mon,6).slice(5).replace('-','/')})</p>
+    <div class="stat" style="margin-top:12px">
+      <div><b>${newN}</b><span>새 카드</span></div>
+      <div><b>${revN}</b><span>돌아온 카드</span></div>
+      <div><b>${hardN}</b><span>△·✕ 누른 것</span></div>
+      <div><b>${cards.length}</b><span>모은 카드</span></div>
+    </div>
+    <h2 class="sec">연속</h2>
+    <p>총 ${si.total}일 중 <b>${si.run}일 연속</b>${DB.bestStreak ? ' · 최고 ' + DB.bestStreak + '일' : ''}</p>
+    <h2 class="sec">아직 어린 카드 🌱</h2>
+    ${ young.length ? '<p class="sim">' + young.slice(0,5).map(x => '· ' + x).join('<br>') + '</p>'
+                    : '<p class="lead">없습니다.</p>' }
+    <h2 class="sec">진도</h2>
+    <p class="lead">30장 중 <b>${cards.length}장</b>을 배웠습니다.</p>`;
+}
+
+/* ═══════════════ 설정 ═══════════════ */
+function renderSet(){
+  const p = DB.pledge;
+  document.getElementById('setBody').innerHTML = `
+    <h2 class="sec">나의 약속</h2>
+    <p>나는 <b>${timeLabel(p.time)}</b>에 <b>${p.cue}</b> 카드 한 장을 연다.</p>
+    <button class="btn line" id="reBtn">약속 바꾸기</button>
+
+    <h2 class="sec">아침 알림</h2>
+    <p class="lead">이 앱은 스스로 알림을 띄우지 못합니다. 폰의 <b>시계 앱</b>에서
+       매일 <b>${p.time}</b> 알람을 맞춰두고, 알람을 끄면서 이 아이콘을 눌러주세요.</p>
+
+    <h2 class="sec">기록</h2>
+    <button class="btn ghost" id="expBtn">기록 내보내기</button>
+    <button class="btn ghost" id="impBtn">기록 불러오기</button>
+    <input type="file" id="impFile" accept="application/json" class="hide">
+    <p class="lead" style="font-size:13px">폰을 바꾸거나 브라우저 기록을 지우면 모은 카드가 사라집니다.
+       한 달에 한 번쯤 내보내 두세요.</p>
+
+    <h2 class="sec">다음 달 설계용</h2>
+    <button class="btn line" id="repBtn">30일 보고서 내보내기</button>
+    <p class="lead" style="font-size:13px">30일을 채우면 이 파일을 클로드에게 주세요.
+       무엇이 잘 외워지고 무엇이 안 됐는지 보고 2·3개월차 문장을 짜드립니다.</p>
+
+    <h2 class="sec">처음부터 다시</h2>
+    <button class="btn line" id="rstBtn">전부 지우고 다시 시작</button>`;
+
+  document.getElementById('reBtn').onclick = () => {
+    document.getElementById('app').classList.add('hide');
+    document.getElementById('setup').classList.remove('hide');
+    document.getElementById('setTime').value = p.time;
+    document.getElementById('setCue').value = p.cue;
+    syncPledge();
+  };
+  document.getElementById('expBtn').onclick = () => download('오늘딱한문장-' + todayStr() + '.json', JSON.stringify(DB, null, 2));
+  document.getElementById('impBtn').onclick = () => document.getElementById('impFile').click();
+  document.getElementById('impFile').onchange = e => {
+    const f = e.target.files[0]; if(!f) return;
+    const r = new FileReader();
+    r.onload = () => {
+      try{
+        const o = JSON.parse(r.result);
+        if(!o.cards) throw 0;
+        if(!confirm('지금 기록을 지우고 이 파일로 바꿀까요?')) return;
+        DB = o; save(); stage = null; renderAll(); toast('불러왔습니다');
+      }catch(err){ toast('이 파일은 읽을 수 없습니다'); }
+    };
+    r.readAsText(f);
+  };
+  document.getElementById('repBtn').onclick = () => download('보고서-' + todayStr() + '.json', JSON.stringify(report(), null, 2));
+  document.getElementById('rstBtn').onclick = () => {
+    if(!confirm('모은 카드가 전부 사라집니다. 정말 지울까요?')) return;
+    localStorage.removeItem(KEY); location.reload();
+  };
+}
+function download(name, text){
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([text], {type:'application/json'}));
+  a.download = name; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  toast('내려받았습니다');
+}
+function report(){
+  const si = streakInfo();
+  return {
+    기간: { 시작: DB.startDate, 오늘: todayStr(), 연_일수: si.total, 최고_연속: DB.bestStreak || si.run },
+    약속: DB.pledge,
+    문장별: Object.values(DB.cards).sort((a,b)=>a.day-b.day).map(c => {
+      const s = byDay(c.day), rev = c.log.filter(l => l.m !== 'new');
+      return {
+        day: s.day, 영어: s.en,
+        배운날: c.learnedOn,
+        복습횟수: rev.length,
+        바로말함: rev.filter(l=>l.m==='ok').length,
+        헷갈림: rev.filter(l=>l.m==='mid').length,
+        못말함: rev.filter(l=>l.m==='no').length,
+        현재단계: c.step,
+        기록: c.log
+      };
+    }),
+    연_날짜: Object.keys(DB.days).sort(),
+  };
+}
+
+/* ═══════════════ 탭 ═══════════════ */
+function switchTab(name){
+  ['Today','Box','Log','Set'].forEach(n =>
+    document.getElementById('tab'+n).classList.toggle('hide', n !== name));
+  document.querySelectorAll('nav button').forEach(b =>
+    b.classList.toggle('on', b.dataset.tab === name));
+  if(name === 'Today') renderToday();
+  if(name === 'Box')   renderBox();
+  if(name === 'Log')   renderLog();
+  if(name === 'Set')   renderSet();
+}
+function renderAll(){ renderToday(); renderBox(); renderLog(); }
+
+/* ═══════════════ 시작 ═══════════════ */
+function syncPledge(){
+  document.getElementById('plT').textContent = timeLabel(document.getElementById('setTime').value);
+  document.getElementById('plC').textContent = document.getElementById('setCue').value;
+}
+document.getElementById('setTime').onchange = syncPledge;
+document.getElementById('setCue').onchange = syncPledge;
+document.getElementById('startBtn').onclick = () => {
+  const time = document.getElementById('setTime').value;
+  const cue  = document.getElementById('setCue').value;
+  if(DB) DB.pledge = { time, cue };
+  else   DB = fresh(time, cue);
+  save();
+  document.getElementById('setup').classList.add('hide');
+  document.getElementById('app').classList.remove('hide');
+  stage = null; switchTab('Today');
+};
+document.querySelectorAll('nav button').forEach(b => b.onclick = () => switchTab(b.dataset.tab));
+document.getElementById('gearBtn').onclick = () => switchTab('Set');
+document.getElementById('setClose').onclick = () => switchTab('Log');
+
+paintAccent();
+if(DB){
+  document.getElementById('setup').classList.add('hide');
+  document.getElementById('app').classList.remove('hide');
+  switchTab('Today');
+}else{
+  syncPledge();
+}
+
+if('serviceWorker' in navigator && location.protocol !== 'file:'){
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+</script>
+</body>
+</html>
