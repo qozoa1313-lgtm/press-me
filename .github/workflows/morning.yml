@@ -4,8 +4,8 @@ name: 아침 알림
 on:
   schedule:
     # UTC 기준입니다. 한국 시간 = UTC + 9시간
-    #   22:13 UTC  →  한국 아침 7:13
-    - cron: '13 22 * * *'
+    #   00:13 UTC  →  한국 아침 9:13
+    - cron: '13 0 * * *'
   workflow_dispatch:        # 깃허브에서 손으로 눌러 바로 보낼 수도 있습니다
 
 jobs:
