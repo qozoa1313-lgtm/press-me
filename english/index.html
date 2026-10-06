@@ -323,18 +323,24 @@ function speak(text){
   u.lang = 'en-US'; u.rate = 0.88;
   speechSynthesis.speak(u);
 }
-const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+const getSR = () => window.SpeechRecognition || window.webkitSpeechRecognition;
 function listen(onResult, onFail){
+  const SR = getSR();
   if(!SR){ onFail('이 브라우저는 마이크 받아쓰기를 지원하지 않습니다'); return null; }
   const r = new SR();
+  let done = false;
+  const finish = fn => (...a) => { if(done) return; done = true; clearTimeout(guard); fn(...a); };
   r.lang = 'en-US'; r.interimResults = false; r.maxAlternatives = 3;
-  r.onresult = e => {
+  r.onresult = finish(e => {
     const alts = [];
     for(let i = 0; i < e.results[0].length; i++) alts.push(e.results[0][i].transcript);
     onResult(alts);
-  };
-  r.onerror = e => onFail(e.error === 'not-allowed' ? '마이크 권한이 필요합니다' : '잘 안 들렸어요. 다시 해볼까요?');
-  try{ r.start(); }catch(e){ onFail('마이크를 열지 못했습니다'); return null; }
+  });
+  r.onerror = finish(e => onFail(e.error === 'not-allowed' ? '마이크 권한이 필요합니다' : '잘 안 들렸어요. 다시 해볼까요?'));
+  r.onend = finish(() => onFail('소리가 들리지 않았어요. 다시 해볼까요?'));
+  // 아무 일도 안 일어난 채 멈춰 있는 것을 막는 안전장치
+  const guard = setTimeout(finish(() => { try{ r.stop(); }catch(e){} onFail('마이크가 응답하지 않습니다'); }), 12000);
+  try{ r.start(); }catch(e){ clearTimeout(guard); done = true; onFail('마이크를 열지 못했습니다'); return null; }
   return r;
 }
 const norm = s => s.toLowerCase().replace(/[^a-z0-9' ]/g,' ').replace(/\s+/g,' ').trim();
@@ -348,7 +354,9 @@ function compare(target, heard){
     return false;
   });
   const hit = marks.filter(Boolean).length;
-  return { marks, want, rate: want.length ? hit / want.length : 0 };
+  // 화면에는 원래 대소문자 그대로 보여준다
+  const raw = target.split(/\s+/).map(t => t.replace(/[^A-Za-z0-9']/g,'')).filter(Boolean);
+  return { marks, want: raw.length === want.length ? raw : want, rate: want.length ? hit / want.length : 0 };
 }
 
 /* ═══════════════ 오늘 화면 ═══════════════ */
@@ -602,7 +610,11 @@ function renderBox(){
       </span></summary>
       <div class="in2">
         <p class="rdline" style="margin-top:0">${s.rd}</p>
-        <button class="btn line" data-speak="${esc(s.en)}" style="margin:0 0 6px">🔊 들어보기</button>
+        <div class="row" style="margin:0 0 6px">
+          <button class="btn line" data-speak="${esc(s.en)}" style="margin:0">🔊 들어보기</button>
+          <button class="btn line" data-mic="${esc(s.en)}" style="margin:0">🎙 따라 말해보기</button>
+        </div>
+        <div class="micout"></div>
         <p class="nuance">${s.ko2}</p>
         ${detailHTML(s, false)}
         <button class="btn line" data-yg="${esc(s.en)}">📺 영상에서 보기</button>
@@ -619,6 +631,23 @@ function renderBox(){
   sync();
   rd.onclick = () => { document.body.classList.toggle('showrd'); sync(); };
   b.querySelectorAll('[data-speak]').forEach(x => x.onclick = e => { e.preventDefault(); speak(x.dataset.speak); });
+  b.querySelectorAll('[data-mic]').forEach(x => x.onclick = e => {
+    e.preventDefault();
+    const out = x.closest('.in2').querySelector('.micout');
+    const target = x.dataset.mic;
+    x.textContent = '🎙 듣는 중…';
+    listen(alts => {
+      x.textContent = '🎙 따라 말해보기';
+      let best = { rate:-1 };
+      alts.forEach(a => { const r = compare(target, a); if(r.rate > best.rate) best = r; });
+      out.innerHTML = '<p class="heard">' +
+        best.want.map((w,i) => best.marks[i] ? '<b>'+w+'</b>' : '<i>'+w+'</i>').join(' ') +
+        '</p><p class="lead" style="font-size:13px">' + Math.round(best.rate*100) + '% 들렸어요 · 연습이라 기록에는 안 남습니다</p>';
+    }, msg => {
+      x.textContent = '🎙 따라 말해보기';
+      out.innerHTML = '<p class="lead" style="font-size:13px">' + msg + '</p>';
+    });
+  });
   b.querySelectorAll('[data-yg]').forEach(x => x.onclick = () =>
     window.open('https://youglish.com/pronounce/' + encodeURIComponent(x.dataset.yg.replace(/[^\w\s']/g,'')) + '/english', '_blank'));
 }
