@@ -43,6 +43,37 @@ h2.sec{font-size:13px;color:var(--soft);font-weight:700;margin:26px 0 10px;lette
   border:1.5px solid var(--line);color:var(--soft);margin-left:7px;vertical-align:middle;
 }
 .chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.hd.sticky{
+  position:sticky;top:0;z-index:20;margin:0 -18px 14px;padding:10px 18px;
+  background:rgba(250,248,244,.96);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);
+}
+
+/* 달력 */
+.cal{margin-top:6px}
+.calhd{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.calhd b{font-size:15px}
+.calhd button{font-size:19px;color:var(--soft);padding:4px 14px}
+.calgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center}
+.calgrid .dow{font-size:11px;color:var(--soft);padding-bottom:6px}
+.cell{padding:7px 0 9px;border-radius:12px;font-size:13.5px;color:var(--ink);position:relative}
+.cell.out{color:transparent;pointer-events:none}
+.cell.sun{color:#B4675E}
+.cell .dot{display:block;width:6px;height:6px;border-radius:50%;background:var(--line);margin:4px auto 0}
+.cell.did .dot{background:var(--accent)}
+.cell.today{outline:1.5px solid var(--accent);outline-offset:-1.5px}
+.cell.sel{background:var(--band)}
+.cell.future{color:#C9C2B8}
+.cell.future .dot{background:transparent}
+.dayinfo{
+  background:var(--card);border:1.5px solid var(--line);border-radius:16px;
+  padding:16px;margin-top:14px;font-size:14.5px;
+}
+.dayinfo h4{margin:0 0 10px;font-size:13px;color:var(--soft)}
+.dayinfo .jump{display:block;width:100%;text-align:left;padding:10px 0;border-bottom:1px solid var(--line)}
+.dayinfo .jump:last-of-type{border-bottom:none}
+.dayinfo .jump b{display:block;font-size:15px}
+.dayinfo .jump span{font-size:13px;color:var(--soft)}
+.learned{font-size:12.5px;color:var(--soft);margin:0 0 10px}
 
 /* ───── 카드 ───── */
 .card{
@@ -216,9 +247,9 @@ select,input[type=text],input[type=time]{
 
   <!-- ─── 문장함 ─── -->
   <div class="wrap tab hide" id="tabBox">
-    <div class="hd">
-      <span class="date">문장함 <button class="chip" id="boxRd">가나다</button></span>
-      <span class="cnt"><b id="boxCnt">0</b>장</span>
+    <div class="hd sticky">
+      <button class="chip" id="boxRd">발음 보기</button>
+      <span class="cnt"><b id="boxCnt">0</b>장 모았어요</span>
     </div>
     <div id="boxBody"></div>
   </div>
@@ -622,13 +653,19 @@ function renderBox(){
   const t = todayStr();
   b.innerHTML = cards.map(c => {
     const s = byDay(c.day), [gr, lab] = maturity(c.step);
-    return `<details class="cardbox"><summary>
+    const rev = c.log.filter(l => l.m !== 'new' && l.m !== 'reset');
+    const cnt = ['ok','mid','no'].map(k => rev.filter(l => l.m === k).length);
+    const [ly, lm, ld] = c.learnedOn.split('-');
+    const meta = `${+lm}월 ${+ld}일에 배움` +
+      (rev.length ? ` · ✓${cnt[0]} △${cnt[1]} ✕${cnt[2]}` : '');
+    return `<details class="cardbox" data-day="${c.day}"><summary>
       <span class="item" style="border:none;padding:0;width:100%">
         <span class="gr" title="${lab}">${gr}</span>
         <span class="tx"><b>${s.en}</b><span>${s.ko}</span></span>
         <span class="dy">DAY ${s.day}</span>
       </span></summary>
       <div class="in2">
+        <p class="learned">${meta}</p>
         <p class="rdline" style="margin-top:0">${s.rd}</p>
         <div class="row" style="margin:0 0 6px">
           <button class="btn line" data-speak="${esc(s.en)}" style="margin:0">🔊 들어보기</button>
@@ -638,7 +675,7 @@ function renderBox(){
         <p class="nuance">${s.ko2}</p>
         ${detailHTML(s, false)}
         <button class="btn line" data-yg="${esc(s.en)}">📺 영상에서 보기</button>
-        <button class="mini" data-reset="${c.day}">🌱 처음부터 다시 외우기</button>
+        ${c.step >= 2 ? `<button class="mini" data-reset="${c.day}">🌱 처음부터 다시 외우기</button>` : ''}
       </div>
     </details>`;
   }).join('') +
@@ -683,6 +720,109 @@ function renderBox(){
   });
 }
 
+/* ═══════════════ 달력 ═══════════════ */
+let calYM = null, calSel = null;
+
+/* 하루치 기록을 모은다 */
+function dayLog(date){
+  const made = [], back = { ok:0, mid:0, no:0, reset:0 };
+  Object.values(DB.cards).forEach(c => c.log.forEach(l => {
+    if(l.d !== date) return;
+    if(l.m === 'new') made.push(c.day);
+    else if(back[l.m] !== undefined) back[l.m]++;
+  }));
+  const any = made.length || back.ok || back.mid || back.no || back.reset;
+  return { made, back, any };
+}
+
+function renderCal(){
+  const now = new Date();
+  if(!calYM) calYM = { y: now.getFullYear(), m: now.getMonth() };
+  const { y, m } = calYM;
+  const first = new Date(y, m, 1), last = new Date(y, m + 1, 0);
+  const start = first.getDay(), days = last.getDate(), t = todayStr();
+
+  let cells = '';
+  for(let i = 0; i < start; i++) cells += '<div class="cell out">.</div>';
+  for(let d = 1; d <= days; d++){
+    const ds = y + '-' + String(m+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+    const did = dayLog(ds).any;
+    cells += `<button class="cell${did?' did':''}${ds===t?' today':''}${ds===calSel?' sel':''}${(start+d-1)%7===0?' sun':''}${ds>t?' future':''}" data-d="${ds}">
+      ${d}<span class="dot"></span></button>`;
+  }
+
+  const monthDone = (() => { let n = 0;
+    for(let d = 1; d <= days; d++){
+      const ds = y + '-' + String(m+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+      if(dayLog(ds).any) n++;
+    } return n; })();
+
+  return `<div class="cal">
+    <div class="calhd">
+      <button data-mv="-1">‹</button>
+      <b>${y}년 ${m+1}월 <span style="color:var(--soft);font-weight:400;font-size:13px">· ${monthDone}일</span></b>
+      <button data-mv="1">›</button>
+    </div>
+    <div class="calgrid">
+      ${['일','월','화','수','목','금','토'].map(x=>`<div class="dow">${x}</div>`).join('')}
+      ${cells}
+    </div>
+    <div id="dayInfo"></div>
+  </div>`;
+}
+
+function renderDayInfo(){
+  const box = document.getElementById('dayInfo');
+  if(!box) return;
+  if(!calSel){ box.innerHTML = ''; return; }
+  const [y, m, d] = calSel.split('-').map(Number);
+  const g = dayLog(calSel);
+  let body;
+  if(!g.any){
+    body = '<p class="lead" style="margin:0">이 날은 쉬었어요.</p>';
+  }else{
+    const marks = [];
+    if(g.back.ok)  marks.push('✓' + g.back.ok);
+    if(g.back.mid) marks.push('△' + g.back.mid);
+    if(g.back.no)  marks.push('✕' + g.back.no);
+    body =
+      g.made.map(day => { const s = byDay(day);
+        return `<button class="jump" data-day="${day}"><b>DAY ${day} · ${s.en}</b><span>${s.ko} · 눌러서 문장함에서 보기</span></button>`;
+      }).join('') +
+      (marks.length ? `<p class="lead" style="margin:10px 0 0">돌아온 카드 ${g.back.ok+g.back.mid+g.back.no}장 (${marks.join(' ')})</p>` : '') +
+      (g.back.reset ? `<p class="lead" style="margin:6px 0 0">처음부터 다시 돌린 카드 ${g.back.reset}장</p>` : '');
+  }
+  box.innerHTML = `<div class="dayinfo"><h4>${m}월 ${d}일</h4>${body}</div>`;
+  box.querySelectorAll('[data-day]').forEach(b => b.onclick = () => openInBox(+b.dataset.day));
+}
+
+function wireCal(){
+  const root = document.getElementById('logBody');
+  root.querySelectorAll('[data-mv]').forEach(b => b.onclick = () => {
+    calYM.m += +b.dataset.mv;
+    if(calYM.m < 0){ calYM.m = 11; calYM.y--; }
+    if(calYM.m > 11){ calYM.m = 0; calYM.y++; }
+    calSel = null; renderLog();
+  });
+  root.querySelectorAll('[data-d]').forEach(b => b.onclick = () => {
+    calSel = (calSel === b.dataset.d) ? null : b.dataset.d;
+    root.querySelectorAll('[data-d]').forEach(x => x.classList.toggle('sel', x.dataset.d === calSel));
+    renderDayInfo();
+  });
+  renderDayInfo();
+}
+
+/* 달력 → 문장함으로 넘어가며 그 카드를 펼친다 */
+function openInBox(day){
+  switchTab('Box');
+  setTimeout(() => {
+    const el = document.querySelector(`#boxBody details.cardbox[data-day="${day}"]`);
+    if(!el) return;
+    el.open = true;
+    el.scrollIntoView({ behavior:'smooth', block:'center' });
+  }, 60);
+}
+
 /* ═══════════════ 기록 ═══════════════ */
 function renderLog(){
   const t = todayStr(), d = new Date();
@@ -698,8 +838,8 @@ function renderLog(){
   }));
   const young = cards.filter(c => c.step <= 0).map(c => byDay(c.day).en);
 
-  document.getElementById('logBody').innerHTML = `
-    <p class="lead">이번 주 (${mon.slice(5).replace('-','/')} ~ ${addDays(mon,6).slice(5).replace('-','/')})</p>
+  document.getElementById('logBody').innerHTML = renderCal() + `
+    <h2 class="sec">이번 주 (${mon.slice(5).replace('-','/')} ~ ${addDays(mon,6).slice(5).replace('-','/')})</h2>
     <div class="stat" style="margin-top:12px">
       <div><b>${newN}</b><span>새 카드</span></div>
       <div><b>${revN}</b><span>돌아온 카드</span></div>
@@ -712,7 +852,8 @@ function renderLog(){
     ${ young.length ? '<p class="sim">' + young.slice(0,5).map(x => '· ' + x).join('<br>') + '</p>'
                     : '<p class="lead">없습니다.</p>' }
     <h2 class="sec">진도</h2>
-    <p class="lead">30장 중 <b>${cards.length}장</b>을 배웠습니다.</p>`;
+    <p class="lead">30장 중 <b>${cards.length}장</b>을 모았습니다.</p>`;
+  wireCal();
 }
 
 /* ═══════════════ 설정 ═══════════════ */
