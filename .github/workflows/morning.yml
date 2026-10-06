@@ -1,0 +1,23 @@
+# 매일 아침 「오늘 딱 한 문장」 알림 보내기
+name: 아침 알림
+
+on:
+  schedule:
+    # UTC 기준입니다. 한국 시간 = UTC + 9시간
+    #   22:13 UTC  →  한국 아침 7:13
+    - cron: '13 22 * * *'
+  workflow_dispatch:        # 깃허브에서 손으로 눌러 바로 보낼 수도 있습니다
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm install web-push@3 --no-save
+      - run: node english/push/send.js
+        env:
+          VAPID_PRIVATE: ${{ secrets.VAPID_PRIVATE }}
+          SUBSCRIPTION:  ${{ secrets.SUBSCRIPTION }}
