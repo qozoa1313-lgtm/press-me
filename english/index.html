@@ -86,6 +86,12 @@ details .in2{padding-top:12px}
 body.showrd .rdline{display:block}
 .nuance{font-size:14.5px;color:var(--soft);background:var(--band);
   border-radius:12px;padding:12px 14px;margin:10px 0 0;line-height:1.6}
+/* 문장함 카드 */
+details.cardbox{border:1.5px solid var(--line);border-radius:18px;
+  padding:14px 16px;margin-bottom:10px;background:var(--card)}
+details.cardbox>summary::after{align-self:flex-start;margin-top:2px}
+details.cardbox .in2{border-top:1px solid var(--line);margin-top:12px}
+details.cardbox details{border-top:1px solid var(--line)}
 
 /* ───── 결과 ───── */
 .heard{font-size:15px;margin:14px 0 0;line-height:1.8}
@@ -376,6 +382,25 @@ function renderToday(){
   save();
 }
 
+/* 카드 속 내용 — 오늘 화면과 문장함이 같이 씁니다 */
+function detailHTML(s, open){
+  const lines = arr => arr.map(e => `
+    <div class="line">
+      <b>${e[0]}<button class="sl" data-speak="${esc(e[0].replace(/^[AB]:\s*/,''))}">🔊</button></b>
+      <span class="k">${e[1]}</span>
+      <span class="rdline">${e[2]}</span>
+    </div>`).join('');
+  return `
+    <details${open === false ? '' : ' open'}><summary>단어 쪼개보기</summary>
+      <div class="in2"><div class="bd">${s.bd.map(p=>`<b>${p[0]}</b><span>${p[1]}</span>`).join('')}</div></div>
+    </details>
+    <details><summary>💬 이런 순간에</summary>
+      <div class="in2"><div class="when">${s.when}</div></div>
+    </details>
+    <details><summary>이렇게 써요</summary><div class="in2">${lines(s.ex)}</div></details>
+    <details><summary>비슷한 표현</summary><div class="in2">${lines(s.sim)}</div></details>`;
+}
+
 /* ─── 새 문장 ─── */
 function viewNew(s){
   return `
@@ -390,31 +415,7 @@ function viewNew(s){
       <p class="ko" style="margin:0;font-weight:700">${s.ko}</p>
       <p class="nuance">${s.ko2}</p>
 
-      <details open><summary>단어 쪼개보기</summary>
-        <div class="in2"><div class="bd">${s.bd.map(p=>`<b>${p[0]}</b><span>${p[1]}</span>`).join('')}</div></div>
-      </details>
-
-      <details><summary>💬 이런 순간에</summary>
-        <div class="in2"><div class="when">${s.when}</div></div>
-      </details>
-
-      <details><summary>이렇게 써요</summary>
-        <div class="in2">${s.ex.map(e=>`
-          <div class="line">
-            <b>${e[0]}<button class="sl" data-speak="${esc(e[0].replace(/^[AB]:\s*/,''))}">🔊</button></b>
-            <span class="k">${e[1]}</span>
-            <span class="rdline">${e[2]}</span>
-          </div>`).join('')}</div>
-      </details>
-
-      <details><summary>비슷한 표현</summary>
-        <div class="in2">${s.sim.map(e=>`
-          <div class="line">
-            <b>${e[0]}<button class="sl" data-speak="${esc(e[0])}">🔊</button></b>
-            <span class="k">${e[1]}</span>
-            <span class="rdline">${e[2]}</span>
-          </div>`).join('')}</div>
-      </details>
+      ${detailHTML(s)}
 
       <div class="row" style="margin-top:18px">
         <button class="btn line" id="rdBtn">가나다 발음</button>
@@ -585,17 +586,41 @@ function renderBox(){
   document.getElementById('boxCnt').textContent = cards.length;
   const b = document.getElementById('boxBody');
   if(!cards.length){ b.innerHTML = '<p class="lead" style="text-align:center;padding:50px 0">아직 비어 있어요.<br>오늘 카드를 열면 여기에 쌓입니다.</p>'; return; }
-  b.innerHTML = cards.map(c => {
+  const t = todayStr();
+  b.innerHTML =
+  `<button class="btn line" id="boxRd" style="margin-bottom:8px">가나다 발음</button>` +
+  cards.map(c => {
     const s = byDay(c.day), [gr, lab] = maturity(c.step);
-    return `<div class="item">
-      <span class="gr" title="${lab}">${gr}</span>
-      <span class="tx"><b>${s.en}</b><span>${s.ko}</span></span>
-      <span class="dy">DAY ${s.day}</span>
-    </div>`;
+    const left = diffDays(t, c.due);
+    const when = c.step >= LADDER.length ? '졸업' :
+                 left <= 0 ? '오늘 돌아옴' : (left === 1 ? '내일 돌아옴' : left + '일 뒤 돌아옴');
+    return `<details class="cardbox"><summary>
+      <span class="item" style="border:none;padding:0;width:100%">
+        <span class="gr" title="${lab}">${gr}</span>
+        <span class="tx"><b>${s.en}</b><span>${s.ko} · ${when}</span></span>
+        <span class="dy">DAY ${s.day}</span>
+      </span></summary>
+      <div class="in2">
+        <p class="rdline" style="margin-top:0">${s.rd}</p>
+        <button class="btn line" data-speak="${esc(s.en)}" style="margin:0 0 6px">🔊 들어보기</button>
+        <p class="nuance">${s.ko2}</p>
+        ${detailHTML(s, false)}
+        <button class="btn line" data-yg="${esc(s.en)}">📺 영상에서 보기</button>
+      </div>
+    </details>`;
   }).join('') +
   `<p class="lead" style="margin-top:22px;font-size:13px;text-align:center">
-     🌱 갓 심은 것 · 🌿 자라는 중 · 🌳 익어감 · ✦ 내 것이 됨
+     🌱 갓 심은 것 · 🌿 자라는 중 · 🌳 익어감 · ✦ 내 것이 됨<br>
+     카드를 누르면 다시 열어볼 수 있습니다.
    </p>`;
+
+  const rd = document.getElementById('boxRd');
+  const sync = () => rd.textContent = document.body.classList.contains('showrd') ? '가나다 발음 끄기' : '가나다 발음';
+  sync();
+  rd.onclick = () => { document.body.classList.toggle('showrd'); sync(); };
+  b.querySelectorAll('[data-speak]').forEach(x => x.onclick = e => { e.preventDefault(); speak(x.dataset.speak); });
+  b.querySelectorAll('[data-yg]').forEach(x => x.onclick = () =>
+    window.open('https://youglish.com/pronounce/' + encodeURIComponent(x.dataset.yg.replace(/[^\w\s']/g,'')) + '/english', '_blank'));
 }
 
 /* ═══════════════ 기록 ═══════════════ */
