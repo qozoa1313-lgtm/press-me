@@ -622,13 +622,10 @@ function renderBox(){
   const t = todayStr();
   b.innerHTML = cards.map(c => {
     const s = byDay(c.day), [gr, lab] = maturity(c.step);
-    const left = diffDays(t, c.due);
-    const when = c.step >= LADDER.length ? '졸업' :
-                 left <= 0 ? '오늘 돌아옴' : (left === 1 ? '내일 돌아옴' : left + '일 뒤 돌아옴');
     return `<details class="cardbox"><summary>
       <span class="item" style="border:none;padding:0;width:100%">
         <span class="gr" title="${lab}">${gr}</span>
-        <span class="tx"><b>${s.en}</b><span>${s.ko} · ${when}</span></span>
+        <span class="tx"><b>${s.en}</b><span>${s.ko}</span></span>
         <span class="dy">DAY ${s.day}</span>
       </span></summary>
       <div class="in2">
@@ -641,6 +638,7 @@ function renderBox(){
         <p class="nuance">${s.ko2}</p>
         ${detailHTML(s, false)}
         <button class="btn line" data-yg="${esc(s.en)}">📺 영상에서 보기</button>
+        <button class="mini" data-reset="${c.day}">🌱 처음부터 다시 외우기</button>
       </div>
     </details>`;
   }).join('') +
@@ -673,6 +671,16 @@ function renderBox(){
   });
   b.querySelectorAll('[data-yg]').forEach(x => x.onclick = () =>
     window.open('https://youglish.com/pronounce/' + encodeURIComponent(x.dataset.yg.replace(/[^\w\s']/g,'')) + '/english', '_blank'));
+  b.querySelectorAll('[data-reset]').forEach(x => x.onclick = () => {
+    const c = DB.cards['d' + x.dataset.reset];
+    if(!c) return;
+    if(!confirm('이 카드를 🌱 로 되돌려서 내일부터 다시 돌릴까요?')) return;
+    c.step = 0;
+    c.due = addDays(todayStr(), 1);
+    c.log.push({ d: todayStr(), m: 'reset' });
+    save(); renderBox(); stage = null;
+    toast('내일 다시 올라옵니다');
+  });
 }
 
 /* ═══════════════ 기록 ═══════════════ */
