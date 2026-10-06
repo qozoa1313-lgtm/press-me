@@ -34,8 +34,15 @@ h2.sec{font-size:13px;color:var(--soft);font-weight:700;margin:26px 0 10px;lette
 .btn.ghost{background:var(--band);color:var(--ink)}
 .btn.line{background:none;border:1.5px solid var(--line);color:var(--soft);font-weight:600}
 .row{display:flex;gap:10px}
-.row>*{flex:1}
+.row>*{flex:1 1 0;min-width:0}
+.btn{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:400px){ .btn{font-size:15px;padding:16px 10px} }
 .mini{font-size:13px;color:var(--soft);text-align:center;padding:12px;display:block;width:100%}
+.chip{
+  font-size:11px;font-weight:700;letter-spacing:0;padding:3px 9px;border-radius:999px;
+  border:1.5px solid var(--line);color:var(--soft);margin-left:7px;vertical-align:middle;
+}
+.chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
 
 /* ───── 카드 ───── */
 .card{
@@ -210,7 +217,7 @@ select,input[type=text],input[type=time]{
   <!-- ─── 문장함 ─── -->
   <div class="wrap tab hide" id="tabBox">
     <div class="hd">
-      <span class="date">문장함</span>
+      <span class="date">문장함 <button class="chip" id="boxRd">가나다</button></span>
       <span class="cnt"><b id="boxCnt">0</b>장</span>
     </div>
     <div id="boxBody"></div>
@@ -414,7 +421,7 @@ function viewNew(s){
   return `
   <p class="lead">오늘 딱 한 문장</p>
   <div class="card today">
-    <span class="badge">DAY ${s.day}</span>
+    <span class="badge">DAY ${s.day}</span><button class="chip" id="rdBtn">가나다</button>
     <p class="en">${s.en}</p>
     <p class="rdline">${s.rd}</p>
     <button class="spk" data-speak="${esc(s.en)}">🔊</button>
@@ -425,10 +432,7 @@ function viewNew(s){
 
       ${detailHTML(s)}
 
-      <div class="row" style="margin-top:18px">
-        <button class="btn line" id="rdBtn">가나다 발음</button>
-        <button class="btn line" id="ygBtn">📺 영상에서 보기</button>
-      </div>
+      <button class="btn line" id="ygBtn" style="margin-top:18px">📺 영상에서 보기</button>
     </div>
   </div>
   <button class="btn ghost" id="openBtn">뜻 보기</button>
@@ -465,6 +469,26 @@ function viewReview(c){
   </div>`;
 }
 
+/* 끝냈을 때 뜨는 말 — 날마다 바뀝니다 */
+const PRAISE = [
+  '나는 오늘도 했다.',
+  '완벽하지 않아도 괜찮아요.<br>오늘 했잖아요.',
+  '하기 싫은 날에도 열었다는 게<br>제일 중요해요.',
+  '어제의 나보다<br>한 문장 많아졌어요.',
+  '작게 하는 사람이<br>오래 합니다.',
+  '잘하려고 안 해도 돼요.<br>계속하면 돼요.',
+  '오늘의 나를 칭찬해도 됩니다.',
+  '멈추지만 않으면<br>느려도 괜찮아요.',
+  '빠른 길보다<br>끊기지 않는 길이 낫습니다.',
+  '한 장이 쌓여서<br>한 달이 됩니다.',
+  '오늘 몫은 끝났어요.<br>이제 쉬어도 돼요.',
+  '안 하고 싶은 마음을<br>이긴 날입니다.',
+  '남과 비교할 필요 없어요.<br>어제의 나만 보면 돼요.',
+  '잘 모르겠어도 괜찮아요.<br>모르는 채로 계속하면 돼요.',
+  '한 문장쯤은<br>이제 내 것이 되어가고 있어요.',
+];
+const praise = n => PRAISE[(n + new Date().getDate()) % PRAISE.length];
+
 /* ─── 다 끝 ─── */
 function viewDone(){
   const si = streakInfo();
@@ -475,7 +499,7 @@ function viewDone(){
   const inDays = next ? diffDays(t, next) : null;
   return `
   <div class="ok">
-    <p class="big">나는 오늘도 했다.</p>
+    <p class="big">${praise(n)}</p>
     <p class="sub">${n}장째 · 총 ${si.total}일 중 ${si.run}일 연속${DB.bestStreak>si.run?' (최고 '+DB.bestStreak+'일)':''}</p>
   </div>
   ${ inDays !== null ? `<p class="lead" style="text-align:center">
@@ -495,6 +519,13 @@ function wireToday(){
   document.querySelectorAll('[data-speak]').forEach(b =>
     b.onclick = () => speak(b.dataset.speak));
 
+  const rdBtn = document.getElementById('rdBtn');
+  if(rdBtn){
+    const sync = () => rdBtn.classList.toggle('on', document.body.classList.contains('showrd'));
+    sync();
+    rdBtn.onclick = () => { document.body.classList.toggle('showrd'); sync(); };
+  }
+
   const openBtn = document.getElementById('openBtn');
   if(openBtn) openBtn.onclick = () => {
     const box = document.getElementById('opened');
@@ -505,12 +536,6 @@ function wireToday(){
     document.querySelectorAll('[data-speak]').forEach(b => b.onclick = e => {
       e.preventDefault(); speak(b.dataset.speak);
     });
-    const rdBtn = document.getElementById('rdBtn');
-    rdBtn.textContent = document.body.classList.contains('showrd') ? '가나다 발음 끄기' : '가나다 발음';
-    rdBtn.onclick = () => {
-      const on = document.body.classList.toggle('showrd');
-      rdBtn.textContent = on ? '가나다 발음 끄기' : '가나다 발음';
-    };
     document.getElementById('ygBtn').onclick = () => {
       const s = stage.card;
       window.open('https://youglish.com/pronounce/' + encodeURIComponent(s.en.replace(/[^\w\s']/g,'')) + '/english', '_blank');
@@ -595,9 +620,7 @@ function renderBox(){
   const b = document.getElementById('boxBody');
   if(!cards.length){ b.innerHTML = '<p class="lead" style="text-align:center;padding:50px 0">아직 비어 있어요.<br>오늘 카드를 열면 여기에 쌓입니다.</p>'; return; }
   const t = todayStr();
-  b.innerHTML =
-  `<button class="btn line" id="boxRd" style="margin-bottom:8px">가나다 발음</button>` +
-  cards.map(c => {
+  b.innerHTML = cards.map(c => {
     const s = byDay(c.day), [gr, lab] = maturity(c.step);
     const left = diffDays(t, c.due);
     const when = c.step >= LADDER.length ? '졸업' :
@@ -627,7 +650,7 @@ function renderBox(){
    </p>`;
 
   const rd = document.getElementById('boxRd');
-  const sync = () => rd.textContent = document.body.classList.contains('showrd') ? '가나다 발음 끄기' : '가나다 발음';
+  const sync = () => rd.classList.toggle('on', document.body.classList.contains('showrd'));
   sync();
   rd.onclick = () => { document.body.classList.toggle('showrd'); sync(); };
   b.querySelectorAll('[data-speak]').forEach(x => x.onclick = e => { e.preventDefault(); speak(x.dataset.speak); });
