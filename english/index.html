@@ -182,6 +182,10 @@ select,input[type=text],input[type=time]{
 .pl{font-size:20px;line-height:1.9;font-weight:700;text-align:center;margin:10px 0 24px}
 .pl em{font-style:normal;color:var(--accent);border-bottom:2px solid var(--accent)}
 .hide{display:none!important}
+/* 오늘 카드 1·2·3 단계 표시 */
+.steps{display:flex;gap:6px;justify-content:center;margin:2px 0 12px}
+.dotstep{width:7px;height:7px;border-radius:50%;background:var(--line)}
+.dotstep.on{background:var(--accent)}
 .toast{
   position:fixed;left:50%;bottom:92px;transform:translateX(-50%) translateY(10px);
   background:var(--ink);color:#fff;padding:12px 20px;border-radius:12px;font-size:14px;
@@ -450,7 +454,10 @@ function detailHTML(s, open){
 /* ─── 새 문장 ─── */
 function viewNew(s){
   return `
-  <p class="lead">오늘 딱 한 문장</p>
+  <div class="steps">
+    <span class="dotstep on" id="st1"></span><span class="dotstep" id="st2"></span><span class="dotstep" id="st3"></span>
+  </div>
+  <p class="lead" id="guide">1 / 3 · 먼저 뜻을 봐요</p>
   <div class="card today">
     <span class="badge">DAY ${s.day}</span><button class="chip" id="rdBtn">가나다</button>
     <p class="en">${s.en}</p>
@@ -466,11 +473,10 @@ function viewNew(s){
       <button class="btn line" id="ygBtn" style="margin-top:18px">📺 영상에서 보기</button>
     </div>
   </div>
-  <button class="btn ghost" id="openBtn">뜻 보기</button>
-  <button class="btn" id="micBtn">🎙 내가 읽기</button>
+  <button class="btn" id="openBtn">뜻 보기</button>
+  <button class="btn hide" id="micBtn">🎙 내가 읽기</button>
   <div id="micOut"></div>
-  <button class="btn line" id="doneBtn">✓ 오늘 다 했어요</button>
-  <button class="mini" id="skipBtn">다른 거 줘</button>`;
+  <button class="btn hide" id="doneBtn">✓ 다 했어요</button>`;
 }
 
 /* ─── 돌아온 카드 ─── */
@@ -545,6 +551,27 @@ function timeLabel(t){
 }
 const esc = s => s.replace(/"/g,'&quot;');
 
+/* 오늘 카드 — 버튼은 한 번에 하나만 보여줍니다 */
+const STEPTXT = { 1:'1 / 3 · 먼저 뜻을 봐요', 2:'2 / 3 · 소리 내어 읽어요', 3:'3 / 3 · 다 했으면 눌러요' };
+function step(n){
+  ['openBtn','micBtn','doneBtn'].forEach((id,i) => {
+    const b = document.getElementById(id);
+    if(b) b.classList.toggle('hide', i + 1 !== n);
+  });
+  [1,2,3].forEach(i => {
+    const d = document.getElementById('st'+i);
+    if(d) d.classList.toggle('on', i <= n);
+  });
+  const g = document.getElementById('guide');
+  if(g) g.textContent = STEPTXT[n] || '';
+}
+
+/* 통과 못 했을 때 다시 읽어볼 수 있게 */
+function again(out, micBtn){
+  out.innerHTML += '<button class="mini" id="againBtn">🎙 다시 읽어보기</button>';
+  document.getElementById('againBtn').onclick = () => micBtn.onclick();
+}
+
 /* ─── 오늘 화면 동작 ─── */
 function wireToday(){
   document.querySelectorAll('[data-speak]').forEach(b =>
@@ -559,11 +586,8 @@ function wireToday(){
 
   const openBtn = document.getElementById('openBtn');
   if(openBtn) openBtn.onclick = () => {
-    const box = document.getElementById('opened');
-    const willOpen = box.classList.contains('hide');
-    box.classList.toggle('hide');
-    openBtn.textContent = willOpen ? '뜻 접기' : '뜻 보기';
-    if(!willOpen) return;
+    document.getElementById('opened').classList.remove('hide');
+    step(2);
     document.querySelectorAll('[data-speak]').forEach(b => b.onclick = e => {
       e.preventDefault(); speak(b.dataset.speak);
     });
@@ -586,26 +610,16 @@ function wireToday(){
         '</p><p class="lead">' + Math.round(best.rate*100) + '% 들렸어요' +
         (best.rate >= 0.8 ? ' · 통과!' : ' · 한 번 더 해볼까요?') + '</p>';
       if(best.rate >= 0.8) finishNew(s);
-      else out.innerHTML += '<button class="mini" id="forceBtn">그래도 넘어가기</button>',
-           document.getElementById('forceBtn').onclick = () => finishNew(s);
+      else { step(3); again(out, micBtn); }
     }, msg => {
       micBtn.textContent = '🎙 내가 읽기';
-      out.innerHTML = '<p class="lead" style="text-align:center;margin-top:14px">' + msg + '</p>' +
-        '<button class="mini" id="forceBtn">마이크 없이 넘어가기</button>';
-      document.getElementById('forceBtn').onclick = () => finishNew(s);
+      out.innerHTML = '<p class="lead" style="text-align:center;margin-top:14px">' + msg + '</p>';
+      step(3); again(out, micBtn);
     });
   };
 
   const doneBtn = document.getElementById('doneBtn');
   if(doneBtn) doneBtn.onclick = () => finishNew(stage.card);
-
-  const skip = document.getElementById('skipBtn');
-  if(skip) skip.onclick = () => {
-    const pool = SENTENCES.filter(x => !DB.cards[x.id] && x.day !== stage.card.day);
-    if(!pool.length) return toast('남은 문장이 없어요');
-    stage.card = pool[Math.floor(Math.random()*pool.length)];
-    renderToday();
-  };
 
   const ansBtn = document.getElementById('ansBtn');
   if(ansBtn) ansBtn.onclick = () => {
