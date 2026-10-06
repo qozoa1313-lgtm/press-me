@@ -63,9 +63,29 @@ h2.sec{font-size:13px;color:var(--soft);font-weight:700;margin:26px 0 10px;lette
 .bd b{font-weight:700}
 .bd span{color:var(--soft);font-size:14px}
 .when{background:var(--band);border-radius:14px;padding:14px 16px;font-size:14.5px;line-height:1.65}
-.ex{font-size:14.5px;line-height:1.9;font-family:ui-monospace,Consolas,monospace}
 .sim{font-size:14.5px;color:var(--soft);line-height:1.9}
 .rd{font-size:16px;letter-spacing:.02em;background:var(--band);border-radius:12px;padding:12px 14px;margin:0}
+
+/* 접었다 펴는 칸 */
+details{border-top:1px solid var(--line);padding:13px 0}
+details summary{
+  font-size:13px;color:var(--soft);font-weight:700;cursor:pointer;
+  list-style:none;display:flex;justify-content:space-between;align-items:center;
+}
+details summary::-webkit-details-marker{display:none}
+details summary::after{content:'＋';font-weight:400;font-size:15px}
+details[open] summary::after{content:'－'}
+details .in2{padding-top:12px}
+.line{padding:11px 0;border-bottom:1px dashed var(--line)}
+.line:last-child{border-bottom:none;padding-bottom:0}
+.line b{display:block;font-size:15.5px;font-weight:700}
+.line .k{display:block;font-size:14px;color:var(--soft);margin-top:2px}
+.sl{font-size:14px;margin-left:7px;opacity:.55}
+/* 한글 발음 — 기본 숨김, 버튼으로 전체 켜기 */
+.rdline{display:none;font-size:13.5px;color:var(--accent);margin:5px 0 0;letter-spacing:.01em}
+body.showrd .rdline{display:block}
+.nuance{font-size:14.5px;color:var(--soft);background:var(--band);
+  border-radius:12px;padding:12px 14px;margin:10px 0 0;line-height:1.6}
 
 /* ───── 결과 ───── */
 .heard{font-size:15px;margin:14px 0 0;line-height:1.8}
@@ -363,22 +383,41 @@ function viewNew(s){
   <div class="card today">
     <span class="badge">DAY ${s.day}</span>
     <p class="en">${s.en}</p>
+    <p class="rdline">${s.rd}</p>
     <button class="spk" data-speak="${esc(s.en)}">🔊</button>
     <div id="opened" class="open hide">
       <h3>뜻</h3>
       <p class="ko" style="margin:0;font-weight:700">${s.ko}</p>
-      <h3>단어 쪼개보기</h3>
-      <div class="bd">${s.bd.map(p=>`<b>${p[0]}</b><span>${p[1]}</span>`).join('')}</div>
-      <h3>💬 이런 순간에</h3>
-      <div class="when">${s.when}</div>
-      <h3>이렇게 써요</h3>
-      <p class="ex">${s.ex.join('<br>')}</p>
-      <h3>비슷한 표현</h3>
-      <p class="sim">${s.sim.map(x=>'‹ '+x+' ›').join('<br>')}</p>
-      <h3 id="rdH" class="hide">한글 발음</h3>
-      <p id="rdP" class="rd hide">${s.rd}</p>
+      <p class="nuance">${s.ko2}</p>
+
+      <details open><summary>단어 쪼개보기</summary>
+        <div class="in2"><div class="bd">${s.bd.map(p=>`<b>${p[0]}</b><span>${p[1]}</span>`).join('')}</div></div>
+      </details>
+
+      <details><summary>💬 이런 순간에</summary>
+        <div class="in2"><div class="when">${s.when}</div></div>
+      </details>
+
+      <details><summary>이렇게 써요</summary>
+        <div class="in2">${s.ex.map(e=>`
+          <div class="line">
+            <b>${e[0]}<button class="sl" data-speak="${esc(e[0].replace(/^[AB]:\s*/,''))}">🔊</button></b>
+            <span class="k">${e[1]}</span>
+            <span class="rdline">${e[2]}</span>
+          </div>`).join('')}</div>
+      </details>
+
+      <details><summary>비슷한 표현</summary>
+        <div class="in2">${s.sim.map(e=>`
+          <div class="line">
+            <b>${e[0]}<button class="sl" data-speak="${esc(e[0])}">🔊</button></b>
+            <span class="k">${e[1]}</span>
+            <span class="rdline">${e[2]}</span>
+          </div>`).join('')}</div>
+      </details>
+
       <div class="row" style="margin-top:18px">
-        <button class="btn line" id="rdBtn">발음 도움</button>
+        <button class="btn line" id="rdBtn">가나다 발음</button>
         <button class="btn line" id="ygBtn">📺 영상에서 보기</button>
       </div>
     </div>
@@ -402,6 +441,7 @@ function viewReview(c){
     <p class="lead" style="margin-top:14px">영어로 뭐였죠? 먼저 입으로 말해보세요.</p>
     <div id="ansBox" class="open hide">
       <p class="en" style="margin:0">${s.en}</p>
+      <p class="rdline">${s.rd}</p>
       <button class="spk" data-speak="${esc(s.en)}">🔊</button>
     </div>
   </div>
@@ -420,11 +460,17 @@ function viewDone(){
   const si = streakInfo();
   const n = Object.keys(DB.cards).length;
   const p = DB.pledge;
+  const t = todayStr();
+  const next = Object.values(DB.cards).map(c => c.due).filter(d => d > t).sort()[0];
+  const inDays = next ? diffDays(t, next) : null;
   return `
   <div class="ok">
     <p class="big">나는 오늘도 했다.</p>
     <p class="sub">${n}장째 · 총 ${si.total}일 중 ${si.run}일 연속${DB.bestStreak>si.run?' (최고 '+DB.bestStreak+'일)':''}</p>
   </div>
+  ${ inDays !== null ? `<p class="lead" style="text-align:center">
+       ${inDays === 1 ? '내일' : inDays + '일 뒤'} 카드가 돌아옵니다.
+       그때 <b>✓ △ ✕</b> 로 표시하게 됩니다.</p>` : '' }
   <button class="btn ghost" id="goBox">문장함 열어보기</button>
   <p class="pledge">나는 ${timeLabel(p.time)}에 ${p.cue}<br>카드 한 장을 연다.</p>`;
 }
@@ -441,12 +487,19 @@ function wireToday(){
 
   const openBtn = document.getElementById('openBtn');
   if(openBtn) openBtn.onclick = () => {
-    document.getElementById('opened').classList.remove('hide');
-    openBtn.classList.add('hide');
-    document.getElementById('rdBtn').onclick = () => {
-      document.getElementById('rdH').classList.remove('hide');
-      document.getElementById('rdP').classList.remove('hide');
-      document.getElementById('rdBtn').classList.add('hide');
+    const box = document.getElementById('opened');
+    const willOpen = box.classList.contains('hide');
+    box.classList.toggle('hide');
+    openBtn.textContent = willOpen ? '뜻 접기' : '뜻 보기';
+    if(!willOpen) return;
+    document.querySelectorAll('[data-speak]').forEach(b => b.onclick = e => {
+      e.preventDefault(); speak(b.dataset.speak);
+    });
+    const rdBtn = document.getElementById('rdBtn');
+    rdBtn.textContent = document.body.classList.contains('showrd') ? '가나다 발음 끄기' : '가나다 발음';
+    rdBtn.onclick = () => {
+      const on = document.body.classList.toggle('showrd');
+      rdBtn.textContent = on ? '가나다 발음 끄기' : '가나다 발음';
     };
     document.getElementById('ygBtn').onclick = () => {
       const s = stage.card;
