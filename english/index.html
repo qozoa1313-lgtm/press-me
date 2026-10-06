@@ -425,6 +425,7 @@ function viewNew(s){
   <button class="btn ghost" id="openBtn">뜻 보기</button>
   <button class="btn" id="micBtn">🎙 내가 읽기</button>
   <div id="micOut"></div>
+  <button class="btn line" id="doneBtn">✓ 오늘 다 했어요</button>
   <button class="mini" id="skipBtn">다른 거 줘</button>`;
 }
 
@@ -529,6 +530,9 @@ function wireToday(){
       document.getElementById('forceBtn').onclick = () => finishNew(s);
     });
   };
+
+  const doneBtn = document.getElementById('doneBtn');
+  if(doneBtn) doneBtn.onclick = () => finishNew(stage.card);
 
   const skip = document.getElementById('skipBtn');
   if(skip) skip.onclick = () => {
