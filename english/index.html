@@ -199,6 +199,27 @@ select,input[type=text],input[type=time]{
 .rnd.mic{background:#E8903F;color:#fff}
 .rnd.mic.on{background:#C0392B}
 .tryn{font-size:12.5px;color:var(--soft);flex:0 0 auto}
+.rnd.key{background:#5B7FA8;color:#fff}
+.rnd.key.on{outline:3px solid rgba(91,127,168,.3)}
+.typebox{margin-top:14px;display:none}
+.typebox.show{display:block}
+.typebox input{
+  width:100%;padding:13px 14px;border:1.5px solid var(--line);border-radius:14px;
+  font:inherit;background:var(--paper);color:inherit;
+}
+.typebox input:focus{outline:none;border-color:var(--accent)}
+.typebox .go{
+  display:block;width:100%;margin-top:8px;padding:13px;border-radius:14px;
+  background:var(--accent);color:#fff;font-weight:700;text-align:center;
+}
+.blur{filter:blur(7px);user-select:none}
+/* 답 확인 띠 — 듀오링고 방식 */
+.fb{margin-top:14px;border-radius:14px;padding:14px 16px;font-size:15px;font-weight:700}
+.fb.ok{background:#E2F0E6;color:#2E6B4A;border-top:2px solid #A7D8B9}
+.fb.no{background:#FBE6E4;color:#B4443C;border-top:2px solid #F2BDB8}
+.fb .t{font-size:11.5px;letter-spacing:.04em;display:block;opacity:.75}
+.fb .ans{margin-top:5px;font-size:19px;color:var(--ink)}
+.fb .ans u{text-decoration-color:#C0392B;text-underline-offset:3px}
 .pill{
   font-size:13px;font-weight:700;border:1.5px solid var(--line);border-radius:999px;
   padding:10px 13px;margin-left:5px;color:var(--soft);
@@ -521,6 +542,29 @@ function detailHTML(s, open){
 }
 
 /* ─── 새 문장 ─── */
+/* 직접 써본 것과 정답을 단어 하나하나 맞춰봅니다 (엄격 — 줄임말·철자 그대로) */
+function typeCheck(typed, target){
+  const cut = x => x.replace(/[.!?,;:]+$/,'');
+  const want = target.split(/\s+/).map(cut);
+  const got  = typed.trim().split(/\s+/).map(cut).filter(Boolean)
+                    .map(w => ({ raw:w, low:w.toLowerCase(), used:false }));
+  const marks = want.map(w => {
+    const g = got.find(x => !x.used && x.low === w.toLowerCase());
+    if(g){ g.used = true; return true; }
+    return false;
+  });
+  const hit = marks.filter(Boolean).length;
+  return { want, marks, extra: got.filter(x => !x.used).map(x => x.raw),
+           rate: want.length ? hit/want.length : 0 };
+}
+
+function typeResult(target, typed){
+  const r = typeCheck(typed, target);
+  if(r.rate === 1 && !r.extra.length) return '<div class="fb ok">정답!</div>';
+  const words = r.want.map((w,i) => r.marks[i] ? w : `<u>${w}</u>`).join(' ');
+  return `<div class="fb no"><span class="t">정답</span><div class="ans">${words}</div></div>`;
+}
+
 /* 문장을 단어 단위로 쪼개 둡니다 — 틀린 단어만 빨갛게 칠하려고요 */
 function wordSpans(en){
   return en.split(/\s+/).map(w => `<span class="w">${w}</span>`).join(' ');
@@ -533,15 +577,22 @@ function viewNew(s){
       <div class="ctrow"><span class="badge">DAY ${s.day}</span><button class="chip" id="rdBtn">발음 보기</button></div>
       <p class="en" id="enLine">${wordSpans(s.en)}</p>
       <p class="rdline">${s.rd}</p>
+      <p class="lead hide" id="koHint">${s.ko}</p>
       <div class="acts">
         <button class="rnd" data-speak="${esc(s.en)}">🔊</button>
         <button class="rnd mic" id="micBtn" title="발음 체크해보기">🎙</button>
+        <button class="rnd key" id="keyBtn" title="직접 써보기">⌨</button>
         <span id="unlock" class="hide">
           <button class="pill" id="againBtn">재도전</button>
           <button class="pill on" id="doneBtn">완료</button>
         </span>
         <span class="tryn" id="tryN"></span>
       </div>
+      <div class="typebox" id="typeBox">
+        <input id="typeIn" placeholder="영어로 입력" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+        <button class="go" id="typeGo">확인</button>
+      </div>
+      <div id="typeOut"></div>
     </div>
     <div id="opened" class="open hide">
       <h3>뜻</h3>
@@ -577,11 +628,17 @@ function viewReview(c){
   <div class="card">
     <span class="badge">${gr} DAY ${s.day}</span>
     <p class="en" style="font-size:21px">${s.ko}</p>
-    <p class="lead" style="margin-top:14px">영어로 뭐였죠? 먼저 입으로 말해보세요.</p>
+    <p class="lead" style="margin-top:14px">영어로 뭐였죠?</p>
     <div class="acts">
       <button class="rnd mic" id="revMic" title="말해보기">🎙</button>
+      <button class="rnd key" id="rvKey" title="직접 써보기">⌨</button>
       <span class="tryn" id="revTry"></span>
     </div>
+    <div class="typebox show" id="rvBox">
+      <input id="rvIn" placeholder="영어로 입력" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+      <button class="go" id="rvGo">확인</button>
+    </div>
+    <div id="rvOut"></div>
     <div id="ansBox" class="open hide">
       <p class="en" id="revEn" style="margin:0">${wordSpans(s.en)}</p>
       <p class="rdline">${s.rd}</p>
@@ -729,6 +786,25 @@ function wireToday(){
   };
   if(micBtn) micBtn.onclick = runMic;
 
+  /* 오늘 카드 — 직접 써보기 */
+  const keyBtn = document.getElementById('keyBtn');
+  if(keyBtn) keyBtn.onclick = () => {
+    const box = document.getElementById('typeBox');
+    const on = !box.classList.contains('show');
+    box.classList.toggle('show', on);
+    document.getElementById('enLine').classList.toggle('blur', on);
+    document.getElementById('koHint').classList.toggle('hide', !on);
+    keyBtn.classList.toggle('on', on);
+    if(on) document.getElementById('typeIn').focus();
+  };
+  const typeGo = document.getElementById('typeGo');
+  if(typeGo) typeGo.onclick = () => {
+    document.getElementById('typeOut').innerHTML = typeResult(stage.card.en, document.getElementById('typeIn').value);
+    document.getElementById('enLine').classList.remove('blur');
+  };
+  const typeIn = document.getElementById('typeIn');
+  if(typeIn) typeIn.onkeydown = e => { if(e.key === 'Enter') typeGo.onclick(); };
+
   const againBtn = document.getElementById('againBtn');
   if(againBtn) againBtn.onclick = runMic;
 
@@ -746,6 +822,19 @@ function wireToday(){
 
   const ansBtn = document.getElementById('ansBtn');
   if(ansBtn) ansBtn.onclick = showAns;
+
+  /* 복습 카드 — 직접 써보기 */
+  const rvKey = document.getElementById('rvKey');
+  if(rvKey) rvKey.onclick = () => document.getElementById('rvIn').focus();
+  const rvGo = document.getElementById('rvGo');
+  if(rvGo) rvGo.onclick = () => {
+    const c = DB.cards['d' + openRev];
+    if(!c) return;
+    document.getElementById('rvOut').innerHTML = typeResult(byDay(c.day).en, document.getElementById('rvIn').value);
+    showAns();
+  };
+  const rvIn = document.getElementById('rvIn');
+  if(rvIn) rvIn.onkeydown = e => { if(e.key === 'Enter') rvGo.onclick(); };
 
   /* 복습 카드 — 말해보고 답 확인하기 */
   const revMic = document.getElementById('revMic');
