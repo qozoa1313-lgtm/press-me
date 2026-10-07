@@ -362,6 +362,7 @@ function dueToday(){
   const t = todayStr();
   return Object.values(DB.cards)
     .filter(c => (c.revive || c.step < LADDER.length) && c.due <= t)
+    .filter(c => !(DB.days[t] && DB.days[t].relearn || []).includes('d' + c.day))
     .sort((a,b) => a.day - b.day);
 }
 function maturity(step){
@@ -445,8 +446,17 @@ function renderToday(){
   const n = newToday();
   const due = dueToday();
   const newPending = n && !DB.days[t].newDone;
+  const relearnId = (DB.days[t].relearn || [])[0];
+  const relearn = relearnId && DB.cards[relearnId] ? byDay(DB.cards[relearnId].day) : null;
 
-  if(newPending){
+  if(relearn){
+    if(!stage || stage.card !== relearn) micTries = 0;
+    stage = { mode:'new', card:relearn };
+    body.innerHTML = '<p class="lead" style="margin-bottom:8px">다시 학습</p>'
+      + viewNew(relearn)
+      + (newPending ? `<div class="tdone" style="margin-top:14px">이걸 끝내면 오늘의 새 문장 <b>DAY ${n.day} · ${n.en}</b> 이 이어서 나옵니다</div>` : '')
+      + viewRevSection(due);
+  }else if(newPending){
     if(!stage || stage.card !== n) micTries = 0;
     stage = { mode:'new', card:n };
     body.innerHTML = viewNew(n) + viewRevSection(due);
@@ -549,7 +559,7 @@ function viewReview(c){
 function viewRevSection(due){
   if(!due.length) return '';
   return `
-  <h2 class="sec" style="margin-top:30px">돌아온 카드 ${due.length}장</h2>
+  <h2 class="sec" style="margin-top:30px">복습 ${due.length}장</h2>
   ${due.map(c => c.day === openRev ? viewReview(c) : revRow(c)).join('')}`;
 }
 
@@ -707,10 +717,23 @@ function wireToday(){
 
 function finishNew(s){
   const t = todayStr();
-  DB.cards[s.id] = { day:s.day, learnedOn:t, step:0, due:addDays(t,LADDER[0]), log:[{d:t,m:'new'}], fav:false };
-  DB.days[t] = Object.assign(DB.days[t]||{}, { newCard:s.id, newDone:true, done:true });
-  stage = null; save(); renderToday();
-  toast('문장함에 꽂혔습니다');
+  const old = DB.cards[s.id];
+  if(old){
+    /* 복구해서 다시 익힌 경우 — 기억 단계만 처음으로, 배운 날짜와 기록은 남깁니다 */
+    old.step = 0;
+    old.due = addDays(t, LADDER[0]);
+    old.log.push({ d:t, m:'relearn' });
+    delete old.revive;
+    DB.days[t].relearn = (DB.days[t].relearn || []).filter(x => x !== s.id);
+    DB.days[t].done = true;
+    stage = null; save(); renderToday();
+    toast('다시 익혔습니다');
+  }else{
+    DB.cards[s.id] = { day:s.day, learnedOn:t, step:0, due:addDays(t,LADDER[0]), log:[{d:t,m:'new'}], fav:false };
+    DB.days[t] = Object.assign(DB.days[t]||{}, { newCard:s.id, newDone:true, done:true });
+    stage = null; save(); renderToday();
+    toast('문장함에 꽂혔습니다');
+  }
 }
 
 function mark(m){
@@ -795,19 +818,14 @@ function renderBox(){
   b.querySelectorAll('[data-yg]').forEach(x => x.onclick = () =>
     window.open('https://youglish.com/pronounce/' + encodeURIComponent(x.dataset.yg.replace(/[^\w\s']/g,'')) + '/english', '_blank'));
   b.querySelectorAll('[data-revive]').forEach(x => x.onclick = () => {
-    const c = DB.cards['d' + x.dataset.revive], t = todayStr();
+    const id = 'd' + x.dataset.revive, c = DB.cards[id], t = todayStr();
     if(!c) return;
-    if(c.learnedOn === t){
-      /* 오늘 배운 문장이면 「오늘의 문장」 자리로 되돌립니다 */
-      DB.days[t] = Object.assign(DB.days[t]||{}, { newCard:'d' + c.day, newDone:false });
-      toast('오늘의 문장으로 되돌렸습니다');
-    }else{
-      /* 지난 문장이면 「돌아온 카드」 에 합류시킵니다. 기억 단계는 건드리지 않습니다 */
-      c.due = t;
-      c.revive = true;
-      toast('돌아온 카드에 넣었습니다');
-    }
+    /* 복구 = 처음부터 다시 학습. 오늘의 문장 위에 올립니다 */
+    DB.days[t] = DB.days[t] || {};
+    DB.days[t].relearn = DB.days[t].relearn || [];
+    if(!DB.days[t].relearn.includes(id)) DB.days[t].relearn.push(id);
     openRev = null; stage = null; save(); switchTab('Today');
+    toast('다시 학습할 수 있게 맨 위로 올렸습니다');
   });
   b.querySelectorAll('[data-reset]').forEach(x => x.onclick = () => {
     const c = DB.cards['d' + x.dataset.reset];
@@ -890,7 +908,7 @@ function renderDayInfo(){
       g.made.map(day => { const s = byDay(day);
         return `<button class="jump" data-day="${day}"><b>DAY ${day} · ${s.en}</b><span>${s.ko} · 눌러서 문장함에서 보기</span></button>`;
       }).join('') +
-      (marks.length ? `<p class="lead" style="margin:10px 0 0">돌아온 카드 ${g.back.ok+g.back.mid+g.back.no}장 (${marks.join(' ')})</p>` : '') +
+      (marks.length ? `<p class="lead" style="margin:10px 0 0">복습 ${g.back.ok+g.back.mid+g.back.no}장 (${marks.join(' ')})</p>` : '') +
       (g.back.reset ? `<p class="lead" style="margin:6px 0 0">처음부터 다시 돌린 카드 ${g.back.reset}장</p>` : '');
   }
   box.innerHTML = `<div class="dayinfo"><h4>${m}월 ${d}일</h4>${body}</div>`;
@@ -943,7 +961,7 @@ function renderLog(){
     <h2 class="sec">이번 주 (${mon.slice(5).replace('-','/')} ~ ${addDays(mon,6).slice(5).replace('-','/')})</h2>
     <div class="stat" style="margin-top:12px">
       <div><b>${newN}</b><span>새 카드</span></div>
-      <div><b>${revN}</b><span>돌아온 카드</span></div>
+      <div><b>${revN}</b><span>복습</span></div>
       <div><b>${hardN}</b><span>△·✕ 누른 것</span></div>
       <div><b>${cards.length}</b><span>모은 카드</span></div>
     </div>
