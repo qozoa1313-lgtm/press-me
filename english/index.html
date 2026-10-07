@@ -182,11 +182,28 @@ select,input[type=text],input[type=time]{
 .pl{font-size:20px;line-height:1.9;font-weight:700;text-align:center;margin:10px 0 24px}
 .pl em{font-style:normal;color:var(--accent);border-bottom:2px solid var(--accent)}
 .hide{display:none!important}
-/* 오늘 카드 — 윗줄(DAY · 발음 보기) 고정 */
+/* 오늘 카드 — 윗부분(DAY · 문장 · 버튼) 통째로 고정 */
 .cardtop{
-  position:sticky;top:0;z-index:15;margin:-26px -22px 0;padding:20px 22px 12px;
-  background:rgba(255,255,255,.97);backdrop-filter:blur(6px);border-radius:20px 20px 0 0;
+  position:sticky;top:0;z-index:15;margin:-26px -22px 16px;padding:20px 22px 16px;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(8px);
+  border-radius:20px 20px 0 0;border-bottom:1px solid var(--line);
 }
+.ctrow{display:flex;align-items:center}
+.cardtop .en{margin:14px 0 0}
+.cardtop .w.bad{color:#C0392B}
+.acts{display:flex;align-items:center;gap:10px;margin-top:16px;flex-wrap:wrap}
+.rnd{
+  width:50px;height:50px;border-radius:50%;background:var(--band);font-size:21px;
+  display:flex;align-items:center;justify-content:center;flex:0 0 auto;
+}
+.rnd.mic{background:#E8903F;color:#fff}
+.rnd.mic.on{background:#C0392B}
+.tryn{font-size:12.5px;color:var(--soft);flex:0 0 auto}
+.pill{
+  font-size:13px;font-weight:700;border:1.5px solid var(--line);border-radius:999px;
+  padding:10px 13px;margin-left:5px;color:var(--soft);
+}
+.pill.on{background:var(--accent);border-color:var(--accent);color:#fff}
 /* 돌아온 카드 — 접힌 줄 */
 .revrow{
   display:flex;align-items:center;gap:12px;width:100%;text-align:left;
@@ -208,10 +225,7 @@ select,input[type=text],input[type=time]{
   font-size:11px;font-weight:700;border:1.5px solid var(--line);border-radius:999px;
   padding:3px 10px;margin-left:8px;color:var(--soft);vertical-align:middle;
 }
-/* 오늘 카드 1·2·3 단계 표시 */
-.steps{display:flex;gap:6px;justify-content:center;margin:2px 0 12px}
-.dotstep{width:7px;height:7px;border-radius:50%;background:var(--line)}
-.dotstep.on{background:var(--accent)}
+
 .toast{
   position:fixed;left:50%;bottom:92px;transform:translateX(-50%) translateY(10px);
   background:var(--ink);color:#fff;padding:12px 20px;border-radius:12px;font-size:14px;
@@ -507,16 +521,28 @@ function detailHTML(s, open){
 }
 
 /* ─── 새 문장 ─── */
+/* 문장을 단어 단위로 쪼개 둡니다 — 틀린 단어만 빨갛게 칠하려고요 */
+function wordSpans(en){
+  return en.split(/\s+/).map(w => `<span class="w">${w}</span>`).join(' ');
+}
+
 function viewNew(s){
   return `
-  <div class="steps">
-    <span class="dotstep on" id="st1"></span><span class="dotstep" id="st2"></span><span class="dotstep" id="st3"></span>
-  </div>
   <div class="card today">
-    <div class="cardtop"><span class="badge">DAY ${s.day}</span><button class="chip" id="rdBtn">발음 보기</button></div>
-    <p class="en">${s.en}</p>
-    <p class="rdline">${s.rd}</p>
-    <button class="spk" data-speak="${esc(s.en)}">🔊</button>
+    <div class="cardtop">
+      <div class="ctrow"><span class="badge">DAY ${s.day}</span><button class="chip" id="rdBtn">발음 보기</button></div>
+      <p class="en" id="enLine">${wordSpans(s.en)}</p>
+      <p class="rdline">${s.rd}</p>
+      <div class="acts">
+        <button class="rnd" data-speak="${esc(s.en)}">🔊</button>
+        <button class="rnd mic" id="micBtn" title="발음 체크해보기">🎙</button>
+        <span id="unlock" class="hide">
+          <button class="pill" id="againBtn">재도전</button>
+          <button class="pill on" id="doneBtn">완료</button>
+        </span>
+        <span class="tryn" id="tryN"></span>
+      </div>
+    </div>
     <div id="opened" class="open hide">
       <h3>뜻</h3>
       <p class="ko" style="margin:0;font-weight:700">${s.ko}</p>
@@ -528,9 +554,7 @@ function viewNew(s){
     </div>
   </div>
   <button class="btn" id="openBtn">뜻 보기</button>
-  <button class="btn hide" id="micBtn">🎙 발음 체크해보기</button>
-  <div id="micOut"></div>
-  <button class="btn hide" id="doneBtn">✓ 완료하기</button>`;
+  <div id="micOut"></div>`;
 }
 
 /* ─── 돌아온 카드 ─── */
@@ -631,17 +655,6 @@ function timeLabel(t){
 }
 const esc = s => s.replace(/"/g,'&quot;');
 
-/* 오늘 카드 — 버튼은 한 번에 하나만 보여줍니다 */
-function step(n){
-  ['openBtn','micBtn','doneBtn'].forEach((id,i) => {
-    const b = document.getElementById(id);
-    if(b) b.classList.toggle('hide', i + 1 !== n);
-  });
-  [1,2,3].forEach(i => {
-    const d = document.getElementById('st'+i);
-    if(d) d.classList.toggle('on', i <= n);
-  });
-}
 
 let openRev = null;   /* 지금 펼쳐둔 돌아온 카드의 day */
 
@@ -650,11 +663,6 @@ let micTries = 0;
 const MICNEED = 3;
 const micLabel = () => '🎙 발음 체크해보기' + (micTries ? ' (' + Math.min(micTries, MICNEED) + '/' + MICNEED + ')' : '');
 
-/* 통과 못 했을 때 다시 읽어볼 수 있게 */
-function again(out, micBtn){
-  out.innerHTML += '<button class="mini" id="againBtn">🎙 다시 읽어보기</button>';
-  document.getElementById('againBtn').onclick = () => micBtn.onclick();
-}
 
 /* ─── 오늘 화면 동작 ─── */
 function wireToday(){
@@ -670,8 +678,11 @@ function wireToday(){
 
   const openBtn = document.getElementById('openBtn');
   if(openBtn) openBtn.onclick = () => {
-    document.getElementById('opened').classList.remove('hide');
-    step(2);
+    const box = document.getElementById('opened');
+    const willOpen = box.classList.contains('hide');
+    box.classList.toggle('hide');
+    openBtn.textContent = willOpen ? '뜻 접기' : '뜻 보기';
+    if(!willOpen) return;
     document.querySelectorAll('[data-speak]').forEach(b => b.onclick = e => {
       e.preventDefault(); speak(b.dataset.speak);
     });
@@ -682,27 +693,40 @@ function wireToday(){
   };
 
   const micBtn = document.getElementById('micBtn');
-  if(micBtn) micBtn.onclick = () => {
+  const paintWords = marks => {
+    const ws = document.querySelectorAll('#enLine .w');
+    ws.forEach((w,i) => w.classList.toggle('bad', marks ? marks[i] === false : false));
+  };
+  const unlock = () => { const u = document.getElementById('unlock'); if(u) u.classList.remove('hide'); };
+  const tryText = t => { const e = document.getElementById('tryN'); if(e) e.innerHTML = t; };
+
+  const runMic = () => {
     const s = stage.card, out = document.getElementById('micOut');
-    micBtn.textContent = '🎙 듣는 중…';
+    paintWords(null);
+    micBtn.classList.add('on');
+    tryText('듣는 중…');
     listen(alts => {
-      micBtn.textContent = micLabel();
+      micBtn.classList.remove('on');
       let best = { rate:-1 };
       alts.forEach(a => { const r = compare(s.en, a); if(r.rate > best.rate) best = r; });
-      out.innerHTML = '<p class="heard">' +
-        best.want.map((w,i) => best.marks[i] ? '<b>'+w+'</b>' : '<i>'+w+'</i>').join(' ') +
-        '</p><p class="lead">' + Math.round(best.rate*100) + '% 들렸어요' +
-        (best.rate >= 0.8 ? ' · 통과!' : ' · 한 번 더 해볼까요?') + '</p>';
       micTries++;
-      micBtn.textContent = micLabel();
-      if(best.rate >= 0.8) finishNew(s);
-      else { if(micTries >= MICNEED) step(3); again(out, micBtn); }
+      out.innerHTML = '';
+      if(best.rate >= 0.8){ tryText('<b style="color:var(--accent)">통과!</b>'); finishNew(s); return; }
+      paintWords(best.marks);
+      tryText(micTries + ' / ' + MICNEED + ' · ' + Math.round(best.rate*100) + '%');
+      if(micTries >= MICNEED) unlock();
     }, msg => {
-      micBtn.textContent = micLabel();
+      micBtn.classList.remove('on');
+      micTries++;
+      tryText('');
       out.innerHTML = '<p class="lead" style="text-align:center;margin-top:14px">' + msg + '</p>';
-      step(3); again(out, micBtn);   /* 마이크가 안 되면 횟수와 상관없이 넘어갈 수 있게 */
+      unlock();   /* 마이크가 안 되면 횟수와 상관없이 넘어갈 수 있게 */
     });
   };
+  if(micBtn) micBtn.onclick = runMic;
+
+  const againBtn = document.getElementById('againBtn');
+  if(againBtn) againBtn.onclick = runMic;
 
   const doneBtn = document.getElementById('doneBtn');
   if(doneBtn) doneBtn.onclick = () => finishNew(stage.card);
