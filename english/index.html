@@ -1126,9 +1126,9 @@ function renderLog(){
   document.getElementById('logBody').innerHTML = renderCal() + `
     <h2 class="sec">이번 주 (${mon.slice(5).replace('-','/')} ~ ${addDays(mon,6).slice(5).replace('-','/')})</h2>
     <div class="stat" style="margin-top:12px">
-      <div><b>${newN}</b><span>새 카드</span></div>
-      <div><b>${revN}</b><span>복습</span></div>
-      <div><b>${hardN}</b><span>△·✕ 누른 것</span></div>
+      <div><b>${newN}</b><span>새로 배운 카드</span></div>
+      <div><b>${revN}</b><span>복습한 횟수</span></div>
+      <div><b>${hardN}</b><span>그중 △·✕</span></div>
       <div><b>${cards.length}</b><span>모은 카드</span></div>
     </div>
     <h2 class="sec">연속</h2>
