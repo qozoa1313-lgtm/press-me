@@ -1,5 +1,5 @@
 /* 오늘 딱 한 문장 — 오프라인 + 아침 알림 */
-const CACHE = 'oneline-v2';
+const CACHE = 'oneline-v3';
 const SHELL = ['./','./index.html','./sentences.js','./manifest.json','./icon-192.png','./icon-512.png'];
 
 self.addEventListener('install', e => {
@@ -18,8 +18,9 @@ self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET') return;
   if (new URL(req.url).origin !== self.location.origin) return;
+  /* 저장해둔 옛 파일 말고 늘 새 파일을 받아옵니다 */
   e.respondWith(
-    fetch(req).then(res => {
+    fetch(req, { cache: 'no-store' }).then(res => {
       const copy = res.clone();
       caches.open(CACHE).then(c => c.put(req, copy)).catch(() => {});
       return res;
