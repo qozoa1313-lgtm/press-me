@@ -129,6 +129,16 @@ details.cardbox{border:1.5px solid var(--line);border-radius:18px;
   padding:14px 16px;margin-bottom:10px;background:var(--card)}
 details.cardbox>summary::after{align-self:flex-start;margin-top:2px}
 details.cardbox .in2{border-top:1px solid var(--line);margin-top:12px}
+/* 펼쳤을 때 : 영문 ~ 따라 말해보기 까지 고정 */
+details.cardbox[open]>summary{
+  position:sticky;top:var(--hdh,46px);z-index:12;background:var(--card);
+  margin:-14px -16px 0;padding:14px 16px 8px;border-radius:16px 16px 0 0;
+}
+details.cardbox[open] .boxtop{
+  position:sticky;top:calc(var(--hdh,46px) + var(--sumh,62px));z-index:11;
+  background:var(--card);margin:0 -16px;padding:10px 16px 12px;
+  border-bottom:1px solid var(--line);
+}
 details.cardbox details{border-top:1px solid var(--line)}
 
 /* ───── 결과 ───── */
@@ -914,6 +924,16 @@ function mark(m){
 }
 
 /* ═══════════════ 문장함 ═══════════════ */
+/* 고정 위치 계산 — 상단 띠와 요약줄의 실제 높이를 재서 넘겨줍니다 */
+function syncSticky(){
+  const hd = document.querySelector('#tabBox .hd.sticky');
+  if(hd) document.documentElement.style.setProperty('--hdh', hd.offsetHeight + 'px');
+  document.querySelectorAll('#boxBody details.cardbox[open]').forEach(dt => {
+    const sm = dt.querySelector('summary');
+    if(sm) dt.style.setProperty('--sumh', sm.offsetHeight + 'px');
+  });
+}
+
 function renderBox(){
   const cards = Object.values(DB.cards).sort((a,b) => b.day - a.day);
   document.getElementById('boxCnt').textContent = cards.length;
@@ -934,11 +954,13 @@ function renderBox(){
         <span class="dy">DAY ${s.day}</span>
       </span></summary>
       <div class="in2">
-        <p class="learned">${meta}<button class="revive" data-revive="${c.day}">복구</button></p>
-        <p class="rdline" style="margin-top:0">${s.rd}</p>
-        <div class="row" style="margin:0 0 6px">
-          <button class="btn ol" data-speak="${esc(s.en)}" style="margin:0">🔊 들어보기</button>
-          <button class="btn ol" data-mic="${esc(s.en)}" style="margin:0">🎙 따라 말해보기</button>
+        <div class="boxtop">
+          <p class="learned">${meta}<button class="revive" data-revive="${c.day}">복구</button></p>
+          <p class="rdline" style="margin-top:0">${s.rd}</p>
+          <div class="row" style="margin:0">
+            <button class="btn ol" data-speak="${esc(s.en)}" style="margin:0">🔊 들어보기</button>
+            <button class="btn ol" data-mic="${esc(s.en)}" style="margin:0">🎙 따라 말해보기</button>
+          </div>
         </div>
         <div class="micout"></div>
         <p class="nuance">${s.ko2}</p>
@@ -977,6 +999,10 @@ function renderBox(){
   });
   b.querySelectorAll('[data-yg]').forEach(x => x.onclick = () =>
     window.open('https://youglish.com/pronounce/' + encodeURIComponent(x.dataset.yg.replace(/[^\w\s']/g,'')) + '/english', '_blank'));
+  b.querySelectorAll('details.cardbox').forEach(dt =>
+    dt.addEventListener('toggle', () => setTimeout(syncSticky, 0)));
+  syncSticky();
+
   b.querySelectorAll('[data-revive]').forEach(x => x.onclick = () => {
     const id = 'd' + x.dataset.revive, c = DB.cards[id], t = todayStr();
     if(!c) return;
