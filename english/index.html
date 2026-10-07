@@ -151,10 +151,11 @@ details.cardbox details{border-top:1px solid var(--line)}
 .item .dy{font-size:11px;color:var(--soft);flex:none}
 
 /* ───── 기록 ───── */
-.stat{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.stat div{background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:16px}
-.stat b{display:block;font-size:24px;font-weight:700}
+.stat{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stat div{background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:14px 10px;text-align:center}
+.stat b{display:block;font-size:22px;font-weight:700}
 .stat span{font-size:12.5px;color:var(--soft)}
+.stat .br{display:block;margin-top:4px;font-size:11px;letter-spacing:.02em;white-space:nowrap}
 
 /* ───── 탭바 ───── */
 nav{
@@ -1115,20 +1116,22 @@ function renderLog(){
   const cards = Object.values(DB.cards);
   const si = streakInfo();
 
-  let newN = 0, revN = 0, hardN = 0;
+  let newN = 0;
+  const mk = { ok:0, mid:0, no:0 };
   cards.forEach(c => c.log.forEach(l => {
     if(l.d < mon) return;
     if(l.m === 'new') newN++;
-    else { revN++; if(l.m !== 'ok') hardN++; }
+    else if(mk[l.m] !== undefined) mk[l.m]++;
   }));
+  const revN = mk.ok + mk.mid + mk.no;
   const young = cards.filter(c => c.step <= 0).map(c => byDay(c.day).en);
 
   document.getElementById('logBody').innerHTML = renderCal() + `
     <h2 class="sec">이번 주 (${mon.slice(5).replace('-','/')} ~ ${addDays(mon,6).slice(5).replace('-','/')})</h2>
     <div class="stat" style="margin-top:12px">
-      <div><b>${newN}</b><span>새로 배운 카드</span></div>
-      <div><b>${revN}</b><span>복습한 횟수</span></div>
-      <div><b>${hardN}</b><span>그중 △·✕</span></div>
+      <div><b>${newN}</b><span>새 카드</span></div>
+      <div><b>${revN}</b><span>복습</span>
+        <span class="br">✓${mk.ok} △${mk.mid} ✕${mk.no}</span></div>
       <div><b>${cards.length}</b><span>모은 카드</span></div>
     </div>
     <h2 class="sec">연속</h2>
