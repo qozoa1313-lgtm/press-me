@@ -187,6 +187,22 @@ select,input[type=text],input[type=time]{
   position:sticky;top:0;z-index:15;margin:-26px -22px 0;padding:20px 22px 12px;
   background:rgba(255,255,255,.97);backdrop-filter:blur(6px);border-radius:20px 20px 0 0;
 }
+/* 돌아온 카드 — 접힌 줄 */
+.revrow{
+  display:flex;align-items:center;gap:12px;width:100%;text-align:left;
+  background:var(--card);border:1.5px solid var(--line);border-radius:16px;
+  padding:14px 16px;margin-top:8px;
+}
+.revrow .rg{font-size:18px;flex:0 0 auto}
+.revrow .rt{flex:1 1 auto;min-width:0}
+.revrow .rt b{display:block;font-size:15.5px;font-weight:700}
+.revrow .rt span{display:block;font-size:12px;color:var(--soft);margin-top:2px}
+.revrow .rp{color:var(--soft);font-size:17px;flex:0 0 auto}
+/* 오늘의 문장을 끝냈을 때 위에 남는 줄 */
+.tdone{
+  background:var(--band);border-radius:14px;padding:13px 16px;font-size:13px;color:var(--soft);
+}
+.tdone b{display:block;color:var(--ink);font-size:15px;margin-top:3px}
 /* 문장함 복구 버튼 */
 .revive{
   font-size:11px;font-weight:700;border:1.5px solid var(--line);border-radius:999px;
@@ -426,17 +442,21 @@ function renderToday(){
   const t = todayStr();
   if(!DB.days[t]) DB.days[t] = { opened:true };
 
-  if(!stage){
-    const n = newToday();
-    const due = dueToday();
-    if(n && !DB.days[t].newDone) stage = { mode:'new', card:n };
-    else if(due.length)          stage = { mode:'review', queue:due, idx:0 };
-    else                         stage = { mode:'done' };
-  }
+  const n = newToday();
+  const due = dueToday();
+  const newPending = n && !DB.days[t].newDone;
 
-  if(stage.mode === 'new'){ micTries = 0; body.innerHTML = viewNew(stage.card); }
-  else if(stage.mode === 'review') body.innerHTML = viewReview(stage.queue[stage.idx]);
-  else                             body.innerHTML = viewDone();
+  if(newPending){
+    if(!stage || stage.card !== n) micTries = 0;
+    stage = { mode:'new', card:n };
+    body.innerHTML = viewNew(n) + viewRevSection(due);
+  }else if(due.length){
+    stage = { mode:'review' };
+    body.innerHTML = viewTodayMini() + viewRevSection(due);
+  }else{
+    stage = { mode:'done' };
+    body.innerHTML = viewDone();
+  }
 
   wireToday();
   save();
@@ -489,12 +509,22 @@ function viewNew(s){
 }
 
 /* ─── 돌아온 카드 ─── */
+/* 돌아온 카드 — 접힌 줄 */
+function revRow(c){
+  const s = byDay(c.day), [gr] = maturity(c.step);
+  const n = c.log.filter(l => l.m !== 'new' && l.m !== 'reset').length;
+  return `<button class="revrow" data-rev="${c.day}">
+      <span class="rg">${gr}</span>
+      <span class="rt"><b>${s.ko}</b><span>DAY ${s.day}${n ? ' · ' + n + '회 복습' : ''}</span></span>
+      <span class="rp">＋</span>
+    </button>`;
+}
+
+/* 돌아온 카드 — 펼친 것 */
 function viewReview(c){
   const s = byDay(c.day);
-  const left = stage.queue.length - stage.idx;
   const [gr] = maturity(c.step);
   return `
-  <p class="lead">돌아온 카드 · ${left}장 남음</p>
   <div class="card">
     <span class="badge">${gr} DAY ${s.day}</span>
     <p class="en" style="font-size:21px">${s.ko}</p>
@@ -513,6 +543,22 @@ function viewReview(c){
       <button class="btn ghost" data-mark="no">✕</button>
     </div>
   </div>`;
+}
+
+/* 돌아온 카드 묶음 */
+function viewRevSection(due){
+  if(!due.length) return '';
+  return `
+  <h2 class="sec" style="margin-top:30px">돌아온 카드 ${due.length}장</h2>
+  ${due.map(c => c.day === openRev ? viewReview(c) : revRow(c)).join('')}`;
+}
+
+/* 오늘의 문장을 이미 끝냈을 때 위에 남는 한 줄 */
+function viewTodayMini(){
+  const id = DB.days[todayStr()].newCard, c = id && DB.cards[id];
+  if(!c) return '';
+  const s = byDay(c.day);
+  return `<div class="tdone">✓ 오늘의 문장 · DAY ${s.day} <b>${s.en}</b></div>`;
 }
 
 /* 끝냈을 때 뜨는 말 — 날마다 바뀝니다 */
@@ -571,6 +617,8 @@ function step(n){
     if(d) d.classList.toggle('on', i <= n);
   });
 }
+
+let openRev = null;   /* 지금 펼쳐둔 돌아온 카드의 day */
 
 /* 발음 체크 시도 횟수 — 3번 해야 완료하기가 나옵니다 */
 let micTries = 0;
@@ -643,6 +691,16 @@ function wireToday(){
     document.querySelectorAll('[data-mark]').forEach(b => b.onclick = () => mark(b.dataset.mark));
   };
 
+  document.querySelectorAll('[data-rev]').forEach(b => b.onclick = () => {
+    openRev = +b.dataset.rev;
+    renderToday();
+    setTimeout(() => {
+      const el = document.querySelector('#todayBody .card');
+      const all = document.querySelectorAll('#todayBody .card');
+      (all[all.length-1] || el).scrollIntoView({ behavior:'smooth', block:'center' });
+    }, 40);
+  });
+
   const goBox = document.getElementById('goBox');
   if(goBox) goBox.onclick = () => switchTab('Box');
 }
@@ -656,7 +714,8 @@ function finishNew(s){
 }
 
 function mark(m){
-  const c = stage.queue[stage.idx], t = todayStr();
+  const c = DB.cards['d' + openRev], t = todayStr();
+  if(!c) return;
   c.log.push({ d:t, m });
   delete c.revive;
   if(m === 'ok'){
@@ -667,8 +726,7 @@ function mark(m){
     if(m === 'no' && c.step > 0) c.step--;
   }
   DB.days[t] = Object.assign(DB.days[t]||{}, { done:true });
-  stage.idx++;
-  if(stage.idx >= stage.queue.length) stage = { mode:'done' };
+  openRev = null;
   save(); renderToday();
 }
 
@@ -737,12 +795,19 @@ function renderBox(){
   b.querySelectorAll('[data-yg]').forEach(x => x.onclick = () =>
     window.open('https://youglish.com/pronounce/' + encodeURIComponent(x.dataset.yg.replace(/[^\w\s']/g,'')) + '/english', '_blank'));
   b.querySelectorAll('[data-revive]').forEach(x => x.onclick = () => {
-    const c = DB.cards['d' + x.dataset.revive];
+    const c = DB.cards['d' + x.dataset.revive], t = todayStr();
     if(!c) return;
-    c.due = todayStr();
-    c.revive = true;          /* 졸업한 카드도 오늘 올라오게. 기억 단계는 건드리지 않습니다 */
-    save(); stage = null; switchTab('Today');
-    toast('오늘의 문장 탭으로 가져왔습니다');
+    if(c.learnedOn === t){
+      /* 오늘 배운 문장이면 「오늘의 문장」 자리로 되돌립니다 */
+      DB.days[t] = Object.assign(DB.days[t]||{}, { newCard:'d' + c.day, newDone:false });
+      toast('오늘의 문장으로 되돌렸습니다');
+    }else{
+      /* 지난 문장이면 「돌아온 카드」 에 합류시킵니다. 기억 단계는 건드리지 않습니다 */
+      c.due = t;
+      c.revive = true;
+      toast('돌아온 카드에 넣었습니다');
+    }
+    openRev = null; stage = null; save(); switchTab('Today');
   });
   b.querySelectorAll('[data-reset]').forEach(x => x.onclick = () => {
     const c = DB.cards['d' + x.dataset.reset];
