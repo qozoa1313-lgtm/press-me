@@ -820,12 +820,19 @@ function renderBox(){
   b.querySelectorAll('[data-revive]').forEach(x => x.onclick = () => {
     const id = 'd' + x.dataset.revive, c = DB.cards[id], t = todayStr();
     if(!c) return;
-    /* 복구 = 처음부터 다시 학습. 오늘의 문장 위에 올립니다 */
     DB.days[t] = DB.days[t] || {};
-    DB.days[t].relearn = DB.days[t].relearn || [];
-    if(!DB.days[t].relearn.includes(id)) DB.days[t].relearn.push(id);
+    if(c.learnedOn === t){
+      /* 오늘 배운 문장 → 오늘의 문장 자리에서 처음부터 다시 학습 */
+      DB.days[t].relearn = DB.days[t].relearn || [];
+      if(!DB.days[t].relearn.includes(id)) DB.days[t].relearn.push(id);
+      toast('오늘의 문장으로 올렸습니다');
+    }else{
+      /* 지난 날 배운 문장 → 복습 칸에 합류. 기억 단계는 건드리지 않습니다 */
+      c.due = t;
+      c.revive = true;
+      toast('복습 칸에 넣었습니다');
+    }
     openRev = null; stage = null; save(); switchTab('Today');
-    toast('다시 학습할 수 있게 맨 위로 올렸습니다');
   });
   b.querySelectorAll('[data-reset]').forEach(x => x.onclick = () => {
     const c = DB.cards['d' + x.dataset.reset];
