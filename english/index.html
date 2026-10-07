@@ -190,7 +190,7 @@ select,input[type=text],input[type=time]{
 }
 .ctrow{display:flex;align-items:center}
 .cardtop .en{margin:14px 0 0}
-.cardtop .w.bad{color:#C0392B}
+.w.bad{color:#C0392B}
 .acts{display:flex;align-items:center;gap:10px;margin-top:16px;flex-wrap:wrap}
 .rnd{
   width:50px;height:50px;border-radius:50%;background:var(--band);font-size:21px;
@@ -578,8 +578,12 @@ function viewReview(c){
     <span class="badge">${gr} DAY ${s.day}</span>
     <p class="en" style="font-size:21px">${s.ko}</p>
     <p class="lead" style="margin-top:14px">영어로 뭐였죠? 먼저 입으로 말해보세요.</p>
+    <div class="acts">
+      <button class="rnd mic" id="revMic" title="말해보기">🎙</button>
+      <span class="tryn" id="revTry"></span>
+    </div>
     <div id="ansBox" class="open hide">
-      <p class="en" style="margin:0">${s.en}</p>
+      <p class="en" id="revEn" style="margin:0">${wordSpans(s.en)}</p>
       <p class="rdline">${s.rd}</p>
       <button class="spk" data-speak="${esc(s.en)}">🔊</button>
     </div>
@@ -731,13 +735,40 @@ function wireToday(){
   const doneBtn = document.getElementById('doneBtn');
   if(doneBtn) doneBtn.onclick = () => finishNew(stage.card);
 
-  const ansBtn = document.getElementById('ansBtn');
-  if(ansBtn) ansBtn.onclick = () => {
+  const showAns = () => {
     document.getElementById('ansBox').classList.remove('hide');
     document.getElementById('markBox').classList.remove('hide');
-    ansBtn.classList.add('hide');
+    const ab = document.getElementById('ansBtn');
+    if(ab) ab.classList.add('hide');
     document.querySelectorAll('[data-speak]').forEach(b => b.onclick = () => speak(b.dataset.speak));
     document.querySelectorAll('[data-mark]').forEach(b => b.onclick = () => mark(b.dataset.mark));
+  };
+
+  const ansBtn = document.getElementById('ansBtn');
+  if(ansBtn) ansBtn.onclick = showAns;
+
+  /* 복습 카드 — 말해보고 답 확인하기 */
+  const revMic = document.getElementById('revMic');
+  if(revMic) revMic.onclick = () => {
+    const c = DB.cards['d' + openRev];
+    if(!c) return;
+    const en = byDay(c.day).en;
+    const tr = document.getElementById('revTry');
+    revMic.classList.add('on');
+    tr.textContent = '듣는 중…';
+    listen(alts => {
+      revMic.classList.remove('on');
+      let best = { rate:-1 };
+      alts.forEach(a => { const r = compare(en, a); if(r.rate > best.rate) best = r; });
+      showAns();
+      document.querySelectorAll('#revEn .w').forEach((w,i) => w.classList.toggle('bad', best.marks[i] === false));
+      tr.innerHTML = best.rate >= 0.8
+        ? '<b style="color:var(--accent)">' + Math.round(best.rate*100) + '% · 맞았어요</b>'
+        : Math.round(best.rate*100) + '% 들렸어요';
+    }, msg => {
+      revMic.classList.remove('on');
+      tr.textContent = msg;
+    });
   };
 
   document.querySelectorAll('[data-rev]').forEach(b => b.onclick = () => {
