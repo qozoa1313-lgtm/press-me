@@ -32,7 +32,7 @@ h2.sec{font-size:13px;color:var(--soft);font-weight:700;margin:26px 0 10px;lette
   color:#fff;font-size:16px;font-weight:700;text-align:center;margin-top:10px;
 }
 .btn.ghost{background:var(--band);color:var(--ink)}
-.btn.line{background:none;border:1.5px solid var(--line);color:var(--soft);font-weight:600}
+.btn.ol{background:none;border:1.5px solid var(--line);color:var(--soft);font-weight:600}
 .row{display:flex;gap:10px}
 .row>*{flex:1 1 0;min-width:0}
 .btn{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -182,6 +182,16 @@ select,input[type=text],input[type=time]{
 .pl{font-size:20px;line-height:1.9;font-weight:700;text-align:center;margin:10px 0 24px}
 .pl em{font-style:normal;color:var(--accent);border-bottom:2px solid var(--accent)}
 .hide{display:none!important}
+/* 오늘 카드 — 윗줄(DAY · 발음 보기) 고정 */
+.cardtop{
+  position:sticky;top:0;z-index:15;margin:-26px -22px 0;padding:20px 22px 12px;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(6px);border-radius:20px 20px 0 0;
+}
+/* 문장함 복구 버튼 */
+.revive{
+  font-size:11px;font-weight:700;border:1.5px solid var(--line);border-radius:999px;
+  padding:3px 10px;margin-left:8px;color:var(--soft);vertical-align:middle;
+}
 /* 오늘 카드 1·2·3 단계 표시 */
 .steps{display:flex;gap:6px;justify-content:center;margin:2px 0 12px}
 .dotstep{width:7px;height:7px;border-radius:50%;background:var(--line)}
@@ -277,7 +287,7 @@ select,input[type=text],input[type=time]{
   </div>
 
   <nav><div class="in">
-    <button class="on" data-tab="Today"><span class="ic">◉</span>오늘</button>
+    <button class="on" data-tab="Today"><span class="ic">◉</span>오늘의 문장</button>
     <button data-tab="Box"><span class="ic">♡</span>문장함</button>
     <button data-tab="Log"><span class="ic">▦</span>기록</button>
   </div></nav>
@@ -335,7 +345,7 @@ function newToday(){
 function dueToday(){
   const t = todayStr();
   return Object.values(DB.cards)
-    .filter(c => c.step < LADDER.length && c.due <= t)
+    .filter(c => (c.revive || c.step < LADDER.length) && c.due <= t)
     .sort((a,b) => a.day - b.day);
 }
 function maturity(step){
@@ -424,7 +434,7 @@ function renderToday(){
     else                         stage = { mode:'done' };
   }
 
-  if(stage.mode === 'new')         body.innerHTML = viewNew(stage.card);
+  if(stage.mode === 'new'){ micTries = 0; body.innerHTML = viewNew(stage.card); }
   else if(stage.mode === 'review') body.innerHTML = viewReview(stage.queue[stage.idx]);
   else                             body.innerHTML = viewDone();
 
@@ -458,7 +468,7 @@ function viewNew(s){
     <span class="dotstep on" id="st1"></span><span class="dotstep" id="st2"></span><span class="dotstep" id="st3"></span>
   </div>
   <div class="card today">
-    <span class="badge">DAY ${s.day}</span><button class="chip" id="rdBtn">발음 보기</button>
+    <div class="cardtop"><span class="badge">DAY ${s.day}</span><button class="chip" id="rdBtn">발음 보기</button></div>
     <p class="en">${s.en}</p>
     <p class="rdline">${s.rd}</p>
     <button class="spk" data-speak="${esc(s.en)}">🔊</button>
@@ -469,13 +479,13 @@ function viewNew(s){
 
       ${detailHTML(s)}
 
-      <button class="btn line" id="ygBtn" style="margin-top:18px">📺 영상에서 보기</button>
+      <button class="btn ol" id="ygBtn" style="margin-top:18px">📺 영상에서 보기</button>
     </div>
   </div>
   <button class="btn" id="openBtn">뜻 보기</button>
-  <button class="btn hide" id="micBtn">🎙 내가 읽기</button>
+  <button class="btn hide" id="micBtn">🎙 발음 체크해보기</button>
   <div id="micOut"></div>
-  <button class="btn hide" id="doneBtn">✓ 다 했어요</button>`;
+  <button class="btn hide" id="doneBtn">✓ 완료하기</button>`;
 }
 
 /* ─── 돌아온 카드 ─── */
@@ -497,10 +507,10 @@ function viewReview(c){
   </div>
   <button class="btn ghost" id="ansBtn">답 보기</button>
   <div id="markBox" class="hide">
-    <button class="btn" data-mark="ok">✓ 바로 말했다</button>
     <div class="row">
-      <button class="btn ghost" data-mark="mid">△ 헷갈렸다</button>
-      <button class="btn ghost" data-mark="no">✕ 못 말했다</button>
+      <button class="btn" data-mark="ok">✓</button>
+      <button class="btn ghost" data-mark="mid">△</button>
+      <button class="btn ghost" data-mark="no">✕</button>
     </div>
   </div>`;
 }
@@ -562,6 +572,11 @@ function step(n){
   });
 }
 
+/* 발음 체크 시도 횟수 — 3번 해야 완료하기가 나옵니다 */
+let micTries = 0;
+const MICNEED = 3;
+const micLabel = () => '🎙 발음 체크해보기' + (micTries ? ' (' + Math.min(micTries, MICNEED) + '/' + MICNEED + ')' : '');
+
 /* 통과 못 했을 때 다시 읽어볼 수 있게 */
 function again(out, micBtn){
   out.innerHTML += '<button class="mini" id="againBtn">🎙 다시 읽어보기</button>';
@@ -598,19 +613,21 @@ function wireToday(){
     const s = stage.card, out = document.getElementById('micOut');
     micBtn.textContent = '🎙 듣는 중…';
     listen(alts => {
-      micBtn.textContent = '🎙 내가 읽기';
+      micBtn.textContent = micLabel();
       let best = { rate:-1 };
       alts.forEach(a => { const r = compare(s.en, a); if(r.rate > best.rate) best = r; });
       out.innerHTML = '<p class="heard">' +
         best.want.map((w,i) => best.marks[i] ? '<b>'+w+'</b>' : '<i>'+w+'</i>').join(' ') +
         '</p><p class="lead">' + Math.round(best.rate*100) + '% 들렸어요' +
         (best.rate >= 0.8 ? ' · 통과!' : ' · 한 번 더 해볼까요?') + '</p>';
+      micTries++;
+      micBtn.textContent = micLabel();
       if(best.rate >= 0.8) finishNew(s);
-      else { step(3); again(out, micBtn); }
+      else { if(micTries >= MICNEED) step(3); again(out, micBtn); }
     }, msg => {
-      micBtn.textContent = '🎙 내가 읽기';
+      micBtn.textContent = micLabel();
       out.innerHTML = '<p class="lead" style="text-align:center;margin-top:14px">' + msg + '</p>';
-      step(3); again(out, micBtn);
+      step(3); again(out, micBtn);   /* 마이크가 안 되면 횟수와 상관없이 넘어갈 수 있게 */
     });
   };
 
@@ -641,6 +658,7 @@ function finishNew(s){
 function mark(m){
   const c = stage.queue[stage.idx], t = todayStr();
   c.log.push({ d:t, m });
+  delete c.revive;
   if(m === 'ok'){
     c.step++;
     c.due = c.step < LADDER.length ? addDays(t, LADDER[c.step] - (LADDER[c.step-1]||0)) : addDays(t, 365);
@@ -662,36 +680,36 @@ function renderBox(){
   if(!cards.length){ b.innerHTML = '<p class="lead" style="text-align:center;padding:50px 0">아직 비어 있어요.<br>오늘 카드를 열면 여기에 쌓입니다.</p>'; return; }
   const t = todayStr();
   b.innerHTML = cards.map(c => {
-    const s = byDay(c.day), [gr, lab] = maturity(c.step);
+    const s = byDay(c.day), [gr] = maturity(c.step);
     const rev = c.log.filter(l => l.m !== 'new' && l.m !== 'reset');
     const cnt = ['ok','mid','no'].map(k => rev.filter(l => l.m === k).length);
     const [ly, lm, ld] = c.learnedOn.split('-');
     const meta = `${+lm}월 ${+ld}일에 배움` +
-      (rev.length ? ` · ✓${cnt[0]} △${cnt[1]} ✕${cnt[2]}` : '');
+      (rev.length ? ` · ${rev.length}회 복습 (✓${cnt[0]} △${cnt[1]} ✕${cnt[2]})` : '');
     return `<details class="cardbox" data-day="${c.day}"><summary>
       <span class="item" style="border:none;padding:0;width:100%">
-        <span class="gr" title="${lab}">${gr}</span>
+        <span class="gr" title="${rev.length}회 복습">${gr}</span>
         <span class="tx"><b>${s.en}</b><span>${s.ko}</span></span>
         <span class="dy">DAY ${s.day}</span>
       </span></summary>
       <div class="in2">
-        <p class="learned">${meta}</p>
+        <p class="learned">${meta}<button class="revive" data-revive="${c.day}">복구</button></p>
         <p class="rdline" style="margin-top:0">${s.rd}</p>
         <div class="row" style="margin:0 0 6px">
-          <button class="btn line" data-speak="${esc(s.en)}" style="margin:0">🔊 들어보기</button>
-          <button class="btn line" data-mic="${esc(s.en)}" style="margin:0">🎙 따라 말해보기</button>
+          <button class="btn ol" data-speak="${esc(s.en)}" style="margin:0">🔊 들어보기</button>
+          <button class="btn ol" data-mic="${esc(s.en)}" style="margin:0">🎙 따라 말해보기</button>
         </div>
         <div class="micout"></div>
         <p class="nuance">${s.ko2}</p>
         ${detailHTML(s, false)}
-        <button class="btn line" data-yg="${esc(s.en)}">📺 영상에서 보기</button>
+        <button class="btn ol" data-yg="${esc(s.en)}">📺 영상에서 보기</button>
         ${c.step >= 2 ? `<button class="mini" data-reset="${c.day}">🌱 처음부터 다시 외우기</button>` : ''}
       </div>
     </details>`;
   }).join('') +
   `<p class="lead" style="margin-top:22px;font-size:13px;text-align:center">
-     🌱 갓 심은 것 · 🌿 자라는 중 · 🌳 익어감 · ✦ 내 것이 됨<br>
-     카드를 누르면 다시 열어볼 수 있습니다.
+     카드를 누르면 다시 열어볼 수 있습니다.<br>
+     [복구] 를 누르면 그 카드가 오늘 탭으로 올라옵니다.
    </p>`;
 
   const rd = document.getElementById('boxRd');
@@ -718,6 +736,14 @@ function renderBox(){
   });
   b.querySelectorAll('[data-yg]').forEach(x => x.onclick = () =>
     window.open('https://youglish.com/pronounce/' + encodeURIComponent(x.dataset.yg.replace(/[^\w\s']/g,'')) + '/english', '_blank'));
+  b.querySelectorAll('[data-revive]').forEach(x => x.onclick = () => {
+    const c = DB.cards['d' + x.dataset.revive];
+    if(!c) return;
+    c.due = todayStr();
+    c.revive = true;          /* 졸업한 카드도 오늘 올라오게. 기억 단계는 건드리지 않습니다 */
+    save(); stage = null; switchTab('Today');
+    toast('오늘의 문장 탭으로 가져왔습니다');
+  });
   b.querySelectorAll('[data-reset]').forEach(x => x.onclick = () => {
     const c = DB.cards['d' + x.dataset.reset];
     if(!c) return;
@@ -872,12 +898,12 @@ function renderSet(){
   document.getElementById('setBody').innerHTML = `
     <h2 class="sec">나의 약속</h2>
     <p>나는 <b>${timeLabel(p.time)}</b>에 <b>${p.cue}</b> 카드 한 장을 연다.</p>
-    <button class="btn line" id="reBtn">약속 바꾸기</button>
+    <button class="btn ol" id="reBtn">약속 바꾸기</button>
 
     <h2 class="sec">아침 알림</h2>
     <p class="lead" id="pushState">확인 중…</p>
     <button class="btn ghost" id="pushBtn">알림 받기 켜기</button>
-    <button class="btn line hide" id="testBtn">알림 미리 보기</button>
+    <button class="btn ol hide" id="testBtn">알림 미리 보기</button>
     <div id="subBox" class="hide">
       <p class="lead" style="font-size:13px;margin-top:14px">
         아래 등록 코드를 복사해서 깃허브 Secret 에 <b>SUBSCRIPTION</b> 이라는 이름으로 넣어주세요.
@@ -895,12 +921,12 @@ function renderSet(){
        한 달에 한 번쯤 내보내 두세요.</p>
 
     <h2 class="sec">다음 달 설계용</h2>
-    <button class="btn line" id="repBtn">30일 보고서 내보내기</button>
+    <button class="btn ol" id="repBtn">30일 보고서 내보내기</button>
     <p class="lead" style="font-size:13px">30일을 채우면 이 파일을 클로드에게 주세요.
        무엇이 잘 외워지고 무엇이 안 됐는지 보고 2·3개월차 문장을 짜드립니다.</p>
 
     <h2 class="sec">처음부터 다시</h2>
-    <button class="btn line" id="rstBtn">전부 지우고 다시 시작</button>`;
+    <button class="btn ol" id="rstBtn">전부 지우고 다시 시작</button>`;
 
   wirePush();
   document.getElementById('reBtn').onclick = () => {
