@@ -334,6 +334,20 @@ function load(){
   return null;
 }
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify(DB)); }catch(e){ toast('저장하지 못했습니다'); } }
+/* 지난 버전에서 잘못 붙은 「복습 대상」 표시를 털어냅니다 */
+function tidy(){
+  const t = todayStr();
+  let fixed = 0;
+  Object.values(DB.cards).forEach(c => {
+    if(c.learnedOn === t && (c.revive || c.due <= t)){
+      delete c.revive;
+      c.due = addDays(c.learnedOn, LADDER[0]);
+      fixed++;
+    }
+  });
+  if(fixed) save();
+}
+
 function fresh(time, cue){
   return { pledge:{time,cue}, startDate:todayStr(), cards:{}, days:{}, bestStreak:0, version:1 };
 }
@@ -362,6 +376,7 @@ function dueToday(){
   const t = todayStr();
   return Object.values(DB.cards)
     .filter(c => (c.revive || c.step < LADDER.length) && c.due <= t)
+    .filter(c => c.learnedOn !== t)   /* 오늘 배운 카드는 오늘 복습에 뜨지 않습니다 */
     .filter(c => !(DB.days[t] && DB.days[t].relearn || []).includes('d' + c.day))
     .sort((a,b) => a.day - b.day);
 }
@@ -1177,6 +1192,7 @@ document.getElementById('setClose').onclick = () => switchTab('Log');
 
 paintAccent();
 if(DB){
+  tidy();
   document.getElementById('setup').classList.add('hide');
   document.getElementById('app').classList.remove('hide');
   switchTab('Today');
