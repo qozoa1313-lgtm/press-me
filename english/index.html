@@ -25,6 +25,7 @@ button{font:inherit;color:inherit;border:none;background:none;cursor:pointer}
 .hd{display:flex;align-items:center;justify-content:space-between;margin:6px 0 18px}
 .hd .date{font-size:12px;letter-spacing:.14em;color:var(--soft);font-weight:700}
 .hd .cnt{font-size:12px;color:var(--soft)}
+.hdl{display:flex;align-items:center;gap:9px}
 .hd .cnt b{color:var(--accent);font-size:15px}
 h2.sec{font-size:13px;color:var(--soft);font-weight:700;margin:26px 0 10px;letter-spacing:.02em}
 .btn{
@@ -102,7 +103,7 @@ h2.sec{font-size:13px;color:var(--soft);font-weight:700;margin:26px 0 10px;lette
 .cell.did .dot{background:#E08A3C}
 .cell .dot.ico,.cell.did .dot.ico{
   width:auto;height:auto;background:none;border-radius:0;font-size:10px;line-height:1;
-  margin-top:3px;white-space:nowrap;letter-spacing:-1px;
+  margin-top:3px;
 }
 .cell.today{outline:1.5px solid var(--accent);outline-offset:-1.5px}
 .cell.sel{background:var(--band)}
@@ -307,7 +308,12 @@ select,input[type=text],input[type=time]{
 .warm span{display:block;font-size:12.5px;margin-top:3px}
 .lrn h4{font-size:12px;letter-spacing:.06em;color:var(--soft);margin:0 0 10px;font-weight:700}
 .lk{font-size:12.5px;color:var(--soft);text-align:center;margin:8px 0 0}
-.btn[disabled]{opacity:.4}
+.btn[disabled],.btn.off{opacity:.4}
+@keyframes poke{
+  0%,100%{box-shadow:0 0 0 0 rgba(200,130,60,0)}
+  35%    {box-shadow:0 0 0 7px rgba(200,130,60,.30)}
+}
+.poke{animation:poke 1s ease-in-out 3}
 /* 복습 — 기억났는지 고르는 칸 */
 .mk3{
   flex:1;border:1.5px solid var(--line);border-radius:14px;
@@ -451,8 +457,11 @@ select,input[type=text],input[type=time]{
 
   <!-- ─── 오늘 ─── -->
   <div class="wrap tab" id="tabToday">
-    <div class="hd">
-      <span class="date" id="hdDate">OCT 06</span>
+    <div class="hd sticky">
+      <span class="hdl">
+        <span class="date" id="hdDate">OCT 06</span>
+        <button class="chip" id="rdBtn">발음 보기</button>
+      </span>
       <span class="cnt"><b id="hdCnt">0</b>장 모음 · <span id="hdStreak">—</span></span>
     </div>
     <div id="todayBody"></div>
@@ -541,6 +550,19 @@ function fresh(time, cue){
 
 /* ═══════════════ 공통 ═══════════════ */
 let tt;
+/* 아직 못 누르는 버튼을 눌렀을 때 — 3초 동안 어디를 눌러야 하는지 알려줍니다 */
+function poke(els, msg, box){
+  els.filter(Boolean).forEach(e => {
+    e.classList.remove('poke');
+    void e.offsetWidth;                       /* 애니메이션을 처음부터 다시 돌립니다 */
+    e.classList.add('poke');
+    setTimeout(() => e.classList.remove('poke'), 3000);
+  });
+  if(box){
+    box.textContent = msg;
+    setTimeout(() => { if(box.textContent === msg) box.textContent = ''; }, 3000);
+  }
+}
 function toast(m){
   const t = document.getElementById('toast');
   t.textContent = m; t.classList.add('on');
@@ -570,8 +592,8 @@ function dueToday(){
 function maturity(step){
   if(step <= 0) return ['🌱','갓 심은 것'];
   if(step <= 1) return ['🌿','자라는 중'];
-  if(step <= 3) return ['🌳','익어감'];
-  return ['🌲🌳','내 것이 됨'];
+  if(step <= 3) return ['🌲','익어감'];
+  return ['🌳','내 것이 됨'];
 }
 function streakInfo(){
   const days = Object.keys(DB.days).filter(k => DB.days[k].done).sort();
@@ -818,7 +840,7 @@ function viewNew(s, done){
   return `
   <div class="card today">
     <div class="cardtop">
-      <div class="ctrow"><span class="badge">DAY ${s.day}</span><button class="chip" id="rdBtn">발음 보기</button>${done ? '<span class="okmark">✓ 완료</span>' : ''}</div>
+      <div class="ctrow"><span class="badge">DAY ${s.day}</span>${done ? '<span class="okmark">✓ 완료</span>' : ''}</div>
       <p class="en" id="enLine"><span class="grl">${maturity(DB.cards[s.id] ? DB.cards[s.id].step : 0)[0]}</span>${wordSpans(s.en)}</p>
       <p class="rdline">${s.rd}</p>
 
@@ -833,8 +855,8 @@ function viewNew(s, done){
         <span class="tryn" id="tryN"></span>
       </div>
     </div>
-    <button class="btn lap" id="openBtn"${canLearn() ? '' : ' disabled'}>학습하기</button>
-    ${canLearn() ? '' : '<p class="lk">듣고 · 말하고 · 써보면 열립니다</p>'}
+    <button class="btn lap${canLearn() ? '' : ' off'}" id="openBtn">학습하기</button>
+    <p class="lk" id="lkMsg"></p>
   </div>
   <div id="micOut"></div>`;
 }
@@ -886,10 +908,10 @@ function learnHTML(s, done){
     <div class="sec2"><h4>예시</h4>${lines(s.ex)}</div>
     <div class="sec2"><h4>비슷한 표현</h4>${lines(s.sim)}</div>
     <div class="row" style="margin-top:24px">
-      <button class="btn" id="lrnDone"${(!done && d.lrnMicOK && d.lrnKeyOK) ? '' : ' disabled'} style="margin:0">${done ? '✓ 완료함' : '완료하기'}</button>
+      <button class="btn${(!done && d.lrnMicOK && d.lrnKeyOK) ? '' : ' off'}" id="lrnDone" style="margin:0">${done ? '✓ 완료함' : '완료하기'}</button>
       <button class="btn ghost" id="lrnClose" style="margin:0">닫기</button>
     </div>
-    ${(done || (d.lrnMicOK && d.lrnKeyOK)) ? '' : '<p class="lk" id="lrnLk">🎙 와 ⌨ 를 하면 눌립니다</p>'}
+    <p class="lk" id="lrnLk"></p>
   </div>`;
 }
 function closeLearn(){ document.getElementById('learnModal').classList.add('hide'); }
@@ -920,9 +942,7 @@ function wireLearn(s, done){
   const syncDone = () => {
     const dd = DB.days[todayStr()] || {};
     const ok = !done && dd.lrnMicOK && dd.lrnKeyOK;
-    document.getElementById('lrnDone').disabled = !ok;
-    const lk = document.getElementById('lrnLk');
-    if(lk && (ok || done)) lk.remove();
+    document.getElementById('lrnDone').classList.toggle('off', !ok);
   };
   const paint = marks => document.querySelectorAll('#lrnEn .w')
     .forEach((w,i) => w.classList.toggle('bad', marks ? marks[i] === false : false));
@@ -956,7 +976,16 @@ function wireLearn(s, done){
   });
 
   document.getElementById('lrnClose').onclick = closeLearn;
-  document.getElementById('lrnDone').onclick = () => { closeLearn(); finishNew(s); };
+  document.getElementById('lrnDone').onclick = () => {
+    const dd = DB.days[todayStr()] || {};
+    const lk = document.getElementById('lrnLk');
+    if(done){ poke([], '오늘은 이미 완료했어요', lk); return; }
+    if(!(dd.lrnMicOK && dd.lrnKeyOK)){
+      poke([!dd.lrnMicOK && mic, !dd.lrnKeyOK && key], '읽어보고 써보세요', lk);
+      return;
+    }
+    closeLearn(); finishNew(s);
+  };
 }
 
 /* ─── 돌아온 카드 ─── */
@@ -1126,7 +1155,12 @@ function wireToday(){
   }
 
   const openBtn = document.getElementById('openBtn');
-  if(openBtn) openBtn.onclick = openLearn;
+  if(openBtn) openBtn.onclick = () => {
+    if(canLearn()){ openLearn(); return; }
+    const d = DB.days[todayStr()] || {};
+    poke([!d.earOK && earBtn, !d.micOK && micBtn, !d.keyOK && keyBtn],
+         '듣고 · 말하고 · 써보세요', document.getElementById('lkMsg'));
+  };
 
   /* 들어보기 — 한 번 들으면 체크 */
   const earBtn = document.getElementById('earBtn');
@@ -1539,8 +1573,8 @@ function renderCal(){
 const STG = [
   ['🌱','0번',    c => c.step <= 0,                 '막 배운 문장. 내일 다시 나옵니다'],
   ['🌿','1번',    c => c.step === 1,                '한 번 맞혔습니다'],
-  ['🌳','2~3번',  c => c.step >= 2 && c.step <= 3,  '자리를 잡아가는 중입니다'],
-  ['🌲🌳','4번 이상', c => c.step >= 4,                '거의 내 것이 된 문장입니다']
+  ['🌲','2~3번',  c => c.step >= 2 && c.step <= 3,  '자리를 잡아가는 중입니다'],
+  ['🌳','4번 이상', c => c.step >= 4,                '거의 내 것이 된 문장입니다']
 ];
 function stgHelp(){
   const gap = LADDER.join('일 → ') + '일';
