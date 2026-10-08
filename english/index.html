@@ -211,7 +211,7 @@ details.cardbox details{border-top:1px solid var(--line)}
 
 /* ───── 탭바 ───── */
 nav{
-  position:fixed;left:0;right:0;bottom:0;background:rgba(250,248,244,.96);
+  position:fixed;left:0;right:0;bottom:0;z-index:70;background:rgba(250,248,244,.96);
   backdrop-filter:blur(8px);border-top:1px solid var(--line);
   padding-bottom:env(safe-area-inset-bottom);
 }
@@ -282,13 +282,22 @@ select,input[type=text],input[type=time]{
 .modal input:focus{outline:none;border-color:var(--accent)}
 /* 학습하기 창 — 화면 전체 */
 #learnModal{z-index:55;align-items:stretch}
-#learnModal .sheet{border-radius:0;height:100%;overflow:auto;padding:16px 18px calc(30px + env(safe-area-inset-bottom))}
+#learnModal .sheet{border-radius:0;height:100%;overflow:auto;padding:0 18px calc(90px + env(safe-area-inset-bottom))}
+.lrnhd{
+  position:sticky;top:0;z-index:5;background:var(--paper);
+  margin:0 -18px 0;padding:14px 18px 12px;border-bottom:1px solid var(--line);
+}
 .lrntop{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}
 .lrn .enrow{display:flex;align-items:center;gap:8px}
 .lrn .enrow .en{flex:1 1 auto;margin:0;font-size:22px;font-weight:700;line-height:1.35}
 .lrn .korow{display:flex;align-items:center;gap:8px;margin-top:18px}
 .lrn .korow p{flex:1 1 auto;margin:0;font-size:18px;font-weight:700}
 .lrn .sec2{border-top:1px solid var(--line);margin-top:18px;padding-top:16px}
+.lrn .nuance{margin-top:18px}
+/* 오늘 탭 맨 아래 — 따뜻한 한 줄 */
+.warm{text-align:center;margin:36px 0 6px;color:var(--soft);line-height:1.7}
+.warm b{display:block;font-size:13.5px;font-weight:700}
+.warm span{display:block;font-size:12.5px;margin-top:3px}
 .lrn h4{font-size:12px;letter-spacing:.06em;color:var(--soft);margin:0 0 10px;font-weight:700}
 .lk{font-size:12.5px;color:var(--soft);text-align:center;margin:8px 0 0}
 .btn.lap[disabled]{opacity:.4}
@@ -688,6 +697,7 @@ function renderToday(){
       + (due.length ? '' : viewDone());
   }
 
+  body.insertAdjacentHTML('beforeend', warmHTML());
   wireToday();
   save();
 }
@@ -818,10 +828,10 @@ function learnHTML(s, done){
     </div>`).join('');
   return `
   <div class="lrn">
+    <div class="lrnhd">
     <div class="lrntop">
       <span class="badge">DAY ${s.day}</span>
-      <span><button class="chip" id="lrnRd">발음 보기</button>
-            <button class="chip" id="lrnX">닫기</button></span>
+      <button class="chip" id="lrnRd">발음 보기</button>
     </div>
     <div class="enrow">
       <p class="en" id="lrnEn">${wordSpans(s.en)}</p>
@@ -831,13 +841,13 @@ function learnHTML(s, done){
     <p class="rdline">${s.rd}</p>
     <div class="korow">
       <p>${s.ko}</p>
-      <button class="rnd mic${d.micOK ? ' got' : ''}" id="lrnMic" title="말해보기">🎙</button>
-      <button class="rnd key${d.keyOK ? ' got' : ''}" id="lrnKey" title="직접 써보기">⌨</button>
+      <button class="rnd mic${d.lrnMicOK ? ' got' : ''}" id="lrnMic" title="말해보기">🎙</button>
+      <button class="rnd key${d.lrnKeyOK ? ' got' : ''}" id="lrnKey" title="직접 써보기">⌨</button>
     </div>
     <p class="tryn" id="lrnTry"></p>
-    <p class="nuance">${s.ko2}</p>
+    </div>
+    <p class="nuance">${s.ko2} ${s.when}</p>
     <div class="sec2"><div class="bd">${s.bd.map(x => `<b>${x[0]}</b><span>${x[1]}</span>`).join('')}</div></div>
-    <div class="sec2"><div class="when">${s.when}</div></div>
     <div class="sec2"><h4>예시</h4>${lines(s.ex)}</div>
     <div class="sec2"><h4>비슷한 표현</h4>${lines(s.sim)}</div>
     <button class="btn" id="lrnDone" style="margin-top:24px">${done ? '닫기' : '완료하기'}</button>
@@ -863,7 +873,6 @@ function wireLearn(s, done){
   sync();
   rd.onclick = () => { document.body.classList.toggle('showrd'); sync(); };
 
-  document.getElementById('lrnX').onclick = closeLearn;
   document.getElementById('lrnYg').onclick = () =>
     window.open('https://youglish.com/pronounce/' + encodeURIComponent(s.en.replace(/[^\w\s']/g,'')) + '/english', '_blank');
 
@@ -881,7 +890,7 @@ function wireLearn(s, done){
       paint(best.marks);
       if(best.rate >= 0.8){
         say('<b style="color:var(--accent)">' + Math.round(best.rate*100) + '% · 통과!</b>');
-        DB.days[todayStr()].micOK = true; mic.classList.add('got'); save();
+        DB.days[todayStr()].lrnMicOK = true; mic.classList.add('got'); save();
       }else{
         say(Math.round(best.rate*100) + '% — 빨간 단어를 다시');
       }
@@ -892,8 +901,8 @@ function wireLearn(s, done){
   };
 
   const key = document.getElementById('lrnKey');
-  key.onclick = () => openType(s.en, s.ko, 'today-' + s.day, () => {
-    DB.days[todayStr()].keyOK = true; key.classList.add('got'); save();
+  key.onclick = () => openType(s.en, s.ko, 'learn-' + s.day, () => {
+    DB.days[todayStr()].lrnKeyOK = true; key.classList.add('got'); save();
   });
 
   document.getElementById('lrnDone').onclick = () => {
@@ -962,6 +971,45 @@ function viewTodayMini(){
   if(!c) return '';
   const s = byDay(c.day);
   return `<div class="tdone">✓ 오늘의 문장 · DAY ${s.day} <b>${s.en}</b></div>`;
+}
+
+/* 오늘 탭 맨 아래 — 따뜻한 한 줄 (영어 + 뜻). 날마다 바뀝니다 */
+const WARM = [
+  ["Slow progress is still progress.", "느려도 나아가고 있어요."],
+  ["You showed up today.",             "오늘 열었잖아요. 그걸로 충분해요."],
+  ["Small steps count.",               "작은 걸음도 걸음이에요."],
+  ["You are doing enough.",            "지금도 충분히 하고 있어요."],
+  ["It's okay to be slow.",            "느려도 괜찮아요."],
+  ["One line a day is a lot.",         "하루 한 줄도 큰 거예요."],
+  ["You don't have to be perfect.",    "완벽하지 않아도 돼요."],
+  ["Today's you is enough.",           "오늘의 나로 충분해요."],
+  ["Rest is part of it.",              "쉬는 것도 과정이에요."],
+  ["You kept going.",                  "계속 왔잖아요."],
+  ["Mistakes mean you tried.",         "틀렸다는 건 해봤다는 뜻이에요."],
+  ["Be kind to yourself.",             "나한테도 다정하게."],
+  ["You can start small.",             "작게 시작해도 돼요."],
+  ["Nobody starts fluent.",            "처음부터 잘하는 사람은 없어요."],
+  ["Your pace is fine.",               "내 속도면 됩니다."],
+  ["Quiet days still count.",          "조용한 날도 하루예요."],
+  ["You're braver than you think.",    "생각보다 용감한 사람이에요."],
+  ["Keep your own time.",              "내 시간대로 가면 돼요."],
+  ["One sentence is a win.",           "한 문장도 이긴 거예요."],
+  ["You came back. That matters.",     "다시 왔다는 게 중요해요."],
+  ["Progress is quiet.",               "느는 건 조용히 옵니다."],
+  ["You're not behind.",               "늦은 거 아니에요."],
+  ["Trying is the hard part.",         "시도하는 게 제일 어려워요. 그걸 했어요."],
+  ["Good enough is good.",             "이만하면 잘한 거예요."],
+  ["You deserve a soft day.",          "가끔은 느슨해도 돼요."],
+  ["Little by little.",                "조금씩, 조금씩."],
+  ["Learning is brave.",               "배운다는 건 용기 있는 일이에요."],
+  ["Tomorrow you will know more.",     "내일의 나는 더 알고 있을 거예요."],
+  ["Still here. Still going.",         "아직 여기 있고, 아직 가는 중이에요."],
+  ["Be proud of today.",               "오늘의 나를 칭찬해도 됩니다."]
+];
+function warmHTML(){
+  const d = new Date();
+  const w = WARM[(d.getDate() + d.getMonth() * 31) % WARM.length];
+  return `<p class="warm"><b>${w[0]}</b><span>${w[1]}</span></p>`;
 }
 
 /* 끝냈을 때 뜨는 말 — 날마다 바뀝니다 */
@@ -1375,7 +1423,8 @@ function revSheet(from){
   const rows = [];
   let sp = 0, ty = 0, times = 0;
   Object.values(DB.cards).sort((a,b) => b.day - a.day).forEach(c => {
-    const mine = c.log.filter(l => l.d >= f && l.m !== 'new');
+    const mine = c.log.filter(l =>
+      l.d >= f && l.m !== 'new' && l.m !== 'relearn' && l.d !== c.learnedOn);
     if(!mine.length) return;
     const mic = mine.some(l => l.m === 'speak');
     const key = mine.some(l => l.m === 'type');
@@ -1732,8 +1781,9 @@ document.getElementById('mIn').onkeydown = e => { if(e.key === 'Enter') document
 document.getElementById('typeModal').onclick = e => { if(e.target.id === 'typeModal') closeType(); };
 
 document.querySelectorAll('nav button').forEach(b => b.onclick = () => {
-  if(b.dataset.tab === 'Learn') openLearn();
-  else switchTab(b.dataset.tab);
+  if(b.dataset.tab === 'Learn'){ openLearn(); return; }
+  closeLearn();
+  switchTab(b.dataset.tab);
 });
 document.getElementById('gearBtn').onclick = () => switchTab('Set');
 document.getElementById('setClose').onclick = () => switchTab('Log');
