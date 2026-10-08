@@ -3,123 +3,162 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>カレン 보이스 일본어</title>
+<title>FGO 보이스 일본어</title>
 <link rel="icon" href="data:,">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700&family=Noto+Sans+KR:wght@400;600;700&display=swap">
 <style>
-/* 한 화면 = 카드 한 장. 위에서 아래로 캐릭터 → 원본 보이스 → 일본어 → 히라가나 → 번역, 나머지는 접힘 */
+/* 오늘 할 것 하나에 집중: 캐릭터 → 게임 보이스 → 한 단계씩 펼침 → 완료. 하단 탭 4개 */
 :root{
   --bg:#f5f3f1; --card:#ffffff; --ink:#22202a; --sub:#6b6673; --line:#e6e1dd;
   --voice:#b23a5e; --voice-ink:#ffffff; --soft:#f8eef1; --study:#f3f1ee;
-  --ok:#2f7d55; --tts:#3d6f93;
+  --ok:#2f7d55; --tts:#3d6f93; --nav:#ffffffee;
   --jp:"Noto Sans JP","Noto Sans KR",system-ui,sans-serif;
   --kr:"Noto Sans KR","Noto Sans JP",system-ui,sans-serif;
 }
 @media (prefers-color-scheme: dark){
   :root{ --bg:#16141a; --card:#211e26; --ink:#ece8f0; --sub:#a59fae; --line:#353040;
-         --voice:#e0708f; --voice-ink:#1a1016; --soft:#2c2129; --study:#29262e; --ok:#6cc596; --tts:#7fb4dc; color-scheme:dark }
+         --voice:#e0708f; --voice-ink:#1a1016; --soft:#2c2129; --study:#29262e; --ok:#6cc596; --tts:#7fb4dc; --nav:#211e26ee; color-scheme:dark }
 }
 *{box-sizing:border-box}
 html,body{margin:0}
 body{background:var(--bg);color:var(--ink);font-family:var(--kr);font-size:16px;line-height:1.6;
-     padding:max(12px,env(safe-area-inset-top)) 16px max(24px,env(safe-area-inset-bottom))}
-.wrap{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+     padding:max(14px,env(safe-area-inset-top)) 16px calc(86px + env(safe-area-inset-bottom))}
+.tab{width:100%;max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.hide{display:none!important}
 button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
 button:focus-visible,summary:focus-visible{outline:2px solid var(--voice);outline-offset:2px}
+.tab-title{font-size:20px;font-weight:700;margin:2px 0 0}
 
-/* 상단 */
-.top{display:flex;align-items:center;gap:12px}
-.face{width:46px;height:46px;border-radius:50%;object-fit:cover;background:var(--soft);border:2px solid var(--card);box-shadow:0 0 0 1px var(--line)}
-.who{display:flex;flex-direction:column;line-height:1.3;min-width:0}
+/* 캐릭터 머리 */
+.who{display:flex;align-items:center;gap:12px}
+.face{width:48px;height:48px;border-radius:50%;object-fit:cover;background:var(--soft);flex:none;box-shadow:0 0 0 2px var(--card),0 0 0 3px var(--line)}
+.who div{display:flex;flex-direction:column;line-height:1.3;min-width:0}
 .who b{font-family:var(--jp);font-size:17px}
 .who span{font-size:13px;color:var(--sub)}
 
-/* 카드 */
-.card{background:var(--card);border-radius:18px;padding:18px 18px 16px;display:flex;flex-direction:column;gap:14px;box-shadow:0 1px 2px rgba(0,0,0,.05)}
-.meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
-.chip{font-family:var(--jp);font-size:13px;padding:2px 10px;border-radius:999px;background:var(--soft);color:var(--voice);font-weight:600}
+.card{background:var(--card);border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:12px;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+.center{align-items:center;text-align:center}
+.meta{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-family:var(--jp);font-size:13px;padding:2px 10px;border-radius:999px;background:var(--soft);color:var(--voice);font-weight:600;display:inline-block}
 .chip.gray{background:var(--study);color:var(--sub);font-family:var(--kr);font-weight:400}
 
-/* 원본 보이스 버튼 — 꽉 찬 색 버튼. TTS 버튼과 모양부터 다르게 */
-.voice{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px 16px;border-radius:14px;
+/* 게임 원본 보이스 = 꽉 찬 색 버튼 */
+.voice{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px 16px;border-radius:14px;
        background:var(--voice);color:var(--voice-ink);font-weight:700;font-size:16px}
 .voice.playing{filter:brightness(.9)}
-.voice.small{width:auto;padding:8px 14px;font-size:14px;border-radius:999px}
-.voice-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.hint{font-size:12.5px;color:var(--sub);margin-top:-6px}
-
-.dots{display:flex;align-items:center;gap:6px;font-size:14px;color:var(--sub)}
-.dot{width:10px;height:10px;border-radius:50%;border:2px solid var(--voice)}
+.voice.small{width:auto;align-self:flex-start;padding:8px 14px;font-size:14px;border-radius:999px}
+.center .voice.small{align-self:center}
+.hint{font-size:12.5px;color:var(--sub);margin:-4px 0 0}
+.ask{font-size:20px;font-weight:700;text-align:center;margin:6px 0 0}
+.ask-who{font-size:22px;text-align:center;margin:18px 0 4px}
+.dots{display:flex;gap:6px}
+.dot{width:11px;height:11px;border-radius:50%;border:2px solid var(--voice)}
 .dot.on{background:var(--voice)}
+.piece{margin:-6px 0 0;font-size:14px;color:var(--sub)}
 
-.jp{font-family:var(--jp);font-size:24px;font-weight:600;line-height:1.55;margin:0;word-break:break-word}
-.reading{font-family:var(--jp);font-size:15px;color:var(--sub);margin:-6px 0 0;word-break:break-word}
-.natural{font-size:19px;font-weight:700;line-height:1.5;margin:0}
-.study{background:var(--study);border-radius:10px;padding:9px 12px;font-size:14.5px;color:var(--sub)}
-.study small{display:block;font-size:12px;margin-bottom:2px}
+.steps{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.steps span{height:4px;border-radius:2px;background:var(--line)}
+.steps span.on{background:var(--voice)}
 
-/* 접는 칸 */
-.panels{display:flex;flex-direction:column;gap:8px}
-details{border:1px solid var(--line);border-radius:12px;background:var(--card)}
-summary{list-style:none;padding:11px 14px;font-weight:600;font-size:15px;display:flex;justify-content:space-between;align-items:center}
-summary::-webkit-details-marker{display:none}
-summary::after{content:"＋";color:var(--sub)}
-details[open] summary::after{content:"－"}
-.pbody{padding:0 14px 14px;display:flex;flex-direction:column;gap:10px}
-
-.chunk{display:flex;flex-direction:column;padding:8px 10px;border-radius:10px;background:var(--study)}
+/* 단계별 칸 */
+.sec{background:var(--card);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:10px;scroll-margin-top:12px}
+.sec h3{margin:0;font-size:14px;color:var(--voice);letter-spacing:.02em}
+.jp{font-family:var(--jp);font-size:25px;font-weight:600;line-height:1.55;margin:0;word-break:break-word}
+.jp.small{font-size:18px}
+.reading{font-family:var(--jp);font-size:14.5px;color:var(--sub);margin:0;word-break:break-word}
+.natural{font-size:20px;font-weight:700;line-height:1.5;margin:0}
+.natural.small{font-size:16px;font-weight:600}
+details.study{background:var(--study);border-radius:10px}
+details.study summary{padding:9px 12px;font-size:14px;color:var(--sub);list-style:none}
+details.study summary::-webkit-details-marker{display:none}
+details.study summary::after{content:" ＋"}
+details.study[open] summary::after{content:" －"}
+details.study p{margin:0;padding:0 12px 10px;font-size:15px}
+.chunks{display:flex;flex-direction:column;gap:6px}
+.chunk{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:12px;padding:9px 12px;border-radius:10px;background:var(--study);align-items:center}
 .chunk .s{font-family:var(--jp);font-size:18px;font-weight:600}
-.chunk .r{font-family:var(--jp);font-size:13px;color:var(--sub)}
-.chunk .k{font-size:15px}
-
-.grade{display:flex;align-items:baseline;gap:10px}
-.grade b{font-size:30px;line-height:1;color:var(--voice)}
-.legend{font-size:12.5px;color:var(--sub);display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:2px 10px}
-
-.ev{border-radius:10px;background:var(--study);padding:10px 12px;display:flex;flex-direction:column;gap:2px}
-.ev .reg{font-size:12px;font-weight:700;color:var(--tts);letter-spacing:.04em;text-transform:uppercase}
-.ev .s{font-family:var(--jp);font-size:17px;font-weight:600}
+.chunk .r{font-family:var(--jp);font-size:12.5px;color:var(--sub);grid-row:2}
+.chunk .k{grid-column:2;grid-row:1 / span 2;font-size:15px}
+.grade{display:flex;align-items:center;gap:12px}
+.grade b{font-size:32px;line-height:1;color:var(--voice)}
+.grade span{font-weight:600}
+.note{margin:0;font-size:14.5px;color:var(--sub)}
+.ev{border-radius:10px;background:var(--study);padding:10px 12px;display:flex;flex-direction:column;gap:1px}
+.ev .reg{font-size:12px;font-weight:700;color:var(--tts)}
+.ev .s{font-family:var(--jp);font-size:18px;font-weight:600}
 .ev .r{font-family:var(--jp);font-size:13px;color:var(--sub)}
-/* TTS 버튼 — 테두리만 있는 작은 버튼 */
-.tts{align-self:flex-start;margin-top:4px;border:1.5px solid var(--tts);color:var(--tts);border-radius:999px;padding:4px 12px;font-size:13.5px;font-weight:600}
-
-.kw{padding:10px 12px;border-radius:10px;background:var(--study)}
-.kw .s{font-family:var(--jp);font-size:20px;font-weight:700}
+/* 기기 읽어주기 = 테두리만 있는 작은 버튼 */
+.tts{align-self:flex-start;margin-top:6px;border:1.5px solid var(--tts);color:var(--tts);border-radius:999px;padding:4px 12px;font-size:13.5px;font-weight:600}
+.tts-cap{margin:0;font-size:12px;color:var(--sub)}
+.kw{padding:12px;border-radius:12px;background:var(--soft)}
+.kw .s{font-family:var(--jp);font-size:24px;font-weight:700;line-height:1.3}
 .kw .r{font-family:var(--jp);font-size:14px;color:var(--sub)}
-.kw .base{font-size:12.5px;color:var(--sub);margin-top:2px}
+.kw .base{font-size:14px;margin-top:4px}
 
-.done-btn{width:100%;padding:13px;border-radius:14px;border:2px solid var(--ok);color:var(--ok);font-weight:700;font-size:16px}
-.done-msg{text-align:center;color:var(--ok);font-weight:700}
+.next-btn{width:100%;padding:14px;border-radius:14px;background:var(--ink);color:var(--bg);font-weight:700;font-size:16px}
+.done-btn{width:100%;padding:16px;border-radius:14px;background:var(--ok);color:#fff;font-weight:700;font-size:17px}
+.done-card{gap:10px;padding:26px 18px}
+.done-big{font-size:22px;font-weight:700;color:var(--ok);margin:0}
+.next{margin:6px 0 0;color:var(--sub);font-size:14.5px}
+.big{font-size:18px;font-weight:700;margin:0}
+.empty{color:var(--sub);text-align:center;margin:30px 0}
 
-.nav{display:flex;justify-content:space-between;gap:10px}
-.nav button{flex:1;padding:11px;border-radius:12px;background:var(--card);border:1px solid var(--line);font-weight:600}
-.nav button:disabled{opacity:.35;cursor:default}
+/* 캐릭터 */
+.chars{display:flex;flex-direction:column;gap:10px}
+.char{display:flex;gap:14px;align-items:center;text-align:left;background:var(--card);border-radius:16px;padding:14px;border:2px solid transparent}
+.char.sel{border-color:var(--voice)}
+.char.off{opacity:.55}
+.char .face{width:58px;height:58px}
+.char div{display:flex;flex-direction:column;min-width:0;line-height:1.35}
+.char b{font-family:var(--jp);font-size:16px}
+.char span{font-size:14px}
+.char em{font-style:normal;font-size:12.5px;color:var(--sub)}
 
-.credit{font-size:11.5px;color:var(--sub);text-align:center;line-height:1.5}
+/* 보이스함 */
+.grp{margin:6px 0 -4px;font-size:14px;color:var(--sub)}
+.boxitem{background:var(--card);border-radius:14px}
+.boxitem summary{list-style:none;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.boxitem summary::-webkit-details-marker{display:none}
+.boxitem .st{font-size:13px;color:var(--sub)}
+.pbody{padding:0 14px 14px;display:flex;flex-direction:column;gap:10px}
+.boxseg{border-top:1px solid var(--line);padding-top:8px}
+.boxseg p{margin:0}
 
-.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(10px);
+/* 기록 */
+.total{margin:0;font-size:15px}
+.logday{background:var(--card);border-radius:14px;padding:12px 14px}
+.logday h3{margin:0 0 4px;font-size:14px;color:var(--voice)}
+.logday p{margin:2px 0;font-size:15px}
+
+/* 하단 탭 */
+nav{position:fixed;left:0;right:0;bottom:0;background:var(--nav);backdrop-filter:blur(8px);border-top:1px solid var(--line);
+    padding-bottom:env(safe-area-inset-bottom)}
+nav .in{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
+nav button{padding:9px 0 10px;display:flex;flex-direction:column;align-items:center;font-size:12.5px;color:var(--sub)}
+nav button .ic{font-size:19px;line-height:1.2}
+nav button.on{color:var(--voice);font-weight:700}
+
+.credit{font-size:11px;color:var(--sub);text-align:center;line-height:1.5;margin-top:10px}
+.toast{position:fixed;left:50%;bottom:calc(80px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(10px);
        background:var(--ink);color:var(--bg);padding:9px 14px;border-radius:10px;font-size:14px;opacity:0;transition:.2s;max-width:90vw;pointer-events:none}
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 @media (prefers-reduced-motion: reduce){ .toast{transition:none} }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header class="top">
-    <img class="face" id="face" alt="カレン">
-    <div class="who">
-      <b id="name">アムール〔カレン〕</b>
-      <span id="progress">오늘의 보이스</span>
-    </div>
-  </header>
-  <main class="card" id="card"><p>불러오는 중…</p></main>
-  <nav class="nav">
-    <button id="prev">◀ 이전</button>
-    <button id="next">다음 ▶</button>
-  </nav>
-  <footer class="credit">개인 학습용 · 음성·이미지 Atlas Academy · 일본어 원문 Mooncell (CC BY-NC-SA 4.0) · © TYPE-MOON / FGO PROJECT</footer>
-</div>
+<div class="tab" id="tabToday"><div id="todayBody" class="tab"><p class="empty">불러오는 중…</p></div></div>
+<div class="tab hide" id="tabChars"><h2 class="tab-title">캐릭터</h2><p class="note">고른 캐릭터의 보이스로 매일 하나씩 공부해요. 캐릭터마다 진도는 따로 남아요.</p><div id="charsBody"></div></div>
+<div class="tab hide" id="tabBox"><h2 class="tab-title">보이스함</h2><div id="boxBody" class="tab"></div></div>
+<div class="tab hide" id="tabLog"><h2 class="tab-title">기록</h2><div id="logBody" class="tab"></div>
+  <p class="credit">개인 학습용 · 음성·이미지 Atlas Academy · 일본어 원문 Mooncell (CC BY-NC-SA 4.0) · © TYPE-MOON / FGO PROJECT</p></div>
+
+<nav><div class="in">
+  <button class="on" data-tab="Today"><span class="ic">◉</span>오늘</button>
+  <button data-tab="Chars"><span class="ic">☺</span>캐릭터</button>
+  <button data-tab="Box"><span class="ic">♪</span>보이스함</button>
+  <button data-tab="Log"><span class="ic">▦</span>기록</button>
+</div></nav>
 <div class="toast" id="toast"></div>
 <script src="js/store.js"></script>
 <script src="js/audio.js"></script>

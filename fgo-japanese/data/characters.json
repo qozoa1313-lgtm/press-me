@@ -1,0 +1,27 @@
+{
+  "_note": "캐릭터를 늘릴 때는 이 파일만 고친다. learningData 가 있고 enabled=true 일 때만 학습 가능. 얼굴·이름은 raw/atlas 원본에서 옮김",
+  "order": ["901100", "1100900", "100100"],
+  "characters": {
+    "901100": {
+      "id": 901100, "collectionNo": 305,
+      "nameJa": "アムール〔カレン〕", "nameKo": "카렌",
+      "image": "https://static.atlasacademy.io/JP/Faces/f_9011000.png",
+      "learningData": "data/prototype_901100.json",
+      "enabled": true
+    },
+    "1100900": {
+      "id": 1100900, "collectionNo": 268,
+      "nameJa": "スペース・イシュタル", "nameKo": "스페이스 이슈타르",
+      "image": "https://static.atlasacademy.io/JP/Faces/f_11009000.png",
+      "learningData": null,
+      "enabled": false
+    },
+    "100100": {
+      "id": 100100, "collectionNo": 2,
+      "nameJa": "アルトリア・ペンドラゴン", "nameKo": "아르토리아",
+      "image": "https://static.atlasacademy.io/JP/Faces/f_1001000.png",
+      "learningData": null,
+      "enabled": false
+    }
+  }
+}
