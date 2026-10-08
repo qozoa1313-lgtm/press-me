@@ -300,7 +300,7 @@ select,input[type=text],input[type=time]{
 .warm span{display:block;font-size:12.5px;margin-top:3px}
 .lrn h4{font-size:12px;letter-spacing:.06em;color:var(--soft);margin:0 0 10px;font-weight:700}
 .lk{font-size:12.5px;color:var(--soft);text-align:center;margin:8px 0 0}
-.btn.lap[disabled]{opacity:.4}
+.btn[disabled]{opacity:.4}
 .hintline{margin-top:12px;font-size:19px;font-weight:700;letter-spacing:.06em}
 .hintline .dim{color:#C9C2B8}
 .rnd.key.on{outline:3px solid rgba(91,127,168,.3)}
@@ -850,7 +850,8 @@ function learnHTML(s, done){
     <div class="sec2"><div class="bd">${s.bd.map(x => `<b>${x[0]}</b><span>${x[1]}</span>`).join('')}</div></div>
     <div class="sec2"><h4>예시</h4>${lines(s.ex)}</div>
     <div class="sec2"><h4>비슷한 표현</h4>${lines(s.sim)}</div>
-    <button class="btn" id="lrnDone" style="margin-top:24px">${done ? '닫기' : '완료하기'}</button>
+    <button class="btn" id="lrnDone" style="margin-top:24px"${(done || (d.lrnMicOK && d.lrnKeyOK)) ? '' : ' disabled'}>${done ? '닫기' : '완료하기'}</button>
+    ${(done || (d.lrnMicOK && d.lrnKeyOK)) ? '' : '<p class="lk" id="lrnLk">🎙 와 ⌨ 를 하면 눌립니다</p>'}
   </div>`;
 }
 function closeLearn(){ document.getElementById('learnModal').classList.add('hide'); }
@@ -877,6 +878,14 @@ function wireLearn(s, done){
     window.open('https://youglish.com/pronounce/' + encodeURIComponent(s.en.replace(/[^\w\s']/g,'')) + '/english', '_blank');
 
   const say = t => { const e = document.getElementById('lrnTry'); if(e) e.innerHTML = t; };
+  /* 말하기와 쓰기를 둘 다 해야 완료하기가 눌립니다 */
+  const syncDone = () => {
+    const dd = DB.days[todayStr()] || {};
+    const ok = done || (dd.lrnMicOK && dd.lrnKeyOK);
+    document.getElementById('lrnDone').disabled = !ok;
+    const lk = document.getElementById('lrnLk');
+    if(lk && ok) lk.remove();
+  };
   const paint = marks => document.querySelectorAll('#lrnEn .w')
     .forEach((w,i) => w.classList.toggle('bad', marks ? marks[i] === false : false));
 
@@ -890,7 +899,7 @@ function wireLearn(s, done){
       paint(best.marks);
       if(best.rate >= 0.8){
         say('<b style="color:var(--accent)">' + Math.round(best.rate*100) + '% · 통과!</b>');
-        DB.days[todayStr()].lrnMicOK = true; mic.classList.add('got'); save();
+        DB.days[todayStr()].lrnMicOK = true; mic.classList.add('got'); save(); syncDone();
       }else{
         say(Math.round(best.rate*100) + '% — 빨간 단어를 다시');
       }
@@ -902,7 +911,7 @@ function wireLearn(s, done){
 
   const key = document.getElementById('lrnKey');
   key.onclick = () => openType(s.en, s.ko, 'learn-' + s.day, () => {
-    DB.days[todayStr()].lrnKeyOK = true; key.classList.add('got'); save();
+    DB.days[todayStr()].lrnKeyOK = true; key.classList.add('got'); save(); syncDone();
   });
 
   document.getElementById('lrnDone').onclick = () => {
