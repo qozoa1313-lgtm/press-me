@@ -1,0 +1,1220 @@
+{
+ "meta": {
+  "name": "LEARNING DATA PROTOTYPE v1",
+  "servantId": 901100,
+  "servantName": "アムール〔カレン〕",
+  "servantImage": "https://static.atlasacademy.io/JP/Faces/f_9011000.png",
+  "createdAt": "2026-10-08",
+  "source": "merged/voices_901100.json (match.result = matched 만 사용)",
+  "translationPolicy": "일본어 원문을 직접 해석. NA 영어 자막·Mooncell 중국어는 뜻 확인용 보조자료로만 사용",
+  "readingPolicy": "Sudachi(sudachidict_core) 읽기를 참고하고 문맥으로 고침. 확신이 없으면 readingStatus=needs_review",
+  "progressPolicy": "segment 는 order 순서대로. 이전 segment 를 완료해야 다음이 열림. 날짜(nextAvailableAt)는 언제부터 보여줄 수 있는지만 정함",
+  "statusValues": "generated(자동 생성) → reviewed(유진님 확인 후에만)"
+ },
+ "episodes": [
+  {
+   "episodeId": "901100:0_B160",
+   "servantId": 901100,
+   "servantName": "アムール〔カレン〕",
+   "category": "battle",
+   "label": "戦闘不能 1",
+   "kind": "short",
+   "voicePrefix": 0,
+   "audioParts": [
+    {
+     "id": "0_B160",
+     "url": "https://static.atlasacademy.io/JP/Audio/Servants_901100/0_B160.mp3",
+     "delay": 0.0,
+     "duration": 4.351
+    }
+   ],
+   "jpFull": "すみません。急用を思い出しましたので、失礼します",
+   "translation": {
+    "naturalKo": "죄송해요. 급한 볼일이 생각나서, 이만 실례할게요.",
+    "studyKo": "죄송합니다. 급한 볼일을 떠올렸으니, 실례하겠습니다.",
+    "status": "generated"
+   },
+   "segments": [
+    {
+     "id": "901100:0_B160#1",
+     "order": 1,
+     "of": 1,
+     "jp": "すみません。急用を思い出しましたので、失礼します",
+     "reading": "すみません。きゅうようを おもいだしましたので、しつれいします",
+     "readingStatus": "generated",
+     "translation": {
+      "naturalKo": "죄송해요. 급한 볼일이 생각나서, 이만 실례할게요.",
+      "studyKo": "죄송합니다. 급한 볼일을 떠올렸으니, 실례하겠습니다.",
+      "status": "generated",
+      "needsReview": false
+     },
+     "chunks": {
+      "items": [
+       {
+        "surface": "すみません",
+        "reading": "すみません",
+        "lemma": "すみません",
+        "ko": "죄송해요"
+       },
+       {
+        "surface": "急用を",
+        "reading": "きゅうようを",
+        "lemma": "急用",
+        "ko": "급한 볼일을"
+       },
+       {
+        "surface": "思い出しましたので",
+        "reading": "おもいだしましたので",
+        "lemma": "思い出す",
+        "ko": "떠올렸으니까 / 생각나서"
+       },
+       {
+        "surface": "失礼します",
+        "reading": "しつれいします",
+        "lemma": "失礼する",
+        "ko": "실례하겠습니다 (자리를 뜰게요)"
+       }
+      ],
+      "status": "generated"
+     },
+     "usage": {
+      "grade": "◎",
+      "note": "회사·가게에서 그대로 쓰는 정중한 말이에요. 자리를 뜰 때 「失礼します」를 정말 많이 써요. 카렌은 싸움에서 지고 핑계를 대며 빠지는 장면이라 웃긴 대사예요.",
+      "status": "generated"
+     },
+     "everyday": {
+      "items": [
+       {
+        "register": "casual",
+        "jp": "ごめん、急用思い出したから、先に帰るね。",
+        "reading": "ごめん、きゅうよう おもいだしたから、さきに かえるね。",
+        "ko": "미안, 급한 일이 생각나서 먼저 갈게."
+       },
+       {
+        "register": "polite",
+        "jp": "すみません、急用ができたので、お先に失礼します。",
+        "reading": "すみません、きゅうようが できたので、おさきに しつれいします。",
+        "ko": "죄송해요, 급한 일이 생겨서 먼저 들어가 보겠습니다."
+       }
+      ],
+      "status": "generated"
+     },
+     "keywords": [
+      {
+       "surface": "思い出しました",
+       "surfaceReading": "おもいだしました",
+       "lemma": "思い出す",
+       "lemmaReading": "おもいだす",
+       "ko": "떠올리다, 생각나다"
+      },
+      {
+       "surface": "失礼します",
+       "surfaceReading": "しつれいします",
+       "lemma": "失礼する",
+       "lemmaReading": "しつれいする",
+       "ko": "실례하다"
+      }
+     ],
+     "timing": {
+      "status": "raw_boundary",
+      "audioPart": "0_B160",
+      "start": 0.0,
+      "end": 4.351,
+      "basis": "single_part"
+     }
+    }
+   ]
+  },
+  {
+   "episodeId": "901100:0_H030",
+   "servantId": 901100,
+   "servantName": "アムール〔カレン〕",
+   "category": "home",
+   "label": "会話 1",
+   "kind": "short",
+   "voicePrefix": 0,
+   "audioParts": [
+    {
+     "id": "0_H030",
+     "url": "https://static.atlasacademy.io/JP/Audio/ChrVoice_901100/0_H030.mp3",
+     "delay": 0.0,
+     "duration": 5.947
+    }
+   ],
+   "jpFull": "労働の時間ですよ、マスター。一日の糧を、よろしくお願いします",
+   "translation": {
+    "naturalKo": "노동할 시간이에요, 마스터. 일용할 양식, 잘 부탁드릴게요.",
+    "studyKo": "노동할 시간이에요, 마스터. 하루치 양식을 부탁드릴게요.",
+    "status": "generated"
+   },
+   "segments": [
+    {
+     "id": "901100:0_H030#1",
+     "order": 1,
+     "of": 1,
+     "jp": "労働の時間ですよ、マスター。一日の糧を、よろしくお願いします",
+     "reading": "ろうどうの じかんですよ、マスター。いちにちの かてを、よろしく おねがいします",
+     "readingStatus": "generated",
+     "readingNote": "분석기는 一日 을 ついたち(1일)로 읽었지만, 문맥상 いちにち(하루)로 고침",
+     "translation": {
+      "naturalKo": "노동할 시간이에요, 마스터. 일용할 양식, 잘 부탁드릴게요.",
+      "studyKo": "노동할 시간이에요, 마스터. 하루치 양식을 부탁드릴게요.",
+      "status": "generated",
+      "needsReview": false,
+      "note": "「一日の糧」은 기도문의 '일용할 양식'을 떠올리게 하는 말이에요. 수녀인 카렌이 마스터에게 '오늘 내 밥값 벌어 와'라고 능청스럽게 말하는 장면이에요."
+     },
+     "chunks": {
+      "items": [
+       {
+        "surface": "労働の時間ですよ",
+        "reading": "ろうどうの じかんですよ",
+        "lemma": "時間",
+        "ko": "일할(노동의) 시간이에요"
+       },
+       {
+        "surface": "マスター",
+        "reading": "マスター",
+        "lemma": "マスター",
+        "ko": "마스터"
+       },
+       {
+        "surface": "一日の糧を",
+        "reading": "いちにちの かてを",
+        "lemma": "糧",
+        "ko": "하루치 양식을"
+       },
+       {
+        "surface": "よろしくお願いします",
+        "reading": "よろしく おねがいします",
+        "lemma": "よろしく",
+        "ko": "잘 부탁해요"
+       }
+      ],
+      "status": "generated"
+     },
+     "usage": {
+      "grade": "△",
+      "note": "「労働」「糧」은 책에 나오는 딱딱한 말이라 대화에서는 잘 안 써요. 뒤의 「よろしくお願いします」는 매일 쓰는 표현이니 이것만 가져가도 좋아요.",
+      "status": "generated"
+     },
+     "everyday": {
+      "items": [
+       {
+        "register": "casual",
+        "jp": "仕事の時間だよ。今日もがんばってね。",
+        "reading": "しごとの じかんだよ。きょうも がんばってね。",
+        "ko": "일할 시간이야. 오늘도 힘내."
+       },
+       {
+        "register": "polite",
+        "jp": "お仕事の時間ですよ。今日もよろしくお願いします。",
+        "reading": "おしごとの じかんですよ。きょうも よろしく おねがいします。",
+        "ko": "일하실 시간이에요. 오늘도 잘 부탁드려요."
+       }
+      ],
+      "status": "generated"
+     },
+     "keywords": [
+      {
+       "surface": "時間",
+       "surfaceReading": "じかん",
+       "lemma": "時間",
+       "lemmaReading": "じかん",
+       "ko": "시간"
+      },
+      {
+       "surface": "よろしくお願いします",
+       "surfaceReading": "よろしく おねがいします",
+       "lemma": "よろしく",
+       "lemmaReading": "よろしく",
+       "ko": "잘 부탁합니다"
+      }
+     ],
+     "timing": {
+      "status": "raw_boundary",
+      "audioPart": "0_H030",
+      "start": 0.0,
+      "end": 5.947,
+      "basis": "single_part"
+     }
+    }
+   ]
+  },
+  {
+   "episodeId": "901100:0_B040",
+   "servantId": 901100,
+   "servantName": "アムール〔カレン〕",
+   "category": "battle",
+   "label": "エクストラアタック 1",
+   "kind": "short",
+   "voicePrefix": 0,
+   "audioParts": [
+    {
+     "id": "0_B040",
+     "url": "https://static.atlasacademy.io/JP/Audio/Servants_901100/0_B040.mp3",
+     "delay": 0.0,
+     "duration": 2.82
+    }
+   ],
+   "jpFull": "まだ足りない？ 欲張りですね",
+   "translation": {
+    "naturalKo": "아직 모자라? 욕심쟁이시네요.",
+    "studyKo": "아직 부족해? 욕심이 많네요.",
+    "status": "generated"
+   },
+   "segments": [
+    {
+     "id": "901100:0_B040#1",
+     "order": 1,
+     "of": 1,
+     "jp": "まだ足りない？ 欲張りですね",
+     "reading": "まだ たりない？ よくばりですね",
+     "readingStatus": "generated",
+     "translation": {
+      "naturalKo": "아직 모자라? 욕심쟁이시네요.",
+      "studyKo": "아직 부족해? 욕심이 많네요.",
+      "status": "generated",
+      "needsReview": false,
+      "note": "앞은 반말 질문, 뒤는 존댓말이에요. 반말로 툭 던지고 존댓말로 놀리는 카렌식 말투라서 한국어도 그대로 섞었어요."
+     },
+     "chunks": {
+      "items": [
+       {
+        "surface": "まだ",
+        "reading": "まだ",
+        "lemma": "まだ",
+        "ko": "아직"
+       },
+       {
+        "surface": "足りない？",
+        "reading": "たりない？",
+        "lemma": "足りる",
+        "ko": "모자라? (충분하지 않아?)"
+       },
+       {
+        "surface": "欲張りですね",
+        "reading": "よくばりですね",
+        "lemma": "欲張り",
+        "ko": "욕심쟁이네요"
+       }
+      ],
+      "status": "generated"
+     },
+     "usage": {
+      "grade": "○",
+      "note": "친한 사이에 장난으로 쓸 수 있어요. 손님이나 윗사람에게 「欲張りですね」라고 하면 실례예요.",
+      "status": "generated"
+     },
+     "everyday": {
+      "items": [
+       {
+        "register": "casual",
+        "jp": "まだ足りないの？欲張りだなあ。",
+        "reading": "まだ たりないの？ よくばりだなあ。",
+        "ko": "아직 모자라? 욕심 많네."
+       },
+       {
+        "register": "polite",
+        "jp": "まだ足りませんか？",
+        "reading": "まだ たりませんか？",
+        "ko": "아직 부족하세요?"
+       }
+      ],
+      "status": "generated",
+      "note": "정중한 자리에서는 「欲張り」 부분을 빼고 질문만 하는 게 자연스러워요."
+     },
+     "keywords": [
+      {
+       "surface": "足りない",
+       "surfaceReading": "たりない",
+       "lemma": "足りる",
+       "lemmaReading": "たりる",
+       "ko": "충분하다 (足りない = 모자라다)"
+      },
+      {
+       "surface": "欲張り",
+       "surfaceReading": "よくばり",
+       "lemma": "欲張り",
+       "lemmaReading": "よくばり",
+       "ko": "욕심쟁이"
+      }
+     ],
+     "timing": {
+      "status": "raw_boundary",
+      "audioPart": "0_B040",
+      "start": 0.0,
+      "end": 2.82,
+      "basis": "single_part"
+     }
+    }
+   ]
+  },
+  {
+   "episodeId": "901100:11_B210",
+   "servantId": 901100,
+   "servantName": "アムール〔カレン〕",
+   "category": "battle",
+   "label": "宝具カード 1",
+   "kind": "short",
+   "voicePrefix": 11,
+   "audioParts": [
+    {
+     "id": "11_B210",
+     "url": "https://static.atlasacademy.io/JP/Audio/Servants_901100/11_B210.mp3",
+     "delay": 0.0,
+     "duration": 3.159
+    }
+   ],
+   "jpFull": "やっと出番？ 待ちくたびれたわ……！",
+   "translation": {
+    "naturalKo": "이제야 내 차례? 기다리다 지쳤어……!",
+    "studyKo": "드디어 나설 차례? 기다리다 지쳐 버렸어……!",
+    "status": "generated"
+   },
+   "segments": [
+    {
+     "id": "901100:11_B210#1",
+     "order": 1,
+     "of": 1,
+     "jp": "やっと出番？ 待ちくたびれたわ……！",
+     "reading": "やっと でばん？ まちくたびれたわ……！",
+     "readingStatus": "generated",
+     "translation": {
+      "naturalKo": "이제야 내 차례? 기다리다 지쳤어……!",
+      "studyKo": "드디어 나설 차례? 기다리다 지쳐 버렸어……!",
+      "status": "generated",
+      "needsReview": false
+     },
+     "chunks": {
+      "items": [
+       {
+        "surface": "やっと",
+        "reading": "やっと",
+        "lemma": "やっと",
+        "ko": "드디어, 이제야"
+       },
+       {
+        "surface": "出番？",
+        "reading": "でばん？",
+        "lemma": "出番",
+        "ko": "내 차례? (나설 차례)"
+       },
+       {
+        "surface": "待ちくたびれたわ",
+        "reading": "まちくたびれたわ",
+        "lemma": "待ちくたびれる",
+        "ko": "기다리다 지쳤어"
+       }
+      ],
+      "status": "generated"
+     },
+     "usage": {
+      "grade": "△",
+      "note": "끝의 「〜わ」는 표준어에서는 여성적이고 캐릭터성이 강하게 느껴질 수 있어요. 실제 사용감은 말하는 사람과 지역에 따라 달라요. 앞의 「やっと出番？」는 그대로 써도 돼요.",
+      "status": "generated"
+     },
+     "everyday": {
+      "items": [
+       {
+        "register": "casual",
+        "jp": "やっと私の番？待ちくたびれたよ。",
+        "reading": "やっと わたしの ばん？ まちくたびれたよ。",
+        "ko": "이제야 내 차례야? 기다리다 지쳤어."
+       },
+       {
+        "register": "polite",
+        "jp": "やっと順番が来ましたね。",
+        "reading": "やっと じゅんばんが きましたね。",
+        "ko": "드디어 차례가 왔네요."
+       }
+      ],
+      "status": "generated"
+     },
+     "keywords": [
+      {
+       "surface": "出番",
+       "surfaceReading": "でばん",
+       "lemma": "出番",
+       "lemmaReading": "でばん",
+       "ko": "나설 차례"
+      },
+      {
+       "surface": "待ちくたびれた",
+       "surfaceReading": "まちくたびれた",
+       "lemma": "待ちくたびれる",
+       "lemmaReading": "まちくたびれる",
+       "ko": "기다리다 지치다"
+      }
+     ],
+     "timing": {
+      "status": "raw_boundary",
+      "audioPart": "11_B210",
+      "start": 0.0,
+      "end": 3.159,
+      "basis": "single_part"
+     }
+    }
+   ]
+  },
+  {
+   "episodeId": "901100:0_H020",
+   "servantId": 901100,
+   "servantName": "アムール〔カレン〕",
+   "category": "home",
+   "label": "イベント開催中",
+   "kind": "short",
+   "voicePrefix": 0,
+   "audioParts": [
+    {
+     "id": "0_H020",
+     "url": "https://static.atlasacademy.io/JP/Audio/ChrVoice_901100/0_H020.mp3",
+     "delay": 0.0,
+     "duration": 5.778
+    }
+   ],
+   "jpFull": "イベントは逃げませんが、終わります。悔いの無いよう、楽しんでおくべきかと",
+   "translation": {
+    "naturalKo": "이벤트는 도망가지 않지만, 끝나긴 해요. 후회 없게 즐겨 두시는 게 좋을 것 같네요.",
+    "studyKo": "이벤트는 도망치지 않습니다만, 끝납니다. 후회가 없도록, 즐겨 두어야 하지 않을까 해요.",
+    "status": "generated"
+   },
+   "segments": [
+    {
+     "id": "901100:0_H020#1",
+     "order": 1,
+     "of": 1,
+     "jp": "イベントは逃げませんが、終わります。悔いの無いよう、楽しんでおくべきかと",
+     "reading": "イベントは にげませんが、おわります。くいの ないよう、たのしんで おくべきかと",
+     "readingStatus": "generated",
+     "translation": {
+      "naturalKo": "이벤트는 도망가지 않지만, 끝나긴 해요. 후회 없게 즐겨 두시는 게 좋을 것 같네요.",
+      "studyKo": "이벤트는 도망치지 않습니다만, 끝납니다. 후회가 없도록, 즐겨 두어야 하지 않을까 해요.",
+      "status": "generated",
+      "needsReview": false,
+      "note": "일본에서 흔히 쓰는 「〇〇は逃げない(서두를 필요 없어)」를 비튼 말장난이에요. '도망은 안 가도 끝은 난다'는 것이 포인트예요."
+     },
+     "chunks": {
+      "items": [
+       {
+        "surface": "イベントは",
+        "reading": "イベントは",
+        "lemma": "イベント",
+        "ko": "이벤트는"
+       },
+       {
+        "surface": "逃げませんが",
+        "reading": "にげませんが",
+        "lemma": "逃げる",
+        "ko": "도망가지 않지만"
+       },
+       {
+        "surface": "終わります",
+        "reading": "おわります",
+        "lemma": "終わる",
+        "ko": "끝나요"
+       },
+       {
+        "surface": "悔いの無いよう",
+        "reading": "くいの ないよう",
+        "lemma": "悔い",
+        "ko": "후회 없도록"
+       },
+       {
+        "surface": "楽しんでおく",
+        "reading": "たのしんで おく",
+        "lemma": "楽しむ",
+        "ko": "즐겨 두다"
+       },
+       {
+        "surface": "べきかと",
+        "reading": "べきかと",
+        "lemma": "べき",
+        "ko": "~하는 게 좋을 것 같아요"
+       }
+      ],
+      "status": "generated"
+     },
+     "usage": {
+      "grade": "○",
+      "note": "정중하고 조금 딱딱한 말투예요. 「〜べきかと」처럼 문장을 끝까지 말하지 않는 건 조언을 부드럽게 할 때 쓰는데, 일상 대화보다는 회사 말투에 가까워요.",
+      "status": "generated"
+     },
+     "everyday": {
+      "items": [
+       {
+        "register": "casual",
+        "jp": "イベント、もうすぐ終わっちゃうよ。今のうちに楽しんどこう。",
+        "reading": "イベント、もうすぐ おわっちゃうよ。いまのうちに たのしんどこう。",
+        "ko": "이벤트 곧 끝나. 지금 즐겨 두자."
+       },
+       {
+        "register": "polite",
+        "jp": "イベントはもうすぐ終わりますから、今のうちに楽しんでおきましょう。",
+        "reading": "イベントは もうすぐ おわりますから、いまのうちに たのしんで おきましょう。",
+        "ko": "이벤트는 곧 끝나니까, 지금 즐겨 둡시다."
+       }
+      ],
+      "status": "generated"
+     },
+     "keywords": [
+      {
+       "surface": "終わります",
+       "surfaceReading": "おわります",
+       "lemma": "終わる",
+       "lemmaReading": "おわる",
+       "ko": "끝나다"
+      },
+      {
+       "surface": "楽しんで",
+       "surfaceReading": "たのしんで",
+       "lemma": "楽しむ",
+       "lemmaReading": "たのしむ",
+       "ko": "즐기다"
+      }
+     ],
+     "timing": {
+      "status": "raw_boundary",
+      "audioPart": "0_H020",
+      "start": 0.0,
+      "end": 5.778,
+      "basis": "single_part"
+     }
+    }
+   ]
+  },
+  {
+   "episodeId": "901100:0_H080",
+   "servantId": 901100,
+   "servantName": "アムール〔カレン〕",
+   "category": "home",
+   "label": "聖杯について",
+   "kind": "long",
+   "voicePrefix": 0,
+   "audioParts": [
+    {
+     "id": "0_H080",
+     "url": "https://static.atlasacademy.io/JP/Audio/ChrVoice_901100/0_H080.mp3",
+     "delay": 0.0,
+     "duration": 2.239
+    },
+    {
+     "id": "0_H081",
+     "url": "https://static.atlasacademy.io/JP/Audio/ChrVoice_901100/0_H081.mp3",
+     "delay": 0.1,
+     "duration": 9.773
+    },
+    {
+     "id": "0_H082",
+     "url": "https://static.atlasacademy.io/JP/Audio/ChrVoice_901100/0_H082.mp3",
+     "delay": 0.1,
+     "duration": 3.026
+    }
+   ],
+   "jpFull": "聖杯があるのですか？ アレは危険なものです。もしあるのなら、真偽問わずに私が処理しますので、遠慮なく言ってください。……プレゼントとして、受け取ってあげます",
+   "translation": {
+    "naturalKo": "성배가 있다고요? 그건 위험한 물건이에요. 혹시 있다면 진짜든 가짜든 제가 처리할 테니, 부담 갖지 말고 말씀하세요. ……선물이라면, 특별히 받아 줄게요.",
+    "studyKo": "성배가 있는 건가요? 그것은 위험한 물건입니다. 만약 있다면 진위 여부를 가리지 않고 제가 처리할 테니, 거리낌 없이 말해 주세요. ……선물로서, 제가 받아 줄게요.",
+    "status": "generated"
+   },
+   "segmentPlan": "4조각. audioPart 3개 중 가운데(0_H081, 9.8초)가 길어서 문장 경계로 2개로 나눔. 텍스트↔파일 대응은 길이로 추정",
+   "segments": [
+    {
+     "id": "901100:0_H080#1",
+     "order": 1,
+     "of": 4,
+     "jp": "聖杯があるのですか？",
+     "reading": "せいはいが あるのですか？",
+     "readingStatus": "generated",
+     "translation": {
+      "naturalKo": "성배가 있다고요?",
+      "studyKo": "성배가 있는 건가요?",
+      "status": "generated",
+      "needsReview": false
+     },
+     "chunks": {
+      "items": [
+       {
+        "surface": "聖杯が",
+        "reading": "せいはいが",
+        "lemma": "聖杯",
+        "ko": "성배가"
+       },
+       {
+        "surface": "あるのですか？",
+        "reading": "あるのですか？",
+        "lemma": "ある",
+        "ko": "있는 건가요?"
+       }
+      ],
+      "status": "generated"
+     },
+     "usage": {
+      "grade": "○",
+      "note": "「〜のですか？」는 놀라서 다시 확인할 때 쓰는 정중한 말이에요. 실제 대화에서는 「あるんですか？」처럼 줄여서 말해요.",
+      "status": "generated"
+     },
+     "everyday": {
+      "items": [
+       {
+        "register": "casual",
+        "jp": "え、それ本当にあるの？",
+        "reading": "え、それ ほんとうに あるの？",
+        "ko": "어, 그거 진짜 있어?"
+       },
+       {
+        "register": "polite",
+        "jp": "それ、本当にあるんですか？",
+        "reading": "それ、ほんとうに あるんですか？",
+        "ko": "그거 정말 있어요?"
+       }
+      ],
+      "status": "generated",
+      "note": "「聖杯」는 게임 속 물건이라, 현실 표현에서는 「それ(그거)」로 바꿨어요."
+     },
+     "keywords": [
+      {
+       "surface": "ある",
+       "surfaceReading": "ある",
+       "lemma": "ある",
+       "lemmaReading": "ある",
+       "ko": "있다 (물건이)"
+      }
+     ],
+     "timing": {
+      "status": "raw_boundary",
+      "audioPart": "0_H080",
+      "start": 0.0,
+      "end": 2.239,
+      "basis": "duration_estimate",
+      "needsReview": true
+     }
+    },
+    {
+     "id": "901100:0_H080#2",
+     "order": 2,
+     "of": 4,
+     "jp": "アレは危険なものです。",
+     "reading": "アレは きけんな ものです。",
+     "readingStatus": "generated",
+     "translation": {
+      "naturalKo": "그건 위험한 물건이에요.",
+      "studyKo": "그것은 위험한 물건입니다.",
+      "status": "generated",
+      "needsReview": false
+     },
+     "chunks": {
+      "items": [
+       {
+        "surface": "アレは",
+        "reading": "アレは",
+        "lemma": "あれ",
+        "ko": "그건 (그 문제의 물건은)"
+       },
+       {
+        "surface": "危険なものです",
+        "reading": "きけんな ものです",
+        "lemma": "危険",
+        "ko": "위험한 물건이에요"
+       }
+      ],
+      "status": "generated"
+     },
+     "usage": {
+      "grade": "○",
+      "note": "「アレ」는 「あれ(저것·그것)」를 가타카나로 써서 '바로 그 물건'처럼 힘을 준 표기예요. 말로 할 땐 그냥 あれ예요. 「危険」은 조금 딱딱하고, 말로는 「危ない」를 더 많이 써요.",
+      "status": "generated"
+     },
+     "everyday": {
+      "items": [
+       {
+        "register": "casual",
+        "jp": "あれ、危ないよ。",
+        "reading": "あれ、あぶないよ。",
+        "ko": "그거 위험해."
+       },
+       {
+        "register": "polite",
+        "jp": "あれは危ないですよ。",
+        "reading": "あれは あぶないですよ。",
+        "ko": "그건 위험해요."
+       }
+      ],
+      "status": "generated"
+     },
+     "keywords": [
+      {
+       "surface": "危険",
+       "surfaceReading": "きけん",
+       "lemma": "危険",
+       "lemmaReading": "きけん",
+       "ko": "위험"
+      }
+     ],
+     "timing": {
+      "status": "needs_alignment",
+      "audioPart": "0_H081",
+      "start": 0.0,
+      "end": null,
+      "basis": "sentence_split_inside_part"
+     }
+    },
+    {
+     "id": "901100:0_H080#3",
+     "order": 3,
+     "of": 4,
+     "jp": "もしあるのなら、真偽問わずに私が処理しますので、遠慮なく言ってください。",
+     "reading": "もし あるのなら、しんぎ とわずに わたしが しょり しますので、えんりょなく いって ください。",
+     "readingStatus": "needs_review",
+     "readingNote": "「私」가 わたし 인지 わたくし 인지는 음성을 들어야 확정할 수 있음 (분석기는 わたくし)",
+     "translation": {
+      "naturalKo": "혹시 있다면 진짜든 가짜든 제가 처리할 테니, 부담 갖지 말고 말씀하세요.",
+      "studyKo": "만약 있다면 진위 여부를 가리지 않고 제가 처리할 테니, 거리낌 없이 말해 주세요.",
+      "status": "generated",
+      "needsReview": false
+     },
+     "chunks": {
+      "items": [
+       {
+        "surface": "もしあるのなら",
+        "reading": "もし あるのなら",
+        "lemma": "ある",
+        "ko": "만약 있다면"
+       },
+       {
+        "surface": "真偽問わずに",
+        "reading": "しんぎ とわずに",
+        "lemma": "問う",
+        "ko": "진짜든 가짜든 상관없이"
+       },
+       {
+        "surface": "私が処理しますので",
+        "reading": "わたしが しょり しますので",
+        "lemma": "処理する",
+        "ko": "제가 처리할 테니"
+       },
+       {
+        "surface": "遠慮なく",
+        "reading": "えんりょなく",
+        "lemma": "遠慮",
+        "ko": "부담 갖지 말고 / 거리낌 없이"
+       },
+       {
+        "surface": "言ってください",
+        "reading": "いって ください",
+        "lemma": "言う",
+        "ko": "말해 주세요"
+       }
+      ],
+      "status": "generated"
+     },
+     "usage": {
+      "grade": "○",
+      "note": "「真偽問わずに」는 글에서 쓰는 딱딱한 말이에요. 뒤의 「遠慮なく言ってください」는 일상에서도 아주 많이 쓰는 표현이에요.",
+      "status": "generated"
+     },
+     "everyday": {
+      "items": [
+       {
+        "register": "casual",
+        "jp": "何かあったら、遠慮なく言ってね。",
+        "reading": "なにか あったら、えんりょなく いってね。",
+        "ko": "무슨 일 있으면 편하게 말해."
+       },
+       {
+        "register": "polite",
+        "jp": "何かあれば、遠慮なく言ってください。",
+        "reading": "なにか あれば、えんりょなく いって ください。",
+        "ko": "무슨 일 있으시면 부담 갖지 말고 말씀해 주세요."
+       }
+      ],
+      "status": "generated"
+     },
+     "keywords": [
+      {
+       "surface": "遠慮なく",
+       "surfaceReading": "えんりょなく",
+       "lemma": "遠慮",
+       "lemmaReading": "えんりょ",
+       "ko": "거리낌 없이, 부담 갖지 않고"
+      },
+      {
+       "surface": "言って",
+       "surfaceReading": "いって",
+       "lemma": "言う",
+       "lemmaReading": "いう",
+       "ko": "말하다"
+      }
+     ],
+     "timing": {
+      "status": "needs_alignment",
+      "audioPart": "0_H081",
+      "start": null,
+      "end": 9.773,
+      "basis": "sentence_split_inside_part"
+     }
+    },
+    {
+     "id": "901100:0_H080#4",
+     "order": 4,
+     "of": 4,
+     "jp": "……プレゼントとして、受け取ってあげます",
+     "reading": "……プレゼントとして、うけとって あげます",
+     "readingStatus": "generated",
+     "translation": {
+      "naturalKo": "……선물이라면, 특별히 받아 줄게요.",
+      "studyKo": "……선물로서, 제가 받아 줄게요.",
+      "status": "generated",
+      "needsReview": false,
+      "note": "「受け取ってあげます」는 '받아 줄게요'라는 생색이에요. 처리해 준다더니 자기가 갖겠다는 반전이라, 너무 공손하게 옮기면 농담이 약해져요. 어감은 확인이 필요해요."
+     },
+     "chunks": {
+      "items": [
+       {
+        "surface": "プレゼントとして",
+        "reading": "プレゼントとして",
+        "lemma": "プレゼント",
+        "ko": "선물로"
+       },
+       {
+        "surface": "受け取ってあげます",
+        "reading": "うけとって あげます",
+        "lemma": "受け取る",
+        "ko": "받아 줄게요"
+       }
+      ],
+      "status": "generated"
+     },
+     "usage": {
+      "grade": "△",
+      "note": "「〜てあげます」는 '해 줄게요'라는 생색이 들어간 말이에요. 윗사람에게 쓰면 건방져 보여요. 여기선 카렌의 능청스러운 농담이에요.",
+      "status": "generated"
+     },
+     "everyday": {
+      "items": [
+       {
+        "register": "casual",
+        "jp": "じゃあ、ありがたくもらっとくね。",
+        "reading": "じゃあ、ありがたく もらっとくね。",
+        "ko": "그럼 고맙게 받아 둘게."
+       },
+       {
+        "register": "polite",
+        "jp": "では、ありがたくいただきます。",
+        "reading": "では、ありがたく いただきます。",
+        "ko": "그럼 감사히 받겠습니다."
+       }
+      ],
+      "status": "generated"
+     },
+     "keywords": [
+      {
+       "surface": "受け取って",
+       "surfaceReading": "うけとって",
+       "lemma": "受け取る",
+       "lemmaReading": "うけとる",
+       "ko": "받다"
+      }
+     ],
+     "timing": {
+      "status": "raw_boundary",
+      "audioPart": "0_H082",
+      "start": 0.0,
+      "end": 3.026,
+      "basis": "duration_estimate",
+      "needsReview": true
+     }
+    }
+   ]
+  },
+  {
+   "episodeId": "901100:2_G120",
+   "servantId": 901100,
+   "servantName": "アムール〔カレン〕",
+   "category": "groeth",
+   "label": "レベルアップ 3",
+   "kind": "long",
+   "voicePrefix": 2,
+   "audioParts": [
+    {
+     "id": "2_G120",
+     "url": "https://static.atlasacademy.io/JP/Audio/ChrVoice_901100/2_G120.mp3",
+     "delay": 0.0,
+     "duration": 2.547
+    },
+    {
+     "id": "2_G121",
+     "url": "https://static.atlasacademy.io/JP/Audio/ChrVoice_901100/2_G121.mp3",
+     "delay": 0.1,
+     "duration": 3.272
+    },
+    {
+     "id": "2_G122",
+     "url": "https://static.atlasacademy.io/JP/Audio/ChrVoice_901100/2_G122.mp3",
+     "delay": 0.1,
+     "duration": 6.405
+    }
+   ],
+   "jpFull": "えっ！ もう次のレベル！？ 待って待って、ちょっと早すぎない！？ もう、もっと途中の雰囲気とか、楽しんでもいいじゃない。……バカ",
+   "translation": {
+    "naturalKo": "어? 벌써 다음 레벨이야!? 잠깐, 잠깐! 좀 너무 빠르지 않아!? 아이 참, 중간중간 분위기도 좀 더 즐겨도 되잖아. ……바보.",
+    "studyKo": "어! 벌써 다음 레벨!? 기다려 기다려, 조금 너무 빠르지 않아!? 정말, 과정의 분위기 같은 것도 좀 더 즐겨도 되잖아. ……바보.",
+    "status": "generated"
+   },
+   "segmentPlan": "3조각 = audioPart 3개. 텍스트↔파일 대응은 NA 자막 안의 [id …] 표시로 확인",
+   "segments": [
+    {
+     "id": "901100:2_G120#1",
+     "order": 1,
+     "of": 3,
+     "jp": "えっ！ もう次のレベル！？",
+     "reading": "えっ！ もう つぎの レベル！？",
+     "readingStatus": "generated",
+     "translation": {
+      "naturalKo": "어? 벌써 다음 레벨이야!?",
+      "studyKo": "어! 벌써 다음 레벨!?",
+      "status": "generated",
+      "needsReview": false
+     },
+     "chunks": {
+      "items": [
+       {
+        "surface": "えっ！",
+        "reading": "えっ！",
+        "lemma": "えっ",
+        "ko": "어?! (놀람)"
+       },
+       {
+        "surface": "もう",
+        "reading": "もう",
+        "lemma": "もう",
+        "ko": "벌써"
+       },
+       {
+        "surface": "次のレベル！？",
+        "reading": "つぎの レベル！？",
+        "lemma": "次",
+        "ko": "다음 레벨!?"
+       }
+      ],
+      "status": "generated"
+     },
+     "usage": {
+      "grade": "◎",
+      "note": "놀랐을 때 그대로 쓰는 말이에요. 「もう」는 여기서 '벌써'라는 뜻이에요.",
+      "status": "generated"
+     },
+     "everyday": {
+      "items": [
+       {
+        "register": "casual",
+        "jp": "え、もう次？",
+        "reading": "え、もう つぎ？",
+        "ko": "어, 벌써 다음이야?"
+       },
+       {
+        "register": "polite",
+        "jp": "えっ、もう次ですか？",
+        "reading": "えっ、もう つぎですか？",
+        "ko": "어, 벌써 다음이에요?"
+       }
+      ],
+      "status": "generated"
+     },
+     "keywords": [
+      {
+       "surface": "次",
+       "surfaceReading": "つぎ",
+       "lemma": "次",
+       "lemmaReading": "つぎ",
+       "ko": "다음"
+      }
+     ],
+     "timing": {
+      "status": "raw_boundary",
+      "audioPart": "2_G120",
+      "start": 0.0,
+      "end": 2.547,
+      "basis": "na_subtitle_id_marker"
+     }
+    },
+    {
+     "id": "901100:2_G120#2",
+     "order": 2,
+     "of": 3,
+     "jp": "待って待って、ちょっと早すぎない！？",
+     "reading": "まって まって、ちょっと はやすぎない！？",
+     "readingStatus": "generated",
+     "translation": {
+      "naturalKo": "잠깐, 잠깐! 좀 너무 빠르지 않아!?",
+      "studyKo": "기다려 기다려, 조금 너무 빠르지 않아!?",
+      "status": "generated",
+      "needsReview": false
+     },
+     "chunks": {
+      "items": [
+       {
+        "surface": "待って待って",
+        "reading": "まって まって",
+        "lemma": "待つ",
+        "ko": "잠깐 잠깐 (기다려 기다려)"
+       },
+       {
+        "surface": "ちょっと",
+        "reading": "ちょっと",
+        "lemma": "ちょっと",
+        "ko": "좀"
+       },
+       {
+        "surface": "早すぎない！？",
+        "reading": "はやすぎない！？",
+        "lemma": "早い",
+        "ko": "너무 빠르지 않아!?"
+       }
+      ],
+      "status": "generated"
+     },
+     "usage": {
+      "grade": "◎",
+      "note": "「待って待って」「早すぎない？」 둘 다 친구끼리 정말 자주 쓰는 말이에요. 「〜すぎ」는 '너무 ~하다'예요.",
+      "status": "generated"
+     },
+     "everyday": {
+      "items": [
+       {
+        "register": "casual",
+        "jp": "待って待って、早すぎるって！",
+        "reading": "まって まって、はやすぎるって！",
+        "ko": "잠깐 잠깐, 너무 빠르다니까!"
+       },
+       {
+        "register": "polite",
+        "jp": "ちょっと待ってください、早すぎませんか？",
+        "reading": "ちょっと まって ください、はやすぎませんか？",
+        "ko": "잠깐만요, 너무 빠르지 않나요?"
+       }
+      ],
+      "status": "generated"
+     },
+     "keywords": [
+      {
+       "surface": "待って",
+       "surfaceReading": "まって",
+       "lemma": "待つ",
+       "lemmaReading": "まつ",
+       "ko": "기다리다"
+      },
+      {
+       "surface": "早すぎない",
+       "surfaceReading": "はやすぎない",
+       "lemma": "早い",
+       "lemmaReading": "はやい",
+       "ko": "빠르다 (すぎる = 너무)"
+      }
+     ],
+     "timing": {
+      "status": "raw_boundary",
+      "audioPart": "2_G121",
+      "start": 0.0,
+      "end": 3.272,
+      "basis": "na_subtitle_id_marker"
+     }
+    },
+    {
+     "id": "901100:2_G120#3",
+     "order": 3,
+     "of": 3,
+     "jp": "もう、もっと途中の雰囲気とか、楽しんでもいいじゃない。……バカ",
+     "reading": "もう、もっと とちゅうの ふんいきとか、たのしんでも いいじゃない。……バカ",
+     "readingStatus": "generated",
+     "translation": {
+      "naturalKo": "아이 참, 중간중간 분위기도 좀 더 즐겨도 되잖아. ……바보.",
+      "studyKo": "정말, 과정의 분위기 같은 것도 좀 더 즐겨도 되잖아. ……바보.",
+      "status": "generated",
+      "needsReview": false,
+      "note": "여기서 「もう」는 '벌써'가 아니라 '아이 참' 하고 투정 부리는 말이에요. 1조각의 「もう(벌써)」와 뜻이 달라요."
+     },
+     "chunks": {
+      "items": [
+       {
+        "surface": "もう、",
+        "reading": "もう、",
+        "lemma": "もう",
+        "ko": "아이 참,"
+       },
+       {
+        "surface": "もっと",
+        "reading": "もっと",
+        "lemma": "もっと",
+        "ko": "좀 더"
+       },
+       {
+        "surface": "途中の雰囲気とか",
+        "reading": "とちゅうの ふんいきとか",
+        "lemma": "雰囲気",
+        "ko": "중간 분위기 같은 것"
+       },
+       {
+        "surface": "楽しんでもいいじゃない",
+        "reading": "たのしんでも いいじゃない",
+        "lemma": "楽しむ",
+        "ko": "즐겨도 되잖아"
+       },
+       {
+        "surface": "……バカ",
+        "reading": "……バカ",
+        "lemma": "バカ",
+        "ko": "……바보"
+       }
+      ],
+      "status": "generated"
+     },
+     "usage": {
+      "grade": "○",
+      "note": "투정 부리는 말투라 친한 사이에서만 써요. 「バカ」는 장난일 때만 괜찮고, 진지하게 쓰면 큰 실례예요.",
+      "status": "generated"
+     },
+     "everyday": {
+      "items": [
+       {
+        "register": "casual",
+        "jp": "もうちょっとゆっくり楽しもうよ。",
+        "reading": "もうちょっと ゆっくり たのしもうよ。",
+        "ko": "조금 더 천천히 즐기자."
+       },
+       {
+        "register": "polite",
+        "jp": "もう少しゆっくり楽しみませんか？",
+        "reading": "もうすこし ゆっくり たのしみませんか？",
+        "ko": "조금 더 천천히 즐기지 않을래요?"
+       }
+      ],
+      "status": "generated"
+     },
+     "keywords": [
+      {
+       "surface": "楽しんでも",
+       "surfaceReading": "たのしんでも",
+       "lemma": "楽しむ",
+       "lemmaReading": "たのしむ",
+       "ko": "즐기다"
+      },
+      {
+       "surface": "雰囲気",
+       "surfaceReading": "ふんいき",
+       "lemma": "雰囲気",
+       "lemmaReading": "ふんいき",
+       "ko": "분위기"
+      }
+     ],
+     "timing": {
+      "status": "raw_boundary",
+      "audioPart": "2_G122",
+      "start": 0.0,
+      "end": 6.405,
+      "basis": "na_subtitle_id_marker"
+     }
+    }
+   ]
+  }
+ ]
+}
