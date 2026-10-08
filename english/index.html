@@ -1486,6 +1486,10 @@ function openSheet(html, bare){
     speak(x.dataset.speak);
   });
   b.querySelectorAll('[data-day]').forEach(x => x.onclick = () => { closeSheet(); openInBox(+x.dataset.day); });
+  b.querySelectorAll('[data-tip]').forEach(x => x.onclick = () => {
+    const t = b.querySelector('#' + x.dataset.tip);
+    if(t) t.classList.toggle('hide');
+  });
   b.querySelectorAll('[data-ymv]').forEach(x => x.onclick = () => { ymY += +x.dataset.ymv; openSheet(ymSheet(), 1); });
   b.querySelectorAll('[data-ymx]').forEach(x => x.onclick = closeSheet);
   b.querySelectorAll('[data-ym]').forEach(x => x.onclick = () => {
@@ -1539,8 +1543,11 @@ function revSheet(from){
       <span class="mk${mic ? ' on' : ''}">🎙</span>
       <span class="mk${key ? ' on' : ''}">⌨</span></div>`);
   });
-  return `<h3>복습한 문장</h3>
+  return `<h3>복습한 문장<button class="qm" data-tip="revTip">?</button></h3>
     <p class="cnt">총 ${half2(times)}번 · 🎙 ${sp}장 · ⌨ ${ty}장</p>
+    <p class="lead hide" id="revTip" style="margin-top:10px">
+      여기서 복습 횟수는 <b>🎙 말해보기 0.5번 + ⌨ 써보기 0.5번</b> 으로 셉니다.
+      둘 다 하면 <b>1번</b>, 하나만 하면 <b>0.5번</b> 입니다.</p>
     <div class="list">${rows.join('') || '<p class="lead">아직 없습니다.</p>'}</div>`;
 }
 
