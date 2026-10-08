@@ -52,6 +52,30 @@ h2.sec{font-size:13px;color:var(--soft);font-weight:700;margin:26px 0 10px;lette
 .cal{margin-top:6px}
 .calhd{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
 .calhd b{font-size:15px}
+.calttl{letter-spacing:.08em;font-size:14px}
+.weekhd{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:26px 0 10px}
+.weekhd .sec{letter-spacing:.06em}
+#dsearch{
+  font:inherit;font-size:12.5px;color:var(--soft);background:var(--card);
+  border:1.5px solid var(--line);border-radius:12px;padding:6px 9px;flex:0 0 auto;
+}
+/* 기록 요약 — 누를 수 있는 칸 */
+.stat div.tap{cursor:pointer}
+.stat div.tap::after{content:'›';position:absolute;top:10px;right:11px;color:var(--soft);font-size:14px}
+.stat div{position:relative}
+/* 새 창 목록 */
+.sheet .list{max-height:60vh;overflow:auto;margin-top:12px}
+.sheet .li{
+  display:flex;align-items:center;gap:10px;background:var(--card);
+  border:1.5px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:8px;
+}
+.sheet .li .tx{flex:1 1 auto;min-width:0}
+.sheet .li .tx b{display:block;font-size:15px}
+.sheet .li .tx span{display:block;font-size:12.5px;color:var(--soft)}
+.sheet .li .mk{font-size:15px;opacity:.25;flex:0 0 auto}
+.sheet .li .mk.on{opacity:1}
+.sheet h3{font-size:19px;margin:0 0 2px}
+.sheet .cnt{font-size:13px;color:var(--soft);margin:0}
 .calhd button{font-size:19px;color:var(--soft);padding:4px 14px}
 .calgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center}
 .calgrid .dow{font-size:11px;color:var(--soft);padding-bottom:6px}
@@ -59,7 +83,8 @@ h2.sec{font-size:13px;color:var(--soft);font-weight:700;margin:26px 0 10px;lette
 .cell.out{color:transparent;pointer-events:none}
 .cell.sun{color:#B4675E}
 .cell .dot{display:block;width:6px;height:6px;border-radius:50%;background:var(--line);margin:4px auto 0}
-.cell.did .dot{background:var(--accent)}
+.cell .dot{width:7px;height:7px}
+.cell.did .dot{background:#E08A3C}
 .cell.today{outline:1.5px solid var(--accent);outline-offset:-1.5px}
 .cell.sel{background:var(--band)}
 .cell.future{color:#C9C2B8}
@@ -206,6 +231,11 @@ select,input[type=text],input[type=time]{
 .fold{float:right;font-size:17px;line-height:1;color:var(--soft);padding:0 2px 4px 10px}
 .card .fold.corner{position:absolute;top:16px;right:18px;float:none;padding:4px 8px;font-size:20px}
 .w.bad{color:#C0392B}
+/* 카드 아래에 걸쳐 앉는 버튼 */
+.btn.lap{
+  width:calc(100% - 36px);margin:-24px 18px 0;position:relative;z-index:5;
+  box-shadow:0 3px 12px rgba(43,39,35,.10);
+}
 .acts{display:flex;align-items:center;gap:6px;margin-top:16px;flex-wrap:wrap}
 .rnd{
   width:42px;height:42px;border-radius:50%;background:var(--band);font-size:18px;
@@ -347,6 +377,14 @@ select,input[type=text],input[type=time]{
       <button class="btn ghost" id="mClose">닫기</button>
       <button class="btn" id="mGo">확인</button>
     </div>
+  </div>
+</div>
+
+<!-- ══════════ 목록 창 ══════════ -->
+<div id="sheetWrap" class="modal hide">
+  <div class="sheet">
+    <div id="sheetBody"></div>
+    <button class="btn ghost" id="sheetClose" style="margin-top:12px">닫기</button>
   </div>
 </div>
 
@@ -736,7 +774,7 @@ function viewNew(s, done){
       <button class="btn ol" id="ygBtn" style="margin-top:18px">📺 영상에서 보기</button>
     </div>
   </div>
-  <button class="btn" id="openBtn">뜻 보기</button>
+  <button class="btn lap" id="openBtn">학습하기</button>
   <div id="micOut"></div>`;
 }
 
@@ -936,7 +974,7 @@ function wireToday(){
   if(foldBtn) foldBtn.onclick = () => {
     document.getElementById('opened').classList.add('hide');
     const ob = document.getElementById('openBtn');
-    if(ob){ ob.classList.remove('hide'); ob.textContent = '뜻 보기'; }
+    if(ob) ob.classList.remove('hide');
   };
 
   const revFold = document.getElementById('revFold');
@@ -1166,6 +1204,10 @@ function renderBox(){
 }
 
 /* ═══════════════ 달력 ═══════════════ */
+const MONSHORT = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+const enDate = d => MONSHORT[+d.slice(5,7) - 1] + ' ' + (+d.slice(8,10));
+const MONTHFULL = ['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY',
+                   'AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'];
 let calYM = null, calSel = null;
 
 /* 하루치 기록을 모은다 */
@@ -1178,6 +1220,47 @@ function dayLog(date){
   }));
   const any = made.length || back.ok || back.mid || back.no || back.reset;
   return { made, back, any };
+}
+
+/* ─── 목록 창 ─── */
+function openSheet(html){
+  document.getElementById('sheetBody').innerHTML = html;
+  document.getElementById('sheetWrap').classList.remove('hide');
+}
+function closeSheet(){ document.getElementById('sheetWrap').classList.add('hide'); }
+
+/* 완료한 문장 전부 */
+function doneSheet(){
+  const cards = Object.values(DB.cards).sort((a,b) => b.day - a.day);
+  const rows = cards.map(c => {
+    const s = byDay(c.day), [gr] = maturity(c.step);
+    return `<div class="li"><span class="mk on">${gr}</span>
+      <span class="tx"><b>${s.en}</b><span>${s.ko}</span></span>
+      <span class="mk on" style="font-size:11px;color:var(--soft)">DAY ${s.day}</span></div>`;
+  }).join('') || '<p class="lead">아직 없습니다.</p>';
+  return `<h3>완료한 문장</h3><p class="cnt">${cards.length}장</p><div class="list">${rows}</div>`;
+}
+
+/* 이번 주에 복습한 문장 */
+function revSheet(mon){
+  const rows = [], seen = {};
+  let sp = 0, ty = 0;
+  Object.values(DB.cards).sort((a,b) => b.day - a.day).forEach(c => {
+    const mine = c.log.filter(l => l.d >= mon && l.m !== 'new');
+    if(!mine.length) return;
+    const mic = mine.some(l => l.m === 'speak');
+    const key = mine.some(l => l.m === 'type');
+    if(mic) sp++;
+    if(key) ty++;
+    const s = byDay(c.day);
+    rows.push(`<div class="li">
+      <span class="tx"><b>${s.en}</b><span>${s.ko}</span></span>
+      <span class="mk${mic ? ' on' : ''}">🎙</span>
+      <span class="mk${key ? ' on' : ''}">⌨</span></div>`);
+  });
+  return `<h3>이번 주 복습</h3>
+    <p class="cnt">🎙 복습 ${sp} · ⌨ 복습 ${ty}</p>
+    <div class="list">${rows.join('') || '<p class="lead">아직 없습니다.</p>'}</div>`;
 }
 
 function renderCal(){
@@ -1205,7 +1288,7 @@ function renderCal(){
   return `<div class="cal">
     <div class="calhd">
       <button data-mv="-1">‹</button>
-      <b>${y}년 ${m+1}월 <span style="color:var(--soft);font-weight:400;font-size:13px">· ${monthDone}일</span></b>
+      <b class="calttl">${MONTHFULL[m]} ${y}</b>
       <button data-mv="1">›</button>
     </div>
     <div class="calgrid">
@@ -1288,15 +1371,15 @@ function renderLog(){
   const young = cards.filter(c => c.step <= 0).map(c => byDay(c.day).en);
 
   document.getElementById('logBody').innerHTML = renderCal() + `
-    <h2 class="sec">이번 주 (${mon.slice(5).replace('-','/')} ~ ${addDays(mon,6).slice(5).replace('-','/')})</h2>
+    <div class="weekhd">
+      <h2 class="sec" style="margin:0">THIS WEEK (${enDate(mon)} – ${+addDays(mon,6).slice(8,10)})</h2>
+      <input type="date" id="dsearch" value="${todayStr()}">
+    </div>
     <div class="stat" style="margin-top:12px">
-      <div><b>${newN}</b><span>새 카드</span></div>
-      <div><b>${revN}</b><span>복습</span>
-        <span class="br">✓${mk.ok} △${mk.mid} ✕${mk.no}</span></div>
+      <div class="tap" id="statDone"><b>${newN}</b><span>완료</span></div>
+      <div class="tap" id="statRev"><b>${revN}</b><span>복습</span></div>
       <div><b>${cards.length}</b><span>모은 카드</span></div>
     </div>
-    <p class="lead" style="margin-top:10px;text-align:center;font-size:13px">
-      🎙 말해서 맞힌 것 <b>${speakN}</b>번 · ⌨ 써서 맞힌 것 <b>${typeN}</b>번</p>
     <h2 class="sec">연속</h2>
     <p>총 ${si.total}일 중 <b>${si.run}일 연속</b>${DB.bestStreak ? ' · 최고 ' + DB.bestStreak + '일' : ''}</p>
     <h2 class="sec">아직 어린 카드 🌱</h2>
@@ -1305,6 +1388,23 @@ function renderLog(){
     <h2 class="sec">진도</h2>
     <p class="lead">30장 중 <b>${cards.length}장</b>을 모았습니다.</p>`;
   wireCal();
+  const ds = document.getElementById('dsearch');
+  if(ds) ds.onchange = () => {
+    const v = ds.value;
+    if(!v) return;
+    calYM = { y: +v.slice(0,4), m: +v.slice(5,7) - 1 };
+    calSel = v;
+    renderLog();
+    setTimeout(() => {
+      const el = document.querySelector(`#logBody .cell[data-d="${v}"]`);
+      if(el) el.scrollIntoView({ behavior:'smooth', block:'center' });
+    }, 60);
+  };
+
+  const sd = document.getElementById('statDone');
+  if(sd) sd.onclick = () => openSheet(doneSheet());
+  const sr = document.getElementById('statRev');
+  if(sr) sr.onclick = () => openSheet(revSheet(mon));
 }
 
 /* ═══════════════ 설정 ═══════════════ */
@@ -1496,6 +1596,8 @@ document.getElementById('startBtn').onclick = () => {
   document.getElementById('app').classList.remove('hide');
   stage = null; switchTab('Today');
 };
+document.getElementById('sheetClose').onclick = closeSheet;
+document.getElementById('sheetWrap').onclick = e => { if(e.target.id === 'sheetWrap') closeSheet(); };
 document.getElementById('mClose').onclick = closeType;
 document.getElementById('mGo').onclick = () => {
   if(!typeCtx) return;
