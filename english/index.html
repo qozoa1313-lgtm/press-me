@@ -1209,7 +1209,10 @@ function ymSheet(){
       <button data-ymv="-1">‹</button><b>${ymY}</b><button data-ymv="1">›</button>
     </div>
     <div class="ymgrid">${grid}</div>
-    <button class="btn ol" data-ymt="1" style="margin:14px 0 0">TODAY</button>`;
+    <div class="row" style="margin-top:14px">
+      <button class="btn ol" data-ymt="1" style="margin:0">TODAY</button>
+      <button class="btn ghost" data-ymx="1" style="margin:0">닫기</button>
+    </div>`;
 }
 
 /* 하루치 기록을 모은다 */
@@ -1226,13 +1229,15 @@ function dayLog(date){
 
 /* ─── 목록 창 ─── */
 const RVM = { ok:1, mid:1, no:1 };      /* 복습 표시 세 가지 */
-function openSheet(html){
+function openSheet(html, bare){
   const b = document.getElementById('sheetBody');
   b.innerHTML = html;
+  document.getElementById('sheetClose').classList.toggle('hide', !!bare);
   document.getElementById('sheetWrap').classList.remove('hide');
   b.querySelectorAll('[data-speak]').forEach(x => x.onclick = () => speak(x.dataset.speak));
   b.querySelectorAll('[data-day]').forEach(x => x.onclick = () => { closeSheet(); openInBox(+x.dataset.day); });
-  b.querySelectorAll('[data-ymv]').forEach(x => x.onclick = () => { ymY += +x.dataset.ymv; openSheet(ymSheet()); });
+  b.querySelectorAll('[data-ymv]').forEach(x => x.onclick = () => { ymY += +x.dataset.ymv; openSheet(ymSheet(), 1); });
+  b.querySelectorAll('[data-ymx]').forEach(x => x.onclick = closeSheet);
   b.querySelectorAll('[data-ym]').forEach(x => x.onclick = () => {
     calYM = { y: ymY, m: +x.dataset.ym }; calSel = null;
     closeSheet(); renderLog();
@@ -1351,7 +1356,7 @@ function wireCal(){
     calSel = null; renderLog();
   });
   const yb = root.querySelector('#ymBtn');
-  if(yb) yb.onclick = () => { ymY = calYM.y; openSheet(ymSheet()); };
+  if(yb) yb.onclick = () => { ymY = calYM.y; openSheet(ymSheet(), 1); };
   root.querySelectorAll('[data-d]').forEach(b => b.onclick = () => {
     calSel = b.dataset.d;
     root.querySelectorAll('[data-d]').forEach(x => x.classList.toggle('sel', x.dataset.d === calSel));
