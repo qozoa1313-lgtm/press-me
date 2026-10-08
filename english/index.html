@@ -55,25 +55,25 @@ h2.sec{font-size:13px;color:var(--soft);font-weight:700;margin:26px 0 10px;lette
 .calttl{letter-spacing:.08em;font-size:14px}
 .weekhd{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:26px 0 10px}
 .weekhd .sec{letter-spacing:.06em}
-.ymwrap{position:relative;display:inline-block}
-.ymwrap input{
-  position:absolute;left:0;top:0;width:100%;height:100%;
-  opacity:0;border:0;padding:0;margin:0;font:inherit;cursor:pointer;
+/* 완료 · 복습 — 한 줄에 둘 다 */
+.stat1{display:flex;background:var(--card);border:1.5px solid var(--line);border-radius:14px;overflow:hidden}
+.stat1>div{flex:1;display:flex;align-items:baseline;gap:6px;padding:12px 12px;min-width:0}
+.stat1>div+div{border-left:1px solid var(--line)}
+.stat1 span{font-size:13px;color:var(--soft);flex:none}
+.stat1 b{font-size:19px;font-weight:700}
+.stat1 i{margin-left:auto;font-style:normal;font-size:11px;color:var(--soft);white-space:nowrap;flex:none}
+.stat1>div.tap{cursor:pointer}
+/* 월 고르기 창 */
+.calhd button.calttl{font-size:14px;font-weight:700;color:inherit;padding:4px 8px}
+.ymnav{display:flex;align-items:center;justify-content:center;gap:20px;margin:2px 0 14px}
+.ymnav b{font-size:18px}
+.ymnav button{font-size:19px;color:var(--soft);padding:4px 12px}
+.ymgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.ymb{
+  padding:13px 0;border:1.5px solid var(--line);border-radius:12px;
+  font-size:13px;font-weight:700;letter-spacing:.04em;color:var(--soft);background:var(--card);
 }
-/* 완료 · 복습 한 줄 칸 */
-.stat2{display:grid;gap:8px}
-.stat2>div{
-  position:relative;display:flex;align-items:center;gap:10px;
-  background:var(--card);border:1.5px solid var(--line);border-radius:14px;
-  padding:11px 30px 11px 14px;
-}
-.stat2 span{font-size:13.5px;color:var(--soft)}
-.stat2 b{font-size:20px;font-weight:700;line-height:1}
-.stat2 i{margin-left:auto;font-style:normal;font-size:12px;color:var(--soft)}
-.stat2>div.tap::after{
-  content:'›';position:absolute;top:50%;right:12px;transform:translateY(-50%);
-  color:var(--soft);font-size:14px;
-}
+.ymb.on{background:var(--accent);border-color:var(--accent);color:#fff}
 /* 기록 요약 — 누를 수 있는 칸 */
 .stat div.tap{cursor:pointer}
 .stat div.tap::after{content:'›';position:absolute;top:10px;right:11px;color:var(--soft);font-size:14px}
@@ -167,7 +167,9 @@ body.showrd .rdline{display:block}
 /* 문장함 카드 */
 details.cardbox{border:1.5px solid var(--line);border-radius:18px;
   padding:14px 16px;margin-bottom:10px;background:var(--card)}
-details.cardbox>summary::after{align-self:flex-start;margin-top:2px}
+details.cardbox>summary::after{margin-left:6px;color:var(--soft);font-size:14px}
+details.cardbox>summary .item{align-items:center;gap:9px}
+details.cardbox>summary .dy{font-size:10.5px}
 details.cardbox .in2{border-top:1px solid var(--line);margin-top:12px}
 /* 펼쳤을 때 : 영문 ~ 따라 말해보기 까지 고정 */
 details.cardbox[open]>summary{
@@ -1125,7 +1127,7 @@ function renderBox(){
     const meta = `${+lm}월 ${+ld}일에 배움` +
       (rev.length ? ` · ${rev.length}회 복습 (✓${cnt[0]} △${cnt[1]} ✕${cnt[2]})` : '');
     return `<details class="cardbox" data-day="${c.day}"><summary>
-      <span class="item" style="border:none;padding:0;width:100%">
+      <span class="item" style="border:none;padding:0;flex:1;min-width:0">
         <span class="gr" title="${rev.length}회 복습">${gr}</span>
         <span class="tx"><b>${s.en}</b><span>${s.ko}</span></span>
         <span class="dy">DAY ${s.day}</span>
@@ -1196,7 +1198,19 @@ const MONSHORT = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','N
 const enDate = d => MONSHORT[+d.slice(5,7) - 1] + ' ' + (+d.slice(8,10));
 const MONTHFULL = ['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY',
                    'AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'];
-let calYM = null, calSel = null;
+let calYM = null, calSel = null, ymY = null;
+
+/* 월 고르기 창 — 글자는 전부 영문 */
+function ymSheet(){
+  const grid = MONSHORT.map((mm, i) =>
+    `<button class="ymb${(ymY === calYM.y && i === calYM.m) ? ' on' : ''}" data-ym="${i}">${mm}</button>`
+  ).join('');
+  return `<div class="ymnav">
+      <button data-ymv="-1">‹</button><b>${ymY}</b><button data-ymv="1">›</button>
+    </div>
+    <div class="ymgrid">${grid}</div>
+    <button class="btn ol" data-ymt="1" style="margin:14px 0 0">TODAY</button>`;
+}
 
 /* 하루치 기록을 모은다 */
 function dayLog(date){
@@ -1218,6 +1232,16 @@ function openSheet(html){
   document.getElementById('sheetWrap').classList.remove('hide');
   b.querySelectorAll('[data-speak]').forEach(x => x.onclick = () => speak(x.dataset.speak));
   b.querySelectorAll('[data-day]').forEach(x => x.onclick = () => { closeSheet(); openInBox(+x.dataset.day); });
+  b.querySelectorAll('[data-ymv]').forEach(x => x.onclick = () => { ymY += +x.dataset.ymv; openSheet(ymSheet()); });
+  b.querySelectorAll('[data-ym]').forEach(x => x.onclick = () => {
+    calYM = { y: ymY, m: +x.dataset.ym }; calSel = null;
+    closeSheet(); renderLog();
+  });
+  b.querySelectorAll('[data-ymt]').forEach(x => x.onclick = () => {
+    const n = new Date();
+    calYM = { y: n.getFullYear(), m: n.getMonth() }; calSel = null;
+    closeSheet(); renderLog();
+  });
 }
 function closeSheet(){ document.getElementById('sheetWrap').classList.add('hide'); }
 
@@ -1282,10 +1306,7 @@ function renderCal(){
   return `<div class="cal">
     <div class="calhd">
       <button data-mv="-1">‹</button>
-      <span class="ymwrap">
-        <b class="calttl">${MONTHFULL[m]} ${y} ▾</b>
-        <input type="month" id="ympick" value="${y}-${String(m+1).padStart(2,'0')}">
-      </span>
+      <button class="calttl" id="ymBtn">${MONTHFULL[m]} ${y} ▾</button>
       <button data-mv="1">›</button>
     </div>
     <div class="calgrid">
@@ -1329,13 +1350,8 @@ function wireCal(){
     if(calYM.m > 11){ calYM.m = 0; calYM.y++; }
     calSel = null; renderLog();
   });
-  const yp = root.querySelector('#ympick');
-  if(yp) yp.onchange = () => {
-    const v = yp.value;                      /* 2026-10 */
-    if(!v) return;
-    calYM = { y: +v.slice(0,4), m: +v.slice(5,7) - 1 };
-    calSel = null; renderLog();
-  };
+  const yb = root.querySelector('#ymBtn');
+  if(yb) yb.onclick = () => { ymY = calYM.y; openSheet(ymSheet()); };
   root.querySelectorAll('[data-d]').forEach(b => b.onclick = () => {
     calSel = b.dataset.d;
     root.querySelectorAll('[data-d]').forEach(x => x.classList.toggle('sel', x.dataset.d === calSel));
@@ -1374,7 +1390,7 @@ function renderLog(){
     <div class="weekhd">
       <h2 class="sec" style="margin:0">SUMMARY</h2>
     </div>
-    <div class="stat2">
+    <div class="stat1">
       <div class="tap" id="statDone"><span>완료</span><b>${doneAll}</b><i>이번주 +${doneWk}</i></div>
       <div class="tap" id="statRev"><span>복습</span><b>${revAll}</b><i>이번주 +${revWk}</i></div>
     </div>
@@ -1608,14 +1624,11 @@ document.getElementById('gearBtn').onclick = () => switchTab('Set');
 document.getElementById('setClose').onclick = () => switchTab('Log');
 
 paintAccent();
-if(DB){
-  tidy();
-  document.getElementById('setup').classList.add('hide');
-  document.getElementById('app').classList.remove('hide');
-  switchTab('Today');
-}else{
-  syncPledge();
-}
+if(!DB){ DB = fresh('07:00', '이불에서 나오기 전'); save(); }   /* 약속 화면은 설정에서만 */
+tidy();
+document.getElementById('setup').classList.add('hide');
+document.getElementById('app').classList.remove('hide');
+switchTab('Today');
 
 if('serviceWorker' in navigator && location.protocol !== 'file:'){
   navigator.serviceWorker.register('sw.js').catch(()=>{});
