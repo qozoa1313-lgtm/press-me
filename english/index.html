@@ -232,10 +232,7 @@ select,input[type=text],input[type=time]{
 .card .fold.corner{position:absolute;top:16px;right:18px;float:none;padding:4px 8px;font-size:20px}
 .w.bad{color:#C0392B}
 /* 카드 아래에 걸쳐 앉는 버튼 */
-.btn.lap{
-  width:calc(100% - 36px);margin:-24px 18px 0;position:relative;z-index:5;
-  box-shadow:0 3px 12px rgba(43,39,35,.10);
-}
+.btn.lap{width:100%;margin:6px 0 0}
 .acts{display:flex;align-items:center;gap:6px;margin-top:16px;flex-wrap:wrap}
 .rnd{
   width:42px;height:42px;border-radius:50%;background:var(--band);font-size:18px;
@@ -773,8 +770,8 @@ function viewNew(s, done){
 
       <button class="btn ol" id="ygBtn" style="margin-top:18px">📺 영상에서 보기</button>
     </div>
+    <button class="btn lap" id="openBtn">학습하기</button>
   </div>
-  <button class="btn lap" id="openBtn">학습하기</button>
   <div id="micOut"></div>`;
 }
 
