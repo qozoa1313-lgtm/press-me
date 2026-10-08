@@ -1512,6 +1512,9 @@ function doneSheet(){
   return `<h3>완료한 문장</h3><p class="cnt">${cards.length}장</p><div class="list">${rows}</div>`;
 }
 
+/* 0.5 는 0.5 로, 1 은 1 로 적습니다 */
+const half2 = n => (n % 1 ? n.toFixed(1) : String(n));
+
 /* 지금까지 복습한 문장 */
 function revSheet(from){
   const f = from || '';
@@ -1525,17 +1528,19 @@ function revSheet(from){
     const key = mine.some(l => l.m === 'type');
     if(mic) sp++;
     if(key) ty++;
-    times += mine.filter(l => RVM[l.m]).length;
+    const half = (mine.filter(l => l.m === 'speak').length
+                + mine.filter(l => l.m === 'type').length) / 2;
+    times += half;
     const s = byDay(c.day);
-    const n = mine.filter(l => RVM[l.m]).length;
+    const n = half;
     rows.push(`<div class="li" data-day="${s.day}">
       <span class="tx"><b>${s.en}</b><span>${s.ko}</span></span>
-      <span class="n">총 ${n}번</span>
+      <span class="n">총 ${half2(n)}번</span>
       <span class="mk${mic ? ' on' : ''}">🎙</span>
       <span class="mk${key ? ' on' : ''}">⌨</span></div>`);
   });
   return `<h3>복습한 문장</h3>
-    <p class="cnt">총 ${times}번 · 🎙 ${sp}장 · ⌨ ${ty}장</p>
+    <p class="cnt">총 ${half2(times)}번 · 🎙 ${sp}장 · ⌨ ${ty}장</p>
     <div class="list">${rows.join('') || '<p class="lead">아직 없습니다.</p>'}</div>`;
 }
 
