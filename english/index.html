@@ -90,6 +90,8 @@ h2.sec{font-size:13px;color:var(--soft);font-weight:700;margin:26px 0 10px;lette
 .sheet .li .tx span{display:block;font-size:12.5px;color:var(--soft)}
 .sheet .li .mk{font-size:15px;opacity:.25;flex:0 0 auto}
 .sheet .li .mk.on{opacity:1}
+.sheet .li[data-day]{cursor:pointer}
+.sheet .li .n{font-size:11px;color:var(--soft);flex:0 0 auto}
 .sheet h3{font-size:19px;margin:0 0 2px}
 .sheet .cnt{font-size:13px;color:var(--soft);margin:0}
 .calhd button{font-size:19px;color:var(--soft);padding:4px 14px}
@@ -1479,7 +1481,10 @@ function openSheet(html, bare){
   b.innerHTML = html;
   document.getElementById('sheetClose').classList.toggle('hide', !!bare);
   document.getElementById('sheetWrap').classList.remove('hide');
-  b.querySelectorAll('[data-speak]').forEach(x => x.onclick = () => speak(x.dataset.speak));
+  b.querySelectorAll('[data-speak]').forEach(x => x.onclick = e => {
+    e.stopPropagation();                      /* 줄 전체를 누른 것으로 치지 않습니다 */
+    speak(x.dataset.speak);
+  });
   b.querySelectorAll('[data-day]').forEach(x => x.onclick = () => { closeSheet(); openInBox(+x.dataset.day); });
   b.querySelectorAll('[data-ymv]').forEach(x => x.onclick = () => { ymY += +x.dataset.ymv; openSheet(ymSheet(), 1); });
   b.querySelectorAll('[data-ymx]').forEach(x => x.onclick = closeSheet);
@@ -1500,9 +1505,9 @@ function doneSheet(){
   const cards = Object.values(DB.cards).sort((a,b) => b.day - a.day);
   const rows = cards.map(c => {
     const s = byDay(c.day), [gr] = maturity(c.step);
-    return `<div class="li"><span class="mk on">${gr}</span>
+    return `<div class="li" data-day="${s.day}"><span class="mk on">${gr}</span>
       <span class="tx"><b>${s.en}</b><span>${s.ko}</span></span>
-      <span class="mk on" style="font-size:11px;color:var(--soft)">DAY ${s.day}</span></div>`;
+      <span class="n">DAY ${s.day}</span></div>`;
   }).join('') || '<p class="lead">아직 없습니다.</p>';
   return `<h3>완료한 문장</h3><p class="cnt">${cards.length}장</p><div class="list">${rows}</div>`;
 }
@@ -1522,8 +1527,10 @@ function revSheet(from){
     if(key) ty++;
     times += mine.filter(l => RVM[l.m]).length;
     const s = byDay(c.day);
-    rows.push(`<div class="li">
+    const n = mine.filter(l => RVM[l.m]).length;
+    rows.push(`<div class="li" data-day="${s.day}">
       <span class="tx"><b>${s.en}</b><span>${s.ko}</span></span>
+      <span class="n">총 ${n}번</span>
       <span class="mk${mic ? ' on' : ''}">🎙</span>
       <span class="mk${key ? ' on' : ''}">⌨</span></div>`);
   });
@@ -1595,8 +1602,8 @@ function stgSheet(i){
   const g = STG[i];
   const list = Object.values(DB.cards).filter(g[2]).sort((a,b) => a.day - b.day);
   const rows = list.map(c => { const x = byDay(c.day);
-    return `<div class="li">
-      <span class="mk on" style="font-size:11px;color:var(--soft)">DAY ${x.day}</span>
+    return `<div class="li" data-day="${x.day}">
+      <span class="n">DAY ${x.day}</span>
       <span class="tx"><b>${x.en}</b><span>${x.ko}</span></span>
       <button class="mk on" data-speak="${esc(x.en)}">🔊</button></div>`;
   }).join('') || '<p class="lead">아직 없습니다.</p>';
