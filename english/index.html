@@ -55,9 +55,24 @@ h2.sec{font-size:13px;color:var(--soft);font-weight:700;margin:26px 0 10px;lette
 .calttl{letter-spacing:.08em;font-size:14px}
 .weekhd{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:26px 0 10px}
 .weekhd .sec{letter-spacing:.06em}
-#dsearch{
-  font:inherit;font-size:12.5px;color:var(--soft);background:var(--card);
-  border:1.5px solid var(--line);border-radius:12px;padding:6px 9px;flex:0 0 auto;
+.ymwrap{position:relative;display:inline-block}
+.ymwrap input{
+  position:absolute;left:0;top:0;width:100%;height:100%;
+  opacity:0;border:0;padding:0;margin:0;font:inherit;cursor:pointer;
+}
+/* 완료 · 복습 한 줄 칸 */
+.stat2{display:grid;gap:8px}
+.stat2>div{
+  position:relative;display:flex;align-items:center;gap:10px;
+  background:var(--card);border:1.5px solid var(--line);border-radius:14px;
+  padding:11px 30px 11px 14px;
+}
+.stat2 span{font-size:13.5px;color:var(--soft)}
+.stat2 b{font-size:20px;font-weight:700;line-height:1}
+.stat2 i{margin-left:auto;font-style:normal;font-size:12px;color:var(--soft)}
+.stat2>div.tap::after{
+  content:'›';position:absolute;top:50%;right:12px;transform:translateY(-50%);
+  color:var(--soft);font-size:14px;
 }
 /* 기록 요약 — 누를 수 있는 칸 */
 .stat div.tap{cursor:pointer}
@@ -306,12 +321,6 @@ select,input[type=text],input[type=time]{
   background:var(--band);border-radius:14px;padding:13px 16px;font-size:13px;color:var(--soft);
 }
 .tdone b{display:block;color:var(--ink);font-size:15px;margin-top:3px}
-/* 문장함 복구 버튼 */
-.revive{
-  font-size:11px;font-weight:700;border:1.5px solid var(--line);border-radius:999px;
-  padding:3px 10px;margin-left:8px;color:var(--soft);vertical-align:middle;
-}
-
 .toast{
   position:fixed;left:50%;bottom:92px;transform:translateX(-50%) translateY(10px);
   background:var(--ink);color:#fff;padding:12px 20px;border-radius:12px;font-size:14px;
@@ -1123,7 +1132,7 @@ function renderBox(){
       </span></summary>
       <div class="in2">
         <div class="boxtop">
-          <p class="learned">${meta}<button class="revive" data-revive="${c.day}">복구</button></p>
+          <p class="learned">${meta}</p>
           <p class="rdline" style="margin-top:0">${s.rd}</p>
           <div class="row" style="margin:0">
             <button class="btn ol" data-speak="${esc(s.en)}" style="margin:0">🔊 들어보기</button>
@@ -1139,8 +1148,7 @@ function renderBox(){
     </details>`;
   }).join('') +
   `<p class="lead" style="margin-top:22px;font-size:13px;text-align:center">
-     카드를 누르면 다시 열어볼 수 있습니다.<br>
-     [복구] 를 누르면 그 카드가 오늘 탭으로 올라옵니다.
+     카드를 누르면 다시 열어볼 수 있습니다.
    </p>`;
 
   const rd = document.getElementById('boxRd');
@@ -1171,23 +1179,6 @@ function renderBox(){
     dt.addEventListener('toggle', () => setTimeout(syncSticky, 0)));
   syncSticky();
 
-  b.querySelectorAll('[data-revive]').forEach(x => x.onclick = () => {
-    const id = 'd' + x.dataset.revive, c = DB.cards[id], t = todayStr();
-    if(!c) return;
-    DB.days[t] = DB.days[t] || {};
-    if(c.learnedOn === t){
-      /* 오늘 배운 문장 → 오늘의 문장 자리에서 처음부터 다시 학습 */
-      DB.days[t].relearn = DB.days[t].relearn || [];
-      if(!DB.days[t].relearn.includes(id)) DB.days[t].relearn.push(id);
-      toast('오늘의 문장으로 올렸습니다');
-    }else{
-      /* 지난 날 배운 문장 → 복습 칸에 합류. 기억 단계는 건드리지 않습니다 */
-      c.due = t;
-      c.revive = true;
-      toast('복습 칸에 넣었습니다');
-    }
-    openRev = null; stage = null; save(); switchTab('Today');
-  });
   b.querySelectorAll('[data-reset]').forEach(x => x.onclick = () => {
     const c = DB.cards['d' + x.dataset.reset];
     if(!c) return;
@@ -1220,9 +1211,13 @@ function dayLog(date){
 }
 
 /* ─── 목록 창 ─── */
+const RVM = { ok:1, mid:1, no:1 };      /* 복습 표시 세 가지 */
 function openSheet(html){
-  document.getElementById('sheetBody').innerHTML = html;
+  const b = document.getElementById('sheetBody');
+  b.innerHTML = html;
   document.getElementById('sheetWrap').classList.remove('hide');
+  b.querySelectorAll('[data-speak]').forEach(x => x.onclick = () => speak(x.dataset.speak));
+  b.querySelectorAll('[data-day]').forEach(x => x.onclick = () => { closeSheet(); openInBox(+x.dataset.day); });
 }
 function closeSheet(){ document.getElementById('sheetWrap').classList.add('hide'); }
 
@@ -1238,25 +1233,27 @@ function doneSheet(){
   return `<h3>완료한 문장</h3><p class="cnt">${cards.length}장</p><div class="list">${rows}</div>`;
 }
 
-/* 이번 주에 복습한 문장 */
-function revSheet(mon){
-  const rows = [], seen = {};
-  let sp = 0, ty = 0;
+/* 지금까지 복습한 문장 */
+function revSheet(from){
+  const f = from || '';
+  const rows = [];
+  let sp = 0, ty = 0, times = 0;
   Object.values(DB.cards).sort((a,b) => b.day - a.day).forEach(c => {
-    const mine = c.log.filter(l => l.d >= mon && l.m !== 'new');
+    const mine = c.log.filter(l => l.d >= f && l.m !== 'new');
     if(!mine.length) return;
     const mic = mine.some(l => l.m === 'speak');
     const key = mine.some(l => l.m === 'type');
     if(mic) sp++;
     if(key) ty++;
+    times += mine.filter(l => RVM[l.m]).length;
     const s = byDay(c.day);
     rows.push(`<div class="li">
       <span class="tx"><b>${s.en}</b><span>${s.ko}</span></span>
       <span class="mk${mic ? ' on' : ''}">🎙</span>
       <span class="mk${key ? ' on' : ''}">⌨</span></div>`);
   });
-  return `<h3>이번 주 복습</h3>
-    <p class="cnt">🎙 복습 ${sp} · ⌨ 복습 ${ty}</p>
+  return `<h3>복습한 문장</h3>
+    <p class="cnt">총 ${times}번 · 🎙 ${sp}장 · ⌨ ${ty}장</p>
     <div class="list">${rows.join('') || '<p class="lead">아직 없습니다.</p>'}</div>`;
 }
 
@@ -1285,40 +1282,43 @@ function renderCal(){
   return `<div class="cal">
     <div class="calhd">
       <button data-mv="-1">‹</button>
-      <b class="calttl">${MONTHFULL[m]} ${y}</b>
+      <span class="ymwrap">
+        <b class="calttl">${MONTHFULL[m]} ${y} ▾</b>
+        <input type="month" id="ympick" value="${y}-${String(m+1).padStart(2,'0')}">
+      </span>
       <button data-mv="1">›</button>
     </div>
     <div class="calgrid">
       ${['일','월','화','수','목','금','토'].map(x=>`<div class="dow">${x}</div>`).join('')}
       ${cells}
     </div>
-    <div id="dayInfo"></div>
   </div>`;
 }
 
-function renderDayInfo(){
-  const box = document.getElementById('dayInfo');
-  if(!box) return;
-  if(!calSel){ box.innerHTML = ''; return; }
-  const [y, m, d] = calSel.split('-').map(Number);
-  const g = dayLog(calSel);
+/* 달력에서 고른 하루 — 새 창 */
+function daySheet(date){
+  const [y, m, d] = date.split('-').map(Number);
+  const g = dayLog(date);
   let body;
   if(!g.any){
-    body = '<p class="lead" style="margin:0">이 날은 쉬었어요.</p>';
+    body = '<p class="lead">이 날은 쉬었어요.</p>';
   }else{
     const marks = [];
     if(g.back.ok)  marks.push('✓' + g.back.ok);
     if(g.back.mid) marks.push('△' + g.back.mid);
     if(g.back.no)  marks.push('✕' + g.back.no);
-    body =
-      g.made.map(day => { const s = byDay(day);
-        return `<button class="jump" data-day="${day}"><b>DAY ${day} · ${s.en}</b><span>${s.ko} · 눌러서 문장함에서 보기</span></button>`;
-      }).join('') +
-      (marks.length ? `<p class="lead" style="margin:10px 0 0">복습 ${g.back.ok+g.back.mid+g.back.no}장 (${marks.join(' ')})</p>` : '') +
-      (g.back.reset ? `<p class="lead" style="margin:6px 0 0">처음부터 다시 돌린 카드 ${g.back.reset}장</p>` : '');
+    body = g.made.map(day => { const s = byDay(day);
+      return `<div class="li">
+          <span class="mk on" style="font-size:11px;color:var(--soft)">DAY ${day}</span>
+          <span class="tx"><b>${s.en}</b></span>
+          <button class="mk on" data-speak="${esc(s.en)}">🔊</button>
+        </div>
+        <button class="btn ol" data-day="${day}" style="margin:0 0 14px">문장함에서 보기</button>`;
+    }).join('') +
+    (marks.length ? `<p class="lead" style="margin:0">복습 ${g.back.ok+g.back.mid+g.back.no}장 (${marks.join(' ')})</p>` : '') +
+    (g.back.reset ? `<p class="lead" style="margin:6px 0 0">처음부터 다시 돌린 카드 ${g.back.reset}장</p>` : '');
   }
-  box.innerHTML = `<div class="dayinfo"><h4>${m}월 ${d}일</h4>${body}</div>`;
-  box.querySelectorAll('[data-day]').forEach(b => b.onclick = () => openInBox(+b.dataset.day));
+  return `<h3>${m}월 ${d}일</h3><div class="list">${body}</div>`;
 }
 
 function wireCal(){
@@ -1329,12 +1329,18 @@ function wireCal(){
     if(calYM.m > 11){ calYM.m = 0; calYM.y++; }
     calSel = null; renderLog();
   });
+  const yp = root.querySelector('#ympick');
+  if(yp) yp.onchange = () => {
+    const v = yp.value;                      /* 2026-10 */
+    if(!v) return;
+    calYM = { y: +v.slice(0,4), m: +v.slice(5,7) - 1 };
+    calSel = null; renderLog();
+  };
   root.querySelectorAll('[data-d]').forEach(b => b.onclick = () => {
-    calSel = (calSel === b.dataset.d) ? null : b.dataset.d;
+    calSel = b.dataset.d;
     root.querySelectorAll('[data-d]').forEach(x => x.classList.toggle('sel', x.dataset.d === calSel));
-    renderDayInfo();
+    openSheet(daySheet(calSel));
   });
-  renderDayInfo();
 }
 
 /* 달력 → 문장함으로 넘어가며 그 카드를 펼친다 */
@@ -1355,27 +1361,22 @@ function renderLog(){
   const cards = Object.values(DB.cards);
   const si = streakInfo();
 
-  let newN = 0, speakN = 0, typeN = 0;
-  const mk = { ok:0, mid:0, no:0 };
+  /* 큰 숫자 = 전체 / 작은 글씨 = 이번 주 */
+  let doneAll = 0, doneWk = 0, revAll = 0, revWk = 0;
   cards.forEach(c => c.log.forEach(l => {
-    if(l.d < mon) return;
-    if(l.m === 'new') newN++;
-    else if(l.m === 'speak') speakN++;
-    else if(l.m === 'type') typeN++;
-    else if(mk[l.m] !== undefined) mk[l.m]++;
+    const wk = l.d >= mon;
+    if(l.m === 'new'){ doneAll++; if(wk) doneWk++; }
+    else if(RVM[l.m]){ revAll++; if(wk) revWk++; }
   }));
-  const revN = mk.ok + mk.mid + mk.no;
   const young = cards.filter(c => c.step <= 0).map(c => byDay(c.day).en);
 
   document.getElementById('logBody').innerHTML = renderCal() + `
     <div class="weekhd">
-      <h2 class="sec" style="margin:0">THIS WEEK (${enDate(mon)} – ${+addDays(mon,6).slice(8,10)})</h2>
-      <input type="date" id="dsearch" value="${todayStr()}">
+      <h2 class="sec" style="margin:0">SUMMARY</h2>
     </div>
-    <div class="stat" style="margin-top:12px">
-      <div class="tap" id="statDone"><b>${newN}</b><span>완료</span></div>
-      <div class="tap" id="statRev"><b>${revN}</b><span>복습</span></div>
-      <div><b>${cards.length}</b><span>모은 카드</span></div>
+    <div class="stat2">
+      <div class="tap" id="statDone"><span>완료</span><b>${doneAll}</b><i>이번주 +${doneWk}</i></div>
+      <div class="tap" id="statRev"><span>복습</span><b>${revAll}</b><i>이번주 +${revWk}</i></div>
     </div>
     <h2 class="sec">연속</h2>
     <p>총 ${si.total}일 중 <b>${si.run}일 연속</b>${DB.bestStreak ? ' · 최고 ' + DB.bestStreak + '일' : ''}</p>
@@ -1385,23 +1386,10 @@ function renderLog(){
     <h2 class="sec">진도</h2>
     <p class="lead">30장 중 <b>${cards.length}장</b>을 모았습니다.</p>`;
   wireCal();
-  const ds = document.getElementById('dsearch');
-  if(ds) ds.onchange = () => {
-    const v = ds.value;
-    if(!v) return;
-    calYM = { y: +v.slice(0,4), m: +v.slice(5,7) - 1 };
-    calSel = v;
-    renderLog();
-    setTimeout(() => {
-      const el = document.querySelector(`#logBody .cell[data-d="${v}"]`);
-      if(el) el.scrollIntoView({ behavior:'smooth', block:'center' });
-    }, 60);
-  };
-
   const sd = document.getElementById('statDone');
   if(sd) sd.onclick = () => openSheet(doneSheet());
   const sr = document.getElementById('statRev');
-  if(sr) sr.onclick = () => openSheet(revSheet(mon));
+  if(sr) sr.onclick = () => openSheet(revSheet());
 }
 
 /* ═══════════════ 설정 ═══════════════ */
