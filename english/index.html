@@ -201,15 +201,19 @@ select,input[type=text],input[type=time]{
 }
 .ctrow{display:flex;align-items:center}
 .cardtop .en{margin:14px 0 0}
+.card.today .open{border-top:none;margin-top:4px;padding-top:0}
+.okmark{margin-left:auto;font-size:11.5px;font-weight:700;color:var(--accent)}
+.fold{float:right;font-size:17px;line-height:1;color:var(--soft);padding:0 2px 4px 10px}
+.card .fold.corner{position:absolute;top:16px;right:18px;float:none;padding:4px 8px;font-size:20px}
 .w.bad{color:#C0392B}
-.acts{display:flex;align-items:center;gap:10px;margin-top:16px;flex-wrap:wrap}
+.acts{display:flex;align-items:center;gap:6px;margin-top:16px;flex-wrap:wrap}
 .rnd{
-  width:50px;height:50px;border-radius:50%;background:var(--band);font-size:21px;
+  width:42px;height:42px;border-radius:50%;background:var(--band);font-size:18px;
   display:flex;align-items:center;justify-content:center;flex:0 0 auto;
 }
 .rnd.mic{background:#E8903F;color:#fff}
 .rnd.mic.on{background:#C0392B}
-.tryn{font-size:12.5px;color:var(--soft);flex:0 0 auto}
+.tryn{font-size:12.5px;color:var(--soft);flex:1 1 100%;margin-top:2px}
 .rnd.key{background:#5B7FA8;color:#fff}
 .rnd.key.on{outline:3px solid rgba(91,127,168,.3)}
 .typebox{margin-top:14px;display:none}
@@ -232,8 +236,8 @@ select,input[type=text],input[type=time]{
 .fb .ans{margin-top:5px;font-size:19px;color:var(--ink)}
 .fb .ans u{text-decoration-color:#C0392B;text-underline-offset:3px}
 .pill{
-  font-size:13px;font-weight:700;border:1.5px solid var(--line);border-radius:999px;
-  padding:10px 13px;margin-left:5px;color:var(--soft);
+  font-size:12.5px;font-weight:700;border:1.5px solid var(--line);border-radius:999px;
+  padding:9px 10px;margin-left:3px;color:var(--soft);white-space:nowrap;
 }
 .pill.on{background:var(--accent);border-color:var(--accent);color:#fff}
 /* 돌아온 카드 — 접힌 줄 */
@@ -454,24 +458,64 @@ function speak(text){
   speechSynthesis.speak(u);
 }
 const getSR = () => window.SpeechRecognition || window.webkitSpeechRecognition;
+/* 마이크 권한을 먼저 직접 받아둡니다 — 설치한 앱에서 권한 창이 안 뜨는 경우가 있어서 */
+function micReady(){
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return Promise.resolve('no-api');
+  return navigator.mediaDevices.getUserMedia({ audio:true })
+    .then(st => { st.getTracks().forEach(t => t.stop()); return 'ok'; })
+    .catch(e => 'denied:' + (e.name || '?'));
+}
+
+const MICMSG = {
+  'no-speech'          : '소리가 안 들어왔어요',
+  'audio-capture'      : '마이크를 열지 못했어요',
+  'not-allowed'        : '마이크 권한이 꺼져 있어요',
+  'service-not-allowed': '마이크 권한이 꺼져 있어요',
+  'network'            : '인터넷이 끊겼어요',
+  'aborted'            : '중간에 멈췄어요',
+  'no-result'          : '말은 들어왔는데 글자로 못 바꿨어요',
+};
+const micSay = code => (MICMSG[code] || '마이크 오류') + ' (' + code + ')';
+
 function listen(onResult, onFail){
   const SR = getSR();
-  if(!SR){ onFail('이 브라우저는 마이크 받아쓰기를 지원하지 않습니다'); return null; }
-  const r = new SR();
-  let done = false;
-  const finish = fn => (...a) => { if(done) return; done = true; clearTimeout(guard); fn(...a); };
-  r.lang = 'en-US'; r.interimResults = false; r.maxAlternatives = 3;
-  r.onresult = finish(e => {
-    const alts = [];
-    for(let i = 0; i < e.results[0].length; i++) alts.push(e.results[0][i].transcript);
-    onResult(alts);
+  if(!SR){ onFail('이 브라우저는 마이크를 못 씁니다 (no-api)'); return null; }
+  micReady().then(st => {
+    if(st.indexOf('denied') === 0){ onFail(micSay('not-allowed') + ' ' + st); return; }
+    start();
   });
-  r.onerror = finish(e => onFail(e.error === 'not-allowed' ? '마이크 권한이 필요합니다' : '잘 안 들렸어요. 다시 해볼까요?'));
-  r.onend = finish(() => onFail('소리가 들리지 않았어요. 다시 해볼까요?'));
-  // 아무 일도 안 일어난 채 멈춰 있는 것을 막는 안전장치
-  const guard = setTimeout(finish(() => { try{ r.stop(); }catch(e){} onFail('마이크가 응답하지 않습니다'); }), 12000);
-  try{ r.start(); }catch(e){ clearTimeout(guard); done = true; onFail('마이크를 열지 못했습니다'); return null; }
-  return r;
+
+  function start(){
+    const r = new SR();
+    let done = false, interim = '';
+    const finish = fn => (...a) => { if(done) return; done = true; clearTimeout(guard); fn(...a); };
+    const ok = finish(onResult);
+    r.lang = 'en-US'; r.interimResults = true; r.maxAlternatives = 3; r.continuous = false;
+
+    r.onresult = e => {
+      for(let i = e.resultIndex; i < e.results.length; i++){
+        const res = e.results[i];
+        if(res.isFinal){
+          const alts = [];
+          for(let j = 0; j < res.length; j++) alts.push(res[j].transcript);
+          ok(alts);
+          return;
+        }
+        interim = res[0].transcript;
+      }
+    };
+    r.onerror = finish(e => onFail(micSay(e.error)));
+    /* 중간 결과라도 받았으면 그걸 씁니다 (안드로이드에서 최종 결과가 안 오는 경우가 있습니다) */
+    r.onend = finish(() => interim ? onResult([interim]) : onFail(micSay('no-result')));
+    const guard = setTimeout(finish(() => {
+      try{ r.stop(); }catch(e){}
+      onFail(interim ? '' : '마이크가 응답하지 않습니다 (timeout)');
+      if(interim) onResult([interim]);
+    }), 15000);
+
+    try{ r.start(); }catch(e){ clearTimeout(guard); done = true; onFail('마이크를 열지 못했습니다 (start-fail)'); }
+  }
+  return null;
 }
 const norm = s => s.toLowerCase().replace(/[^a-z0-9' ]/g,' ').replace(/\s+/g,' ').trim();
 function compare(target, heard){
@@ -521,12 +565,13 @@ function renderToday(){
     if(!stage || stage.card !== n) micTries = 0;
     stage = { mode:'new', card:n };
     body.innerHTML = viewNew(n) + viewRevSection(due);
-  }else if(due.length){
-    stage = { mode:'review' };
-    body.innerHTML = viewTodayMini() + viewRevSection(due);
   }else{
-    stage = { mode:'done' };
-    body.innerHTML = viewDone();
+    /* 오늘 것을 끝냈어도 카드는 그대로 둡니다 — ✓ 완료 표시만 붙습니다 */
+    const id = DB.days[t].newCard, c = id && DB.cards[id];
+    stage = c ? { mode:'new', card: byDay(c.day), done:true } : { mode:'done' };
+    body.innerHTML = (c ? viewNew(byDay(c.day), true) : '')
+      + viewRevSection(due)
+      + (due.length ? '' : viewDone());
   }
 
   wireToday();
@@ -581,11 +626,11 @@ function wordSpans(en){
   return en.split(/\s+/).map(w => `<span class="w">${w}</span>`).join(' ');
 }
 
-function viewNew(s){
+function viewNew(s, done){
   return `
   <div class="card today">
     <div class="cardtop">
-      <div class="ctrow"><span class="badge">DAY ${s.day}</span><button class="chip" id="rdBtn">발음 보기</button></div>
+      <div class="ctrow"><span class="badge">DAY ${s.day}</span><button class="chip" id="rdBtn">발음 보기</button>${done ? '<span class="okmark">✓ 완료</span>' : ''}</div>
       <p class="en" id="enLine">${wordSpans(s.en)}</p>
       <p class="rdline">${s.rd}</p>
       <p class="lead hide" id="koHint">${s.ko}</p>
@@ -606,7 +651,7 @@ function viewNew(s){
       <div id="typeOut"></div>
     </div>
     <div id="opened" class="open hide">
-      <h3>뜻</h3>
+      <h3>뜻<button class="fold" id="foldBtn">－</button></h3>
       <p class="ko" style="margin:0;font-weight:700">${s.ko}</p>
       <p class="nuance">${s.ko2}</p>
 
@@ -637,6 +682,7 @@ function viewReview(c){
   const [gr] = maturity(c.step);
   return `
   <div class="card">
+    <button class="fold corner" id="revFold">－</button>
     <span class="badge">${gr} DAY ${s.day}</span>
     <p class="en" style="font-size:21px">${s.ko}</p>
     <p class="lead" style="margin-top:14px">영어로 뭐였죠?</p>
@@ -753,7 +799,7 @@ function wireToday(){
     const box = document.getElementById('opened');
     const willOpen = box.classList.contains('hide');
     box.classList.toggle('hide');
-    openBtn.textContent = willOpen ? '뜻 접기' : '뜻 보기';
+    if(willOpen) openBtn.classList.add('hide');
     if(!willOpen) return;
     document.querySelectorAll('[data-speak]').forEach(b => b.onclick = e => {
       e.preventDefault(); speak(b.dataset.speak);
@@ -783,16 +829,19 @@ function wireToday(){
       alts.forEach(a => { const r = compare(s.en, a); if(r.rate > best.rate) best = r; });
       micTries++;
       out.innerHTML = '';
-      if(best.rate >= 0.8){ tryText('<b style="color:var(--accent)">통과!</b>'); finishNew(s); return; }
       paintWords(best.marks);
-      tryText(micTries + ' / ' + MICNEED + ' · ' + Math.round(best.rate*100) + '%');
+      if(best.rate >= 0.8){
+        tryText('<b style="color:var(--accent)">' + Math.round(best.rate*100) + '% · 통과!</b>');
+        if(!stage.done) finishNew(s);
+        return;
+      }
+      tryText(micTries + ' / ' + MICNEED + ' · ' + Math.round(best.rate*100) + '% — 빨간 단어를 다시');
       if(micTries >= MICNEED) unlock();
     }, msg => {
       micBtn.classList.remove('on');
-      micTries++;
-      tryText('');
-      out.innerHTML = '<p class="lead" style="text-align:center;margin-top:14px">' + msg + '</p>';
-      unlock();   /* 마이크가 안 되면 횟수와 상관없이 넘어갈 수 있게 */
+      if(!msg) return;
+      tryText('<b style="color:#C0392B">' + msg + '</b>');   /* 실패 횟수는 세지 않습니다 */
+      unlock();
     });
   };
   if(micBtn) micBtn.onclick = runMic;
@@ -815,6 +864,16 @@ function wireToday(){
   };
   const typeIn = document.getElementById('typeIn');
   if(typeIn) typeIn.onkeydown = e => { if(e.key === 'Enter') typeGo.onclick(); };
+
+  const foldBtn = document.getElementById('foldBtn');
+  if(foldBtn) foldBtn.onclick = () => {
+    document.getElementById('opened').classList.add('hide');
+    const ob = document.getElementById('openBtn');
+    if(ob){ ob.classList.remove('hide'); ob.textContent = '뜻 보기'; }
+  };
+
+  const revFold = document.getElementById('revFold');
+  if(revFold) revFold.onclick = () => { openRev = null; renderToday(); };
 
   const againBtn = document.getElementById('againBtn');
   if(againBtn) againBtn.onclick = runMic;
@@ -867,7 +926,8 @@ function wireToday(){
         : Math.round(best.rate*100) + '% 들렸어요';
     }, msg => {
       revMic.classList.remove('on');
-      tr.textContent = msg;
+      if(!msg) return;
+      tr.innerHTML = '<b style="color:#C0392B">' + msg + '</b>';
     });
   };
 
