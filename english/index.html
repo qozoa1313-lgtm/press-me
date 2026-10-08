@@ -100,6 +100,9 @@ h2.sec{font-size:13px;color:var(--soft);font-weight:700;margin:26px 0 10px;lette
 .cell .dot{display:block;width:6px;height:6px;border-radius:50%;background:var(--line);margin:4px auto 0}
 .cell .dot{width:7px;height:7px}
 .cell.did .dot{background:#E08A3C}
+.cell .dot.ico,.cell.did .dot.ico{
+  width:auto;height:auto;background:none;border-radius:0;font-size:11px;line-height:1;margin-top:3px;
+}
 .cell.today{outline:1.5px solid var(--accent);outline-offset:-1.5px}
 .cell.sel{background:var(--band)}
 .cell.future{color:#C9C2B8}
@@ -301,6 +304,19 @@ select,input[type=text],input[type=time]{
 .lrn h4{font-size:12px;letter-spacing:.06em;color:var(--soft);margin:0 0 10px;font-weight:700}
 .lk{font-size:12.5px;color:var(--soft);text-align:center;margin:8px 0 0}
 .btn[disabled]{opacity:.4}
+/* 복습 — 기억났는지 고르는 칸 */
+.mk3{
+  flex:1;border:1.5px solid var(--line);border-radius:14px;
+  padding:9px 0 8px;background:var(--card);color:var(--soft);
+}
+.mk3 b{display:block;font-size:17px;font-weight:700;color:var(--ink)}
+.mk3 span{display:block;font-size:11px;margin-top:3px;white-space:nowrap}
+/* 기록 — 자람 단계 네 칸 */
+.stg{display:flex;gap:8px}
+.stgb{flex:1;border:1.5px solid var(--line);border-radius:14px;background:var(--card);padding:10px 0 9px}
+.stgb b{display:block;font-size:16px}
+.stgb span{display:block;font-size:17px;font-weight:700;margin-top:2px}
+.stgb i{display:block;font-style:normal;font-size:10.5px;color:var(--soft);margin-top:2px}
 .hintline{margin-top:12px;font-size:19px;font-weight:700;letter-spacing:.06em}
 .hintline .dim{color:#C9C2B8}
 .rnd.key.on{outline:3px solid rgba(91,127,168,.3)}
@@ -850,7 +866,10 @@ function learnHTML(s, done){
     <div class="sec2"><div class="bd">${s.bd.map(x => `<b>${x[0]}</b><span>${x[1]}</span>`).join('')}</div></div>
     <div class="sec2"><h4>예시</h4>${lines(s.ex)}</div>
     <div class="sec2"><h4>비슷한 표현</h4>${lines(s.sim)}</div>
-    <button class="btn" id="lrnDone" style="margin-top:24px"${(done || (d.lrnMicOK && d.lrnKeyOK)) ? '' : ' disabled'}>${done ? '닫기' : '완료하기'}</button>
+    <div class="row" style="margin-top:24px">
+      <button class="btn" id="lrnDone"${(!done && d.lrnMicOK && d.lrnKeyOK) ? '' : ' disabled'} style="margin:0">${done ? '✓ 완료함' : '완료하기'}</button>
+      <button class="btn ghost" id="lrnClose" style="margin:0">닫기</button>
+    </div>
     ${(done || (d.lrnMicOK && d.lrnKeyOK)) ? '' : '<p class="lk" id="lrnLk">🎙 와 ⌨ 를 하면 눌립니다</p>'}
   </div>`;
 }
@@ -881,10 +900,10 @@ function wireLearn(s, done){
   /* 말하기와 쓰기를 둘 다 해야 완료하기가 눌립니다 */
   const syncDone = () => {
     const dd = DB.days[todayStr()] || {};
-    const ok = done || (dd.lrnMicOK && dd.lrnKeyOK);
+    const ok = !done && dd.lrnMicOK && dd.lrnKeyOK;
     document.getElementById('lrnDone').disabled = !ok;
     const lk = document.getElementById('lrnLk');
-    if(lk && ok) lk.remove();
+    if(lk && (ok || done)) lk.remove();
   };
   const paint = marks => document.querySelectorAll('#lrnEn .w')
     .forEach((w,i) => w.classList.toggle('bad', marks ? marks[i] === false : false));
@@ -914,11 +933,8 @@ function wireLearn(s, done){
     DB.days[todayStr()].lrnKeyOK = true; key.classList.add('got'); save(); syncDone();
   });
 
-  document.getElementById('lrnDone').onclick = () => {
-    closeLearn();
-    if(!done) finishNew(s);
-    else renderToday();
-  };
+  document.getElementById('lrnClose').onclick = closeLearn;
+  document.getElementById('lrnDone').onclick = () => { closeLearn(); finishNew(s); };
 }
 
 /* ─── 돌아온 카드 ─── */
@@ -958,9 +974,9 @@ function viewReview(c){
     <button class="btn ghost" id="ansBtn" style="margin-top:16px">답 보기</button>
     <div id="markBox" class="hide">
       <div class="row" style="margin-top:10px">
-        <button class="btn" data-mark="ok">✓</button>
-        <button class="btn ghost" data-mark="mid">△</button>
-        <button class="btn ghost" data-mark="no">✕</button>
+        <button class="mk3" data-mark="ok"><b>✓</b><span>기억나요</span></button>
+        <button class="mk3" data-mark="mid"><b>△</b><span>헷갈려요</span></button>
+        <button class="mk3" data-mark="no"><b>✕</b><span>기억 안 나요</span></button>
       </div>
     </div>
   </div>`;
@@ -1462,9 +1478,11 @@ function renderCal(){
   for(let i = 0; i < start; i++) cells += '<div class="cell out">.</div>';
   for(let d = 1; d <= days; d++){
     const ds = y + '-' + String(m+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
-    const did = dayLog(ds).any;
-    cells += `<button class="cell${did?' did':''}${ds===t?' today':''}${ds===calSel?' sel':''}${(start+d-1)%7===0?' sun':''}${ds>t?' future':''}" data-d="${ds}">
-      ${d}<span class="dot"></span></button>`;
+    const g = dayLog(ds);
+    const mk = g.made[0] && DB.cards['d' + g.made[0]];
+    const ico = mk ? maturity(mk.step)[0] : '';
+    cells += `<button class="cell${g.any?' did':''}${ds===t?' today':''}${ds===calSel?' sel':''}${(start+d-1)%7===0?' sun':''}${ds>t?' future':''}" data-d="${ds}">
+      ${d}<span class="dot${ico?' ico':''}">${ico}</span></button>`;
   }
 
   const monthDone = (() => { let n = 0;
@@ -1484,6 +1502,26 @@ function renderCal(){
       ${cells}
     </div>
   </div>`;
+}
+
+/* 자람 네 단계 — 🌱 0번 → ✦ 4번 이상 맞힘 */
+const STG = [
+  ['🌱','0번',    c => c.step <= 0],
+  ['🌿','1번',    c => c.step === 1],
+  ['🌳','2~3번',  c => c.step >= 2 && c.step <= 3],
+  ['✦','4번 이상', c => c.step >= 4]
+];
+function stgSheet(i){
+  const g = STG[i];
+  const list = Object.values(DB.cards).filter(g[2]).sort((a,b) => a.day - b.day);
+  const rows = list.map(c => { const x = byDay(c.day);
+    return `<div class="li">
+      <span class="mk on" style="font-size:11px;color:var(--soft)">DAY ${x.day}</span>
+      <span class="tx"><b>${x.en}</b><span>${x.ko}</span></span>
+      <button class="mk on" data-speak="${esc(x.en)}">🔊</button></div>`;
+  }).join('') || '<p class="lead">아직 없습니다.</p>';
+  return `<h3>${g[0]} ${g[1]} 맞힌 카드</h3><p class="cnt">${list.length}장</p>
+    <div class="list">${rows}</div>`;
 }
 
 /* 달력에서 고른 하루 — 새 창 */
@@ -1554,7 +1592,6 @@ function renderLog(){
     if(l.m === 'new'){ doneAll++; if(wk) doneWk++; }
     else if(RVM[l.m]){ revAll++; if(wk) revWk++; }
   }));
-  const young = cards.filter(c => c.step <= 0).map(c => byDay(c.day).en);
 
   document.getElementById('logBody').innerHTML = renderCal() + `
     <div class="weekhd">
@@ -1566,9 +1603,12 @@ function renderLog(){
     </div>
     <h2 class="sec">연속</h2>
     <p>총 ${si.total}일 중 <b>${si.run}일 연속</b>${DB.bestStreak ? ' · 최고 ' + DB.bestStreak + '일' : ''}</p>
-    <h2 class="sec">아직 어린 카드 🌱</h2>
-    ${ young.length ? '<p class="sim">' + young.slice(0,5).map(x => '· ' + x).join('<br>') + '</p>'
-                    : '<p class="lead">없습니다.</p>' }
+    <h2 class="sec">카드</h2>
+    <div class="stg">
+      ${STG.map((g,i) => `<button class="stgb" data-stg="${i}">
+        <b>${g[0]}</b><span>${cards.filter(g[2]).length}</span><i>${g[1]}</i></button>`).join('')}
+    </div>
+    <p class="lead" style="font-size:12px;margin-top:8px">✓ 로 맞힌 횟수입니다</p>
     <h2 class="sec">진도</h2>
     <p class="lead">30장 중 <b>${cards.length}장</b>을 모았습니다.</p>`;
   wireCal();
@@ -1576,6 +1616,8 @@ function renderLog(){
   if(sd) sd.onclick = () => openSheet(doneSheet());
   const sr = document.getElementById('statRev');
   if(sr) sr.onclick = () => openSheet(revSheet());
+  document.querySelectorAll('[data-stg]').forEach(b =>
+    b.onclick = () => openSheet(stgSheet(+b.dataset.stg)));
 }
 
 /* ═══════════════ 설정 ═══════════════ */
