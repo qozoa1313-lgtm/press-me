@@ -214,7 +214,30 @@ select,input[type=text],input[type=time]{
 .rnd.mic{background:#E8903F;color:#fff}
 .rnd.mic.on{background:#C0392B}
 .tryn{font-size:12.5px;color:var(--soft);flex:1 1 100%;margin-top:2px}
+.rnd{position:relative}
 .rnd.key{background:#5B7FA8;color:#fff}
+.rnd.got::after{
+  content:'✓';position:absolute;right:-3px;bottom:-3px;width:19px;height:19px;border-radius:50%;
+  background:var(--accent);color:#fff;font-size:11px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;border:2px solid var(--card);
+}
+/* 복습 카드 — 한국어와 버튼을 한 줄에 */
+.qline{display:flex;align-items:center;gap:8px;margin-top:16px}
+/* 직접 써보기 창 */
+.modal{position:fixed;inset:0;z-index:60;background:rgba(43,39,35,.45);display:flex;align-items:flex-end}
+.modal .sheet{
+  width:100%;max-width:460px;margin:0 auto;background:var(--paper);
+  border-radius:24px 24px 0 0;padding:22px 18px calc(22px + env(safe-area-inset-bottom));
+}
+.modal .mko{font-size:20px;font-weight:700;margin:0 0 4px}
+.modal .msub{font-size:13px;color:var(--soft);margin:0 0 14px}
+.modal input{
+  width:100%;padding:14px;border:1.5px solid var(--line);border-radius:14px;
+  font:inherit;background:var(--card);color:inherit;
+}
+.modal input:focus{outline:none;border-color:var(--accent)}
+.hintline{margin-top:12px;font-size:19px;font-weight:700;letter-spacing:.06em}
+.hintline .dim{color:#C9C2B8}
 .rnd.key.on{outline:3px solid rgba(91,127,168,.3)}
 .typebox{margin-top:14px;display:none}
 .typebox.show{display:block}
@@ -311,6 +334,20 @@ select,input[type=text],input[type=time]{
   <p class="lead" style="margin-top:16px;text-align:center;font-size:13px">
     「꾸준한 사람이 되자」보다<br>「언제·무엇을」 정해둔 쪽이 두 배 잘 지켜집니다.
   </p>
+</div>
+
+<!-- ══════════ 직접 써보기 창 ══════════ -->
+<div id="typeModal" class="modal hide">
+  <div class="sheet">
+    <p class="mko" id="mKo"></p>
+    <p class="msub">영어로 써보세요</p>
+    <input id="mIn" placeholder="영어로 입력" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+    <div id="mMsg"></div>
+    <div class="row" style="margin-top:12px">
+      <button class="btn ghost" id="mClose">닫기</button>
+      <button class="btn" id="mGo">확인</button>
+    </div>
+  </div>
 </div>
 
 <!-- ══════════ 본 화면 ══════════ -->
@@ -621,6 +658,35 @@ function typeResult(target, typed){
   return `<div class="fb no"><span class="t">정답</span><div class="ans">${words}</div></div>`;
 }
 
+/* ─── 직접 써보기 창 ─── */
+let typeCtx = null;              /* { en, ko, key, tries, onWin } */
+const typeTries = {};            /* 카드별 틀린 횟수 */
+
+function openType(en, ko, key, onWin){
+  typeCtx = { en, ko, key, onWin };
+  typeTries[key] = typeTries[key] || 0;
+  document.getElementById('mKo').textContent = ko;
+  document.getElementById('mIn').value = '';
+  document.getElementById('mMsg').innerHTML = hintHTML(en, key);
+  document.getElementById('typeModal').classList.remove('hide');
+  setTimeout(() => document.getElementById('mIn').focus(), 50);
+}
+function closeType(){
+  document.getElementById('typeModal').classList.add('hide');
+  typeCtx = null;
+}
+/* 3번 틀릴 때마다 글자를 한 자씩 열어줍니다 */
+function hintHTML(en, key){
+  const n = Math.floor((typeTries[key] || 0) / 3);
+  if(n <= 0) return '';
+  const words = en.split(/\s+/).map(w => {
+    const show = w.slice(0, n);
+    const rest = w.slice(n).replace(/[A-Za-z0-9']/g, '·');
+    return show + '<span class="dim">' + rest + '</span>';
+  }).join(' ');
+  return '<div class="hintline">' + words + '</div>';
+}
+
 /* 문장을 단어 단위로 쪼개 둡니다 — 틀린 단어만 빨갛게 칠하려고요 */
 function wordSpans(en){
   return en.split(/\s+/).map(w => `<span class="w">${w}</span>`).join(' ');
@@ -633,22 +699,17 @@ function viewNew(s, done){
       <div class="ctrow"><span class="badge">DAY ${s.day}</span><button class="chip" id="rdBtn">발음 보기</button>${done ? '<span class="okmark">✓ 완료</span>' : ''}</div>
       <p class="en" id="enLine">${wordSpans(s.en)}</p>
       <p class="rdline">${s.rd}</p>
-      <p class="lead hide" id="koHint">${s.ko}</p>
+
       <div class="acts">
         <button class="rnd" data-speak="${esc(s.en)}">🔊</button>
-        <button class="rnd mic" id="micBtn" title="발음 체크해보기">🎙</button>
-        <button class="rnd key" id="keyBtn" title="직접 써보기">⌨</button>
+        <button class="rnd mic${DB.days[todayStr()].micOK ? ' got' : ''}" id="micBtn" title="발음 체크해보기">🎙</button>
+        <button class="rnd key${DB.days[todayStr()].keyOK ? ' got' : ''}" id="keyBtn" title="직접 써보기">⌨</button>
         <span id="unlock" class="hide">
           <button class="pill" id="againBtn">재도전</button>
           <button class="pill on" id="doneBtn">완료</button>
         </span>
         <span class="tryn" id="tryN"></span>
       </div>
-      <div class="typebox" id="typeBox">
-        <input id="typeIn" placeholder="영어로 입력" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
-        <button class="go" id="typeGo">확인</button>
-      </div>
-      <div id="typeOut"></div>
     </div>
     <div id="opened" class="open hide">
       <h3>뜻<button class="fold" id="foldBtn">－</button></h3>
@@ -680,34 +741,29 @@ function revRow(c){
 function viewReview(c){
   const s = byDay(c.day);
   const [gr] = maturity(c.step);
+  const done = c.todayDone || {};
   return `
   <div class="card">
     <button class="fold corner" id="revFold">－</button>
     <span class="badge">${gr} DAY ${s.day}</span>
-    <p class="en" style="font-size:21px">${s.ko}</p>
-    <p class="lead" style="margin-top:14px">영어로 뭐였죠?</p>
-    <div class="acts">
-      <button class="rnd mic" id="revMic" title="말해보기">🎙</button>
-      <button class="rnd key" id="rvKey" title="직접 써보기">⌨</button>
-      <span class="tryn" id="revTry"></span>
+    <div class="qline">
+      <p class="en" style="font-size:21px;margin:0;flex:1 1 auto">${s.ko}</p>
+      <button class="rnd mic${done.mic ? ' got' : ''}" id="revMic" title="말해보기">🎙</button>
+      <button class="rnd key${done.key ? ' got' : ''}" id="rvKey" title="직접 써보기">⌨</button>
     </div>
-    <div class="typebox show" id="rvBox">
-      <input id="rvIn" placeholder="영어로 입력" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
-      <button class="go" id="rvGo">확인</button>
-    </div>
-    <div id="rvOut"></div>
+    <p class="tryn" id="revTry"></p>
     <div id="ansBox" class="open hide">
       <p class="en" id="revEn" style="margin:0">${wordSpans(s.en)}</p>
       <p class="rdline">${s.rd}</p>
       <button class="spk" data-speak="${esc(s.en)}">🔊</button>
     </div>
-  </div>
-  <button class="btn ghost" id="ansBtn">답 보기</button>
-  <div id="markBox" class="hide">
-    <div class="row">
-      <button class="btn" data-mark="ok">✓</button>
-      <button class="btn ghost" data-mark="mid">△</button>
-      <button class="btn ghost" data-mark="no">✕</button>
+    <button class="btn ghost" id="ansBtn" style="margin-top:16px">답 보기</button>
+    <div id="markBox" class="hide">
+      <div class="row" style="margin-top:10px">
+        <button class="btn" data-mark="ok">✓</button>
+        <button class="btn ghost" data-mark="mid">△</button>
+        <button class="btn ghost" data-mark="no">✕</button>
+      </div>
     </div>
   </div>`;
 }
@@ -832,6 +888,9 @@ function wireToday(){
       paintWords(best.marks);
       if(best.rate >= 0.8){
         tryText('<b style="color:var(--accent)">' + Math.round(best.rate*100) + '% · 통과!</b>');
+        DB.days[todayStr()].micOK = true;
+        micBtn.classList.add('got');
+        save();
         if(!stage.done) finishNew(s);
         return;
       }
@@ -846,24 +905,15 @@ function wireToday(){
   };
   if(micBtn) micBtn.onclick = runMic;
 
-  /* 오늘 카드 — 직접 써보기 */
+  /* 오늘 카드 — 직접 써보기 (창으로 띄웁니다) */
   const keyBtn = document.getElementById('keyBtn');
   if(keyBtn) keyBtn.onclick = () => {
-    const box = document.getElementById('typeBox');
-    const on = !box.classList.contains('show');
-    box.classList.toggle('show', on);
-    document.getElementById('enLine').classList.toggle('blur', on);
-    document.getElementById('koHint').classList.toggle('hide', !on);
-    keyBtn.classList.toggle('on', on);
-    if(on) document.getElementById('typeIn').focus();
+    const s = stage.card;
+    openType(s.en, s.ko, 'today-' + s.day, () => {
+      DB.days[todayStr()].keyOK = true;
+      save(); renderToday();
+    });
   };
-  const typeGo = document.getElementById('typeGo');
-  if(typeGo) typeGo.onclick = () => {
-    document.getElementById('typeOut').innerHTML = typeResult(stage.card.en, document.getElementById('typeIn').value);
-    document.getElementById('enLine').classList.remove('blur');
-  };
-  const typeIn = document.getElementById('typeIn');
-  if(typeIn) typeIn.onkeydown = e => { if(e.key === 'Enter') typeGo.onclick(); };
 
   const foldBtn = document.getElementById('foldBtn');
   if(foldBtn) foldBtn.onclick = () => {
@@ -893,18 +943,18 @@ function wireToday(){
   const ansBtn = document.getElementById('ansBtn');
   if(ansBtn) ansBtn.onclick = showAns;
 
-  /* 복습 카드 — 직접 써보기 */
+  /* 복습 카드 — 직접 써보기 (창으로 띄웁니다) */
   const rvKey = document.getElementById('rvKey');
-  if(rvKey) rvKey.onclick = () => document.getElementById('rvIn').focus();
-  const rvGo = document.getElementById('rvGo');
-  if(rvGo) rvGo.onclick = () => {
+  if(rvKey) rvKey.onclick = () => {
     const c = DB.cards['d' + openRev];
     if(!c) return;
-    document.getElementById('rvOut').innerHTML = typeResult(byDay(c.day).en, document.getElementById('rvIn').value);
-    showAns();
+    const s = byDay(c.day);
+    openType(s.en, s.ko, 'rev-' + s.day, () => {
+      c.todayDone = Object.assign({ d: todayStr() }, c.todayDone, { key:true });
+      c.log.push({ d: todayStr(), m:'type' });
+      save(); renderToday();
+    });
   };
-  const rvIn = document.getElementById('rvIn');
-  if(rvIn) rvIn.onkeydown = e => { if(e.key === 'Enter') rvGo.onclick(); };
 
   /* 복습 카드 — 말해보고 답 확인하기 */
   const revMic = document.getElementById('revMic');
@@ -919,11 +969,14 @@ function wireToday(){
       revMic.classList.remove('on');
       let best = { rate:-1 };
       alts.forEach(a => { const r = compare(en, a); if(r.rate > best.rate) best = r; });
-      showAns();
-      document.querySelectorAll('#revEn .w').forEach((w,i) => w.classList.toggle('bad', best.marks[i] === false));
-      tr.innerHTML = best.rate >= 0.8
-        ? '<b style="color:var(--accent)">' + Math.round(best.rate*100) + '% · 맞았어요</b>'
-        : Math.round(best.rate*100) + '% 들렸어요';
+      if(best.rate >= 0.8){
+        tr.innerHTML = '<b style="color:var(--accent)">' + Math.round(best.rate*100) + '% · 맞았어요</b>';
+        c.todayDone = Object.assign({ d: todayStr() }, c.todayDone, { mic:true });
+        c.log.push({ d: todayStr(), m:'speak' });
+        save(); revMic.classList.add('got');
+      }else{
+        tr.innerHTML = Math.round(best.rate*100) + '% 들렸어요 · 다시 해볼까요?';
+      }
     }, msg => {
       revMic.classList.remove('on');
       if(!msg) return;
@@ -959,7 +1012,10 @@ function finishNew(s){
     stage = null; save(); renderToday();
     toast('다시 익혔습니다');
   }else{
-    DB.cards[s.id] = { day:s.day, learnedOn:t, step:0, due:addDays(t,LADDER[0]), log:[{d:t,m:'new'}], fav:false };
+    const lg = [{ d:t, m:'new' }];
+    if(DB.days[t].micOK) lg.push({ d:t, m:'speak' });
+    if(DB.days[t].keyOK) lg.push({ d:t, m:'type' });
+    DB.cards[s.id] = { day:s.day, learnedOn:t, step:0, due:addDays(t,LADDER[0]), log:lg, fav:false };
     DB.days[t] = Object.assign(DB.days[t]||{}, { newCard:s.id, newDone:true, done:true });
     stage = null; save(); renderToday();
     toast('문장함에 꽂혔습니다');
@@ -1202,11 +1258,13 @@ function renderLog(){
   const cards = Object.values(DB.cards);
   const si = streakInfo();
 
-  let newN = 0;
+  let newN = 0, speakN = 0, typeN = 0;
   const mk = { ok:0, mid:0, no:0 };
   cards.forEach(c => c.log.forEach(l => {
     if(l.d < mon) return;
     if(l.m === 'new') newN++;
+    else if(l.m === 'speak') speakN++;
+    else if(l.m === 'type') typeN++;
     else if(mk[l.m] !== undefined) mk[l.m]++;
   }));
   const revN = mk.ok + mk.mid + mk.no;
@@ -1220,6 +1278,8 @@ function renderLog(){
         <span class="br">✓${mk.ok} △${mk.mid} ✕${mk.no}</span></div>
       <div><b>${cards.length}</b><span>모은 카드</span></div>
     </div>
+    <p class="lead" style="margin-top:10px;text-align:center;font-size:13px">
+      🎙 말해서 맞힌 것 <b>${speakN}</b>번 · ⌨ 써서 맞힌 것 <b>${typeN}</b>번</p>
     <h2 class="sec">연속</h2>
     <p>총 ${si.total}일 중 <b>${si.run}일 연속</b>${DB.bestStreak ? ' · 최고 ' + DB.bestStreak + '일' : ''}</p>
     <h2 class="sec">아직 어린 카드 🌱</h2>
@@ -1419,6 +1479,26 @@ document.getElementById('startBtn').onclick = () => {
   document.getElementById('app').classList.remove('hide');
   stage = null; switchTab('Today');
 };
+document.getElementById('mClose').onclick = closeType;
+document.getElementById('mGo').onclick = () => {
+  if(!typeCtx) return;
+  const r = typeCheck(document.getElementById('mIn').value, typeCtx.en);
+  const msg = document.getElementById('mMsg');
+  if(r.rate === 1 && !r.extra.length){
+    msg.innerHTML = '<div class="fb ok">정답!</div>';
+    typeTries[typeCtx.key] = 0;
+    const win = typeCtx.onWin;
+    setTimeout(() => { closeType(); if(win) win(); }, 700);
+    return;
+  }
+  typeTries[typeCtx.key] = (typeTries[typeCtx.key] || 0) + 1;
+  msg.innerHTML = '<div class="fb no"><span class="t">다시 생각해보세요</span>'
+    + '<div class="ans" style="font-size:14px;color:var(--soft)">' + typeTries[typeCtx.key] + '번째</div></div>'
+    + hintHTML(typeCtx.en, typeCtx.key);
+};
+document.getElementById('mIn').onkeydown = e => { if(e.key === 'Enter') document.getElementById('mGo').onclick(); };
+document.getElementById('typeModal').onclick = e => { if(e.target.id === 'typeModal') closeType(); };
+
 document.querySelectorAll('nav button').forEach(b => b.onclick = () => switchTab(b.dataset.tab));
 document.getElementById('gearBtn').onclick = () => switchTab('Set');
 document.getElementById('setClose').onclick = () => switchTab('Log');
