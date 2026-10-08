@@ -280,6 +280,18 @@ select,input[type=text],input[type=time]{
   font:inherit;background:var(--card);color:inherit;
 }
 .modal input:focus{outline:none;border-color:var(--accent)}
+/* 학습하기 창 — 화면 전체 */
+#learnModal{z-index:55;align-items:stretch}
+#learnModal .sheet{border-radius:0;height:100%;overflow:auto;padding:16px 18px calc(30px + env(safe-area-inset-bottom))}
+.lrntop{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}
+.lrn .enrow{display:flex;align-items:center;gap:8px}
+.lrn .enrow .en{flex:1 1 auto;margin:0;font-size:22px;font-weight:700;line-height:1.35}
+.lrn .korow{display:flex;align-items:center;gap:8px;margin-top:18px}
+.lrn .korow p{flex:1 1 auto;margin:0;font-size:18px;font-weight:700}
+.lrn .sec2{border-top:1px solid var(--line);margin-top:18px;padding-top:16px}
+.lrn h4{font-size:12px;letter-spacing:.06em;color:var(--soft);margin:0 0 10px;font-weight:700}
+.lk{font-size:12.5px;color:var(--soft);text-align:center;margin:8px 0 0}
+.btn.lap[disabled]{opacity:.4}
 .hintline{margin-top:12px;font-size:19px;font-weight:700;letter-spacing:.06em}
 .hintline .dim{color:#C9C2B8}
 .rnd.key.on{outline:3px solid rgba(91,127,168,.3)}
@@ -437,10 +449,14 @@ select,input[type=text],input[type=time]{
 
   <nav><div class="in">
     <button class="on" data-tab="Today"><span class="ic">◉</span>오늘의 문장</button>
+    <button data-tab="Learn"><span class="ic">✎</span>학습하기</button>
     <button data-tab="Box"><span class="ic">♡</span>문장함</button>
     <button data-tab="Log"><span class="ic">▦</span>기록</button>
   </div></nav>
 </div>
+
+<!-- ══════════ 학습하기 창 ══════════ -->
+<div id="learnModal" class="modal hide"><div class="sheet" id="learnBody"></div></div>
 
 <div class="toast" id="toast"></div>
 
@@ -762,28 +778,129 @@ function viewNew(s, done){
       <p class="rdline">${s.rd}</p>
 
       <div class="acts">
-        <button class="rnd" data-speak="${esc(s.en)}">🔊</button>
+        <button class="rnd${DB.days[todayStr()].earOK ? ' got' : ''}" id="earBtn" title="들어보기">🔊</button>
         <button class="rnd mic${DB.days[todayStr()].micOK ? ' got' : ''}" id="micBtn" title="발음 체크해보기">🎙</button>
         <button class="rnd key${DB.days[todayStr()].keyOK ? ' got' : ''}" id="keyBtn" title="직접 써보기">⌨</button>
         <span id="unlock" class="hide">
           <button class="pill" id="againBtn">재도전</button>
-          <button class="pill on" id="doneBtn">완료</button>
+          <button class="pill on" id="doneBtn">넘어가기</button>
         </span>
         <span class="tryn" id="tryN"></span>
       </div>
     </div>
-    <div id="opened" class="open hide">
-      <h3>뜻<button class="fold" id="foldBtn">－</button></h3>
-      <p class="ko" style="margin:0;font-weight:700">${s.ko}</p>
-      <p class="nuance">${s.ko2}</p>
-
-      ${detailHTML(s)}
-
-      <button class="btn ol" id="ygBtn" style="margin-top:18px">📺 영상에서 보기</button>
-    </div>
-    <button class="btn lap" id="openBtn">학습하기</button>
+    <button class="btn lap" id="openBtn"${canLearn() ? '' : ' disabled'}>학습하기</button>
+    ${canLearn() ? '' : '<p class="lk">듣고 · 말하고 · 써보면 열립니다</p>'}
   </div>
   <div id="micOut"></div>`;
+}
+
+/* ─── 학습하기 창 ─── */
+/* 듣기 · 말하기 · 쓰기를 다 해야 열립니다 (끝낸 날은 그냥 열립니다) */
+function canLearn(){
+  const d = DB.days[todayStr()] || {};
+  return !!(d.newDone || (d.earOK && d.micOK && d.keyOK));
+}
+/* 지금 학습할 문장 — 다시 학습 > 오늘 끝낸 것 > 오늘의 새 문장 */
+function learnCard(){
+  const d = DB.days[todayStr()] || {};
+  const rid = (d.relearn || [])[0];
+  if(rid && DB.cards[rid]) return byDay(DB.cards[rid].day);
+  if(d.newDone && d.newCard && DB.cards[d.newCard]) return byDay(DB.cards[d.newCard].day);
+  return newToday();
+}
+function learnHTML(s, done){
+  const d = DB.days[todayStr()] || {};
+  const lines = arr => arr.map(e => `
+    <div class="line">
+      <b>${e[0]}<button class="sl" data-speak="${esc(e[0].replace(/^[AB]:\s*/,''))}">🔊</button></b>
+      <span class="k">${e[1]}</span>
+      <span class="rdline">${e[2]}</span>
+    </div>`).join('');
+  return `
+  <div class="lrn">
+    <div class="lrntop">
+      <span class="badge">DAY ${s.day}</span>
+      <span><button class="chip" id="lrnRd">발음 보기</button>
+            <button class="chip" id="lrnX">닫기</button></span>
+    </div>
+    <div class="enrow">
+      <p class="en" id="lrnEn">${wordSpans(s.en)}</p>
+      <button class="rnd" data-speak="${esc(s.en)}" title="들어보기">🔊</button>
+      <button class="rnd" id="lrnYg" title="영상에서 보기">📺</button>
+    </div>
+    <p class="rdline">${s.rd}</p>
+    <div class="korow">
+      <p>${s.ko}</p>
+      <button class="rnd mic${d.micOK ? ' got' : ''}" id="lrnMic" title="말해보기">🎙</button>
+      <button class="rnd key${d.keyOK ? ' got' : ''}" id="lrnKey" title="직접 써보기">⌨</button>
+    </div>
+    <p class="tryn" id="lrnTry"></p>
+    <p class="nuance">${s.ko2}</p>
+    <div class="sec2"><div class="bd">${s.bd.map(x => `<b>${x[0]}</b><span>${x[1]}</span>`).join('')}</div></div>
+    <div class="sec2"><div class="when">${s.when}</div></div>
+    <div class="sec2"><h4>예시</h4>${lines(s.ex)}</div>
+    <div class="sec2"><h4>비슷한 표현</h4>${lines(s.sim)}</div>
+    <button class="btn" id="lrnDone" style="margin-top:24px">${done ? '닫기' : '완료하기'}</button>
+  </div>`;
+}
+function closeLearn(){ document.getElementById('learnModal').classList.add('hide'); }
+function openLearn(){
+  const s = learnCard();
+  if(!s) return toast('오늘 배울 문장이 없습니다');
+  if(!canLearn()) return toast('먼저 듣고 · 말하고 · 써보세요');
+  const d = DB.days[todayStr()] || {};
+  document.getElementById('learnBody').innerHTML = learnHTML(s, !!d.newDone);
+  document.getElementById('learnModal').classList.remove('hide');
+  wireLearn(s, !!d.newDone);
+}
+function wireLearn(s, done){
+  const box = document.getElementById('learnBody');
+  box.scrollTop = 0;
+  box.querySelectorAll('[data-speak]').forEach(b => b.onclick = () => speak(b.dataset.speak));
+
+  const rd = document.getElementById('lrnRd');
+  const sync = () => rd.classList.toggle('on', document.body.classList.contains('showrd'));
+  sync();
+  rd.onclick = () => { document.body.classList.toggle('showrd'); sync(); };
+
+  document.getElementById('lrnX').onclick = closeLearn;
+  document.getElementById('lrnYg').onclick = () =>
+    window.open('https://youglish.com/pronounce/' + encodeURIComponent(s.en.replace(/[^\w\s']/g,'')) + '/english', '_blank');
+
+  const say = t => { const e = document.getElementById('lrnTry'); if(e) e.innerHTML = t; };
+  const paint = marks => document.querySelectorAll('#lrnEn .w')
+    .forEach((w,i) => w.classList.toggle('bad', marks ? marks[i] === false : false));
+
+  const mic = document.getElementById('lrnMic');
+  mic.onclick = () => {
+    paint(null); mic.classList.add('on'); say('듣는 중…');
+    listen(alts => {
+      mic.classList.remove('on');
+      let best = { rate:-1 };
+      alts.forEach(a => { const r = compare(s.en, a); if(r.rate > best.rate) best = r; });
+      paint(best.marks);
+      if(best.rate >= 0.8){
+        say('<b style="color:var(--accent)">' + Math.round(best.rate*100) + '% · 통과!</b>');
+        DB.days[todayStr()].micOK = true; mic.classList.add('got'); save();
+      }else{
+        say(Math.round(best.rate*100) + '% — 빨간 단어를 다시');
+      }
+    }, msg => {
+      mic.classList.remove('on');
+      if(msg) say('<b style="color:#C0392B">' + msg + '</b>');
+    });
+  };
+
+  const key = document.getElementById('lrnKey');
+  key.onclick = () => openType(s.en, s.ko, 'today-' + s.day, () => {
+    DB.days[todayStr()].keyOK = true; key.classList.add('got'); save();
+  });
+
+  document.getElementById('lrnDone').onclick = () => {
+    closeLearn();
+    if(!done) finishNew(s);
+    else renderToday();
+  };
 }
 
 /* ─── 돌아온 카드 ─── */
@@ -914,19 +1031,15 @@ function wireToday(){
   }
 
   const openBtn = document.getElementById('openBtn');
-  if(openBtn) openBtn.onclick = () => {
-    const box = document.getElementById('opened');
-    const willOpen = box.classList.contains('hide');
-    box.classList.toggle('hide');
-    if(willOpen) openBtn.classList.add('hide');
-    if(!willOpen) return;
-    document.querySelectorAll('[data-speak]').forEach(b => b.onclick = e => {
-      e.preventDefault(); speak(b.dataset.speak);
-    });
-    document.getElementById('ygBtn').onclick = () => {
-      const s = stage.card;
-      window.open('https://youglish.com/pronounce/' + encodeURIComponent(s.en.replace(/[^\w\s']/g,'')) + '/english', '_blank');
-    };
+  if(openBtn) openBtn.onclick = openLearn;
+
+  /* 들어보기 — 한 번 들으면 체크 */
+  const earBtn = document.getElementById('earBtn');
+  if(earBtn) earBtn.onclick = () => {
+    speak(stage.card.en);
+    if(!DB.days[todayStr()].earOK){
+      DB.days[todayStr()].earOK = true; save(); renderToday();
+    }
   };
 
   const micBtn = document.getElementById('micBtn');
@@ -952,9 +1065,7 @@ function wireToday(){
       if(best.rate >= 0.8){
         tryText('<b style="color:var(--accent)">' + Math.round(best.rate*100) + '% · 통과!</b>');
         DB.days[todayStr()].micOK = true;
-        micBtn.classList.add('got');
-        save();
-        if(!stage.done) finishNew(s);
+        save(); renderToday();
         return;
       }
       tryText(micTries + ' / ' + MICNEED + ' · ' + Math.round(best.rate*100) + '% — 빨간 단어를 다시');
@@ -978,21 +1089,17 @@ function wireToday(){
     });
   };
 
-  const foldBtn = document.getElementById('foldBtn');
-  if(foldBtn) foldBtn.onclick = () => {
-    document.getElementById('opened').classList.add('hide');
-    const ob = document.getElementById('openBtn');
-    if(ob) ob.classList.remove('hide');
-  };
-
   const revFold = document.getElementById('revFold');
   if(revFold) revFold.onclick = () => { openRev = null; renderToday(); };
 
   const againBtn = document.getElementById('againBtn');
   if(againBtn) againBtn.onclick = runMic;
 
+  /* 세 번 해도 안 되면 이 단계만 넘어갑니다 */
   const doneBtn = document.getElementById('doneBtn');
-  if(doneBtn) doneBtn.onclick = () => finishNew(stage.card);
+  if(doneBtn) doneBtn.onclick = () => {
+    DB.days[todayStr()].micOK = true; save(); renderToday();
+  };
 
   const showAns = () => {
     document.getElementById('ansBox').classList.remove('hide');
@@ -1624,7 +1731,10 @@ document.getElementById('mGo').onclick = () => {
 document.getElementById('mIn').onkeydown = e => { if(e.key === 'Enter') document.getElementById('mGo').onclick(); };
 document.getElementById('typeModal').onclick = e => { if(e.target.id === 'typeModal') closeType(); };
 
-document.querySelectorAll('nav button').forEach(b => b.onclick = () => switchTab(b.dataset.tab));
+document.querySelectorAll('nav button').forEach(b => b.onclick = () => {
+  if(b.dataset.tab === 'Learn') openLearn();
+  else switchTab(b.dataset.tab);
+});
 document.getElementById('gearBtn').onclick = () => switchTab('Set');
 document.getElementById('setClose').onclick = () => switchTab('Log');
 
