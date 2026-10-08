@@ -1,0 +1,17 @@
+{
+  "name": "FGO 보이스 일본어",
+  "short_name": "FGO 일본어",
+  "description": "FGO 보이스로 매일 일본어 한 조각.",
+  "start_url": "/press-me/fgo-japanese/",
+  "scope": "/press-me/fgo-japanese/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f5f3f1",
+  "theme_color": "#f5f3f1",
+  "lang": "ko",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
