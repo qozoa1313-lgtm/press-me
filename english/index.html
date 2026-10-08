@@ -101,7 +101,8 @@ h2.sec{font-size:13px;color:var(--soft);font-weight:700;margin:26px 0 10px;lette
 .cell .dot{width:7px;height:7px}
 .cell.did .dot{background:#E08A3C}
 .cell .dot.ico,.cell.did .dot.ico{
-  width:auto;height:auto;background:none;border-radius:0;font-size:11px;line-height:1;margin-top:3px;
+  width:auto;height:auto;background:none;border-radius:0;font-size:10px;line-height:1;
+  margin-top:3px;white-space:nowrap;letter-spacing:-1px;
 }
 .cell.today{outline:1.5px solid var(--accent);outline-offset:-1.5px}
 .cell.sel{background:var(--band)}
@@ -199,7 +200,7 @@ details.cardbox details{border-top:1px solid var(--line)}
 .item{
   display:flex;gap:12px;align-items:flex-start;padding:14px 0;border-bottom:1px solid var(--line);
 }
-.item .gr{font-size:18px;width:26px;flex:none;text-align:center}
+.item .gr{font-size:18px;min-width:26px;flex:none;text-align:center;white-space:nowrap}
 .item .tx{flex:1;min-width:0}
 .item .tx b{display:block;font-size:15.5px;font-weight:700}
 .item .tx span{display:block;font-size:13px;color:var(--soft)}
@@ -285,6 +286,9 @@ select,input[type=text],input[type=time]{
 .modal input:focus{outline:none;border-color:var(--accent)}
 /* 학습하기 창 — 화면 전체 */
 #learnModal{z-index:55;align-items:stretch}
+/* 목록 창과 써보기 창은 하단 탭보다 위에 뜹니다 */
+#sheetWrap{z-index:80}
+#typeModal{z-index:85}
 #learnModal .sheet{border-radius:0;height:100%;overflow:auto;padding:0 18px calc(90px + env(safe-area-inset-bottom))}
 .lrnhd{
   position:sticky;top:0;z-index:5;background:var(--paper);
@@ -316,7 +320,16 @@ select,input[type=text],input[type=time]{
 .stgb{flex:1;border:1.5px solid var(--line);border-radius:14px;background:var(--card);padding:10px 0 9px}
 .stgb b{display:block;font-size:16px}
 .stgb span{display:block;font-size:17px;font-weight:700;margin-top:2px}
-.stgb i{display:block;font-style:normal;font-size:10.5px;color:var(--soft);margin-top:2px}
+.grl{font-size:17px;margin-right:7px;vertical-align:baseline}
+.ol1{font-size:14px;margin:16px 0 0}
+.ol1 em{
+  font-style:normal;font-weight:700;color:var(--soft);
+  font-size:12.5px;letter-spacing:.04em;margin-right:7px;
+}
+.qm{
+  width:18px;height:18px;border-radius:50%;border:1.5px solid var(--line);
+  font-size:11px;font-weight:700;color:var(--soft);line-height:1;margin-left:7px;vertical-align:middle;
+}
 .hintline{margin-top:12px;font-size:19px;font-weight:700;letter-spacing:.06em}
 .hintline .dim{color:#C9C2B8}
 .rnd.key.on{outline:3px solid rgba(91,127,168,.3)}
@@ -558,7 +571,7 @@ function maturity(step){
   if(step <= 0) return ['🌱','갓 심은 것'];
   if(step <= 1) return ['🌿','자라는 중'];
   if(step <= 3) return ['🌳','익어감'];
-  return ['✦','내 것이 됨'];
+  return ['🌲🌳','내 것이 됨'];
 }
 function streakInfo(){
   const days = Object.keys(DB.days).filter(k => DB.days[k].done).sort();
@@ -606,7 +619,7 @@ function listen(onResult, onFail){
   if(!SR){ onFail('이 브라우저는 마이크를 못 씁니다 (no-api)'); return null; }
   const WAIT  = 10000;                      /* 말을 시작할 때까지 10초 기다립니다 */
   const until = Date.now() + WAIT;
-  let settled = false;
+  let settled = false, dead = false, cur = null, g = null;
   const win  = a => { if(!settled){ settled = true; onResult(a); } };
   const lose = m => { if(!settled){ settled = true; onFail(m); } };
 
@@ -616,8 +629,9 @@ function listen(onResult, onFail){
   });
 
   function attempt(){
-    if(settled) return;
+    if(settled || dead) return;
     const r = new SR();
+    cur = r;
     let interim = '', ended = false;
     r.lang = 'en-US'; r.interimResults = true; r.maxAlternatives = 3; r.continuous = false;
 
@@ -651,11 +665,16 @@ function listen(onResult, onFail){
     };
 
     /* 말을 시작한 뒤 너무 오래 끌면 멈춥니다 */
-    const g = setTimeout(() => { try{ r.stop(); }catch(e){} }, WAIT + 8000);
+    g = setTimeout(() => { try{ r.stop(); }catch(e){} }, WAIT + 8000);
     try{ r.start(); }catch(e){ clearTimeout(g); lose('마이크를 열지 못했습니다 (start-fail)'); }
   }
-  return null;
+  /* 한 번 더 누르면 듣기를 멈춥니다 — 아무 결과도 돌려주지 않습니다 */
+  return { cancel(){
+    dead = true; settled = true; clearTimeout(g);
+    try{ if(cur) cur.abort(); }catch(e){}
+  } };
 }
+let micJob = null;                 /* 지금 듣고 있는 마이크 (한 번에 하나) */
 const norm = s => s.toLowerCase().replace(/[^a-z0-9' ]/g,' ').replace(/\s+/g,' ').trim();
 function compare(target, heard){
   const want = norm(target).split(' ').filter(Boolean);
@@ -800,7 +819,7 @@ function viewNew(s, done){
   <div class="card today">
     <div class="cardtop">
       <div class="ctrow"><span class="badge">DAY ${s.day}</span><button class="chip" id="rdBtn">발음 보기</button>${done ? '<span class="okmark">✓ 완료</span>' : ''}</div>
-      <p class="en" id="enLine">${wordSpans(s.en)}</p>
+      <p class="en" id="enLine"><span class="grl">${maturity(DB.cards[s.id] ? DB.cards[s.id].step : 0)[0]}</span>${wordSpans(s.en)}</p>
       <p class="rdline">${s.rd}</p>
 
       <div class="acts">
@@ -821,10 +840,10 @@ function viewNew(s, done){
 }
 
 /* ─── 학습하기 창 ─── */
-/* 듣기 · 말하기 · 쓰기를 다 해야 열립니다 (끝낸 날은 그냥 열립니다) */
+/* 듣기 · 말하기 · 쓰기를 다 해야 열립니다. 끝낸 날도 예외 없습니다 */
 function canLearn(){
   const d = DB.days[todayStr()] || {};
-  return !!(d.newDone || (d.earOK && d.micOK && d.keyOK));
+  return !!(d.earOK && d.micOK && d.keyOK);
 }
 /* 지금 학습할 문장 — 다시 학습 > 오늘 끝낸 것 > 오늘의 새 문장 */
 function learnCard(){
@@ -850,7 +869,7 @@ function learnHTML(s, done){
       <button class="chip" id="lrnRd">발음 보기</button>
     </div>
     <div class="enrow">
-      <p class="en" id="lrnEn">${wordSpans(s.en)}</p>
+      <p class="en" id="lrnEn"><span class="grl">${maturity(DB.cards[s.id] ? DB.cards[s.id].step : 0)[0]}</span>${wordSpans(s.en)}</p>
       <button class="rnd" data-speak="${esc(s.en)}" title="들어보기">🔊</button>
       <button class="rnd" id="lrnYg" title="영상에서 보기">📺</button>
     </div>
@@ -910,8 +929,10 @@ function wireLearn(s, done){
 
   const mic = document.getElementById('lrnMic');
   mic.onclick = () => {
-    paint(null); mic.classList.add('on'); say('듣는 중…');
-    listen(alts => {
+    if(micJob){ micJob.cancel(); micJob = null; mic.classList.remove('on'); say(''); return; }
+    paint(null); mic.classList.add('on'); say('듣는 중… (한 번 더 누르면 멈춥니다)');
+    micJob = listen(alts => {
+      micJob = null;
       mic.classList.remove('on');
       let best = { rate:-1 };
       alts.forEach(a => { const r = compare(s.en, a); if(r.rate > best.rate) best = r; });
@@ -923,6 +944,7 @@ function wireLearn(s, done){
         say(Math.round(best.rate*100) + '% — 빨간 단어를 다시');
       }
     }, msg => {
+      micJob = null;
       mic.classList.remove('on');
       if(msg) say('<b style="color:#C0392B">' + msg + '</b>');
     });
@@ -1125,10 +1147,12 @@ function wireToday(){
 
   const runMic = () => {
     const s = stage.card, out = document.getElementById('micOut');
+    if(micJob){ micJob.cancel(); micJob = null; micBtn.classList.remove('on'); tryText(''); return; }
     paintWords(null);
     micBtn.classList.add('on');
-    tryText('듣는 중…');
-    listen(alts => {
+    tryText('듣는 중… (한 번 더 누르면 멈춥니다)');
+    micJob = listen(alts => {
+      micJob = null;
       micBtn.classList.remove('on');
       let best = { rate:-1 };
       alts.forEach(a => { const r = compare(s.en, a); if(r.rate > best.rate) best = r; });
@@ -1144,6 +1168,7 @@ function wireToday(){
       tryText(micTries + ' / ' + MICNEED + ' · ' + Math.round(best.rate*100) + '% — 빨간 단어를 다시');
       if(micTries >= MICNEED) unlock();
     }, msg => {
+      micJob = null;
       micBtn.classList.remove('on');
       if(!msg) return;
       tryText('<b style="color:#C0392B">' + msg + '</b>');   /* 실패 횟수는 세지 않습니다 */
@@ -1206,9 +1231,11 @@ function wireToday(){
     if(!c) return;
     const en = byDay(c.day).en;
     const tr = document.getElementById('revTry');
+    if(micJob){ micJob.cancel(); micJob = null; revMic.classList.remove('on'); tr.textContent = ''; return; }
     revMic.classList.add('on');
-    tr.textContent = '듣는 중…';
-    listen(alts => {
+    tr.textContent = '듣는 중… (한 번 더 누르면 멈춥니다)';
+    micJob = listen(alts => {
+      micJob = null;
       revMic.classList.remove('on');
       let best = { rate:-1 };
       alts.forEach(a => { const r = compare(en, a); if(r.rate > best.rate) best = r; });
@@ -1221,6 +1248,7 @@ function wireToday(){
         tr.innerHTML = Math.round(best.rate*100) + '% 들렸어요 · 다시 해볼까요?';
       }
     }, msg => {
+      micJob = null;
       revMic.classList.remove('on');
       if(!msg) return;
       tr.innerHTML = '<b style="color:#C0392B">' + msg + '</b>';
@@ -1342,8 +1370,10 @@ function renderBox(){
     e.preventDefault();
     const out = x.closest('.in2').querySelector('.micout');
     const target = x.dataset.mic;
-    x.textContent = '🎙 듣는 중…';
-    listen(alts => {
+    if(micJob){ micJob.cancel(); micJob = null; x.textContent = '🎙 따라 말해보기'; return; }
+    x.textContent = '🎙 듣는 중… (다시 누르면 멈춤)';
+    micJob = listen(alts => {
+      micJob = null;
       x.textContent = '🎙 따라 말해보기';
       let best = { rate:-1 };
       alts.forEach(a => { const r = compare(target, a); if(r.rate > best.rate) best = r; });
@@ -1351,6 +1381,7 @@ function renderBox(){
         best.want.map((w,i) => best.marks[i] ? '<b>'+w+'</b>' : '<i>'+w+'</i>').join(' ') +
         '</p><p class="lead" style="font-size:13px">' + Math.round(best.rate*100) + '% 들렸어요 · 연습이라 기록에는 안 남습니다</p>';
     }, msg => {
+      micJob = null;
       x.textContent = '🎙 따라 말해보기';
       out.innerHTML = '<p class="lead" style="font-size:13px">' + msg + '</p>';
     });
@@ -1506,11 +1537,26 @@ function renderCal(){
 
 /* 자람 네 단계 — 🌱 0번 → ✦ 4번 이상 맞힘 */
 const STG = [
-  ['🌱','0번',    c => c.step <= 0],
-  ['🌿','1번',    c => c.step === 1],
-  ['🌳','2~3번',  c => c.step >= 2 && c.step <= 3],
-  ['✦','4번 이상', c => c.step >= 4]
+  ['🌱','0번',    c => c.step <= 0,                 '막 배운 문장. 내일 다시 나옵니다'],
+  ['🌿','1번',    c => c.step === 1,                '한 번 맞혔습니다'],
+  ['🌳','2~3번',  c => c.step >= 2 && c.step <= 3,  '자리를 잡아가는 중입니다'],
+  ['🌲🌳','4번 이상', c => c.step >= 4,                '거의 내 것이 된 문장입니다']
 ];
+function stgHelp(){
+  const gap = LADDER.join('일 → ') + '일';
+  const rows = STG.map(g => `<div class="li">
+      <span class="mk on" style="font-size:16px">${g[0]}</span>
+      <span class="tx"><b>${g[1]} 맞힘</b><span>${g[3]}</span></span></div>`).join('');
+  return `<h3>복습 현황</h3>
+    <p class="cnt">잊을 때쯤 다시 보여드립니다</p>
+    <p class="lead" style="margin-top:14px">사람은 외운 것을 빠르게 잊습니다.
+      그래서 이 앱은 외운 문장을 <b>잊을 때쯤 다시</b> 꺼내 보여줍니다.
+      이걸 <b>망각곡선 복습</b>이라고 합니다.</p>
+    <p class="lead">복습에서 <b>✓ 기억나요</b> 를 누를 때마다 다음에 나오는 간격이 길어집니다
+      (${gap}). <b>△ 헷갈려요</b> 나 <b>✕ 기억 안 나요</b> 를 누르면 다음 날 다시 나옵니다.</p>
+    <p class="lead" style="margin-top:14px">아래 네 칸은 <b>✓ 로 맞힌 횟수</b>로 나눈 것입니다.</p>
+    <div class="list">${rows}</div>`;
+}
 function stgSheet(i){
   const g = STG[i];
   const list = Object.values(DB.cards).filter(g[2]).sort((a,b) => a.day - b.day);
@@ -1601,16 +1647,13 @@ function renderLog(){
       <div class="tap" id="statDone"><span>완료</span><b>${doneAll}</b><i>이번주 +${doneWk}</i></div>
       <div class="tap" id="statRev"><span>복습</span><b>${revAll}</b><i>이번주 +${revWk}</i></div>
     </div>
-    <h2 class="sec">연속</h2>
-    <p>총 ${si.total}일 중 <b>${si.run}일 연속</b>${DB.bestStreak ? ' · 최고 ' + DB.bestStreak + '일' : ''}</p>
-    <h2 class="sec">카드</h2>
+    <p class="ol1"><em>연속 :</em>총 ${si.total}일 중 <b>${si.run}일 연속</b>${DB.bestStreak ? ' · 최고 ' + DB.bestStreak + '일' : ''}</p>
+    <h2 class="sec">복습 현황<button class="qm" id="stgQ">?</button></h2>
     <div class="stg">
       ${STG.map((g,i) => `<button class="stgb" data-stg="${i}">
-        <b>${g[0]}</b><span>${cards.filter(g[2]).length}</span><i>${g[1]}</i></button>`).join('')}
+        <b>${g[0]}</b><span>${cards.filter(g[2]).length}</span></button>`).join('')}
     </div>
-    <p class="lead" style="font-size:12px;margin-top:8px">✓ 로 맞힌 횟수입니다</p>
-    <h2 class="sec">진도</h2>
-    <p class="lead">30장 중 <b>${cards.length}장</b>을 모았습니다.</p>`;
+    <p class="ol1"><em>진도 :</em>30장 중 <b>${cards.length}장</b>을 모았습니다</p>`;
   wireCal();
   const sd = document.getElementById('statDone');
   if(sd) sd.onclick = () => openSheet(doneSheet());
@@ -1618,6 +1661,8 @@ function renderLog(){
   if(sr) sr.onclick = () => openSheet(revSheet());
   document.querySelectorAll('[data-stg]').forEach(b =>
     b.onclick = () => openSheet(stgSheet(+b.dataset.stg)));
+  const sq = document.getElementById('stgQ');
+  if(sq) sq.onclick = () => openSheet(stgHelp());
 }
 
 /* ═══════════════ 설정 ═══════════════ */
