@@ -517,16 +517,21 @@ const micSay = code => (MICMSG[code] || '마이크 오류') + ' (' + code + ')';
 function listen(onResult, onFail){
   const SR = getSR();
   if(!SR){ onFail('이 브라우저는 마이크를 못 씁니다 (no-api)'); return null; }
+  const WAIT  = 10000;                      /* 말을 시작할 때까지 10초 기다립니다 */
+  const until = Date.now() + WAIT;
+  let settled = false;
+  const win  = a => { if(!settled){ settled = true; onResult(a); } };
+  const lose = m => { if(!settled){ settled = true; onFail(m); } };
+
   micReady().then(st => {
-    if(st.indexOf('denied') === 0){ onFail(micSay('not-allowed') + ' ' + st); return; }
-    start();
+    if(st.indexOf('denied') === 0){ lose(micSay('not-allowed') + ' ' + st); return; }
+    attempt();
   });
 
-  function start(){
+  function attempt(){
+    if(settled) return;
     const r = new SR();
-    let done = false, interim = '';
-    const finish = fn => (...a) => { if(done) return; done = true; clearTimeout(guard); fn(...a); };
-    const ok = finish(onResult);
+    let interim = '', ended = false;
     r.lang = 'en-US'; r.interimResults = true; r.maxAlternatives = 3; r.continuous = false;
 
     r.onresult = e => {
@@ -535,22 +540,32 @@ function listen(onResult, onFail){
         if(res.isFinal){
           const alts = [];
           for(let j = 0; j < res.length; j++) alts.push(res[j].transcript);
-          ok(alts);
+          ended = true; clearTimeout(g); win(alts);
           return;
         }
         interim = res[0].transcript;
       }
     };
-    r.onerror = finish(e => onFail(micSay(e.error)));
-    /* 중간 결과라도 받았으면 그걸 씁니다 (안드로이드에서 최종 결과가 안 오는 경우가 있습니다) */
-    r.onend = finish(() => interim ? onResult([interim]) : onFail(micSay('no-result')));
-    const guard = setTimeout(finish(() => {
-      try{ r.stop(); }catch(e){}
-      onFail(interim ? '' : '마이크가 응답하지 않습니다 (timeout)');
-      if(interim) onResult([interim]);
-    }), 15000);
+    r.onerror = e => {
+      if(ended) return;
+      ended = true; clearTimeout(g);
+      /* 아직 10초가 안 지났고 아무 말도 안 들어왔으면 조용히 다시 듣습니다 */
+      if(!interim && Date.now() < until && (e.error === 'no-speech' || e.error === 'aborted')){
+        setTimeout(attempt, 400); return;
+      }
+      lose(micSay(e.error));
+    };
+    r.onend = () => {
+      if(ended) return;
+      ended = true; clearTimeout(g);
+      if(interim){ win([interim]); return; }
+      if(Date.now() < until){ setTimeout(attempt, 400); return; }
+      lose(micSay('no-result'));
+    };
 
-    try{ r.start(); }catch(e){ clearTimeout(guard); done = true; onFail('마이크를 열지 못했습니다 (start-fail)'); }
+    /* 말을 시작한 뒤 너무 오래 끌면 멈춥니다 */
+    const g = setTimeout(() => { try{ r.stop(); }catch(e){} }, WAIT + 8000);
+    try{ r.start(); }catch(e){ clearTimeout(g); lose('마이크를 열지 못했습니다 (start-fail)'); }
   }
   return null;
 }
@@ -753,9 +768,11 @@ function viewReview(c){
     </div>
     <p class="tryn" id="revTry"></p>
     <div id="ansBox" class="open hide">
-      <p class="en" id="revEn" style="margin:0">${wordSpans(s.en)}</p>
+      <div class="qline" style="margin-top:0">
+        <p class="en" id="revEn" style="margin:0;flex:1 1 auto">${wordSpans(s.en)}</p>
+        <button class="rnd" data-speak="${esc(s.en)}">🔊</button>
+      </div>
       <p class="rdline">${s.rd}</p>
-      <button class="spk" data-speak="${esc(s.en)}">🔊</button>
     </div>
     <button class="btn ghost" id="ansBtn" style="margin-top:16px">답 보기</button>
     <div id="markBox" class="hide">
