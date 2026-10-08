@@ -316,5 +316,27 @@ S(30, "I'm glad I kept going.", "계속 해온 게 기뻐요.",
 
 ];
 
+/* 내 문장으로 바꿔보기 — 틀을 바꿔 쓰기 쉬운 문장에만 답니다.
+   없는 날은 이 칸 자체가 안 보입니다. 기존 30문장은 건드리지 않습니다.
+   { before:앞부분, after:뒷부분, opts:[[영어, 뜻], ...] }  열쇠는 DAY 번호 */
+const PATTERNS = {
+  1:  { before:"I'm learning ", after:".",
+        opts:[["Korean","한국어"],["to cook","요리하는 법"],["to swim","수영하는 법"],["to draw","그림 그리는 법"]] },
+  8:  { before:"I'm learning to ", after:".",
+        opts:[["swim","수영하다"],["knit","뜨개질하다"],["cook","요리하다"],["drive","운전하다"]] },
+  15: { before:"I like making ", after:".",
+        opts:[["things","물건"],["food","음식"],["videos","영상"],["clothes","옷"]] },
+  17: { before:"I spend a lot of time ", after:".",
+        opts:[["at home","집에서"],["outside","밖에서"],["with my family","가족이랑"],["on my phone","휴대폰 보면서"]] },
+  18: { before:"I ", after:" in my free time.",
+        opts:[["play games","게임해요"],["read books","책 읽어요"],["knit","뜨개질해요"],["take walks","산책해요"]] },
+  22: { before:"I worry about ", after:" sometimes.",
+        opts:[["money","돈"],["my health","건강"],["work","일"],["the future","앞날"]] },
+  25: { before:"It takes me a while to ", after:".",
+        opts:[["get started","시작하다"],["wake up","잠에서 깨다"],["make up my mind","마음을 정하다"]] },
+  28: { before:"I just want ", after:".",
+        opts:[["a stable life","안정적인 삶"],["a quiet life","조용한 삶"],["more free time","여유 시간"],["a good sleep","푹 자는 것"]] }
+};
+
 /* 복습 사다리 — 처음 배운 날을 0일로 */
 const LADDER = [1, 3, 7, 14, 30];

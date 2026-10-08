@@ -305,6 +305,12 @@ select,input[type=text],input[type=time]{
 .lrn .korow p{flex:1 1 auto;margin:0;font-size:18px;font-weight:700}
 .lrn .sec2{border-top:1px solid var(--line);margin-top:18px;padding-top:16px}
 .lrn details.more{margin-top:18px}
+.swapen{font-size:18px;font-weight:700;margin:0 0 14px;line-height:1.55}
+.swapen u{text-decoration:none;color:var(--accent);border-bottom:2px solid var(--accent);padding:0 2px;margin:0 1px}
+.swapo{display:flex;flex-wrap:wrap;gap:8px}
+.swapo .pill{display:flex;flex-direction:column;align-items:flex-start;gap:1px;line-height:1.3;text-align:left}
+.swapo .pill span{font-size:11px;color:var(--soft);font-weight:400}
+.swapo .pill.on span{color:rgba(255,255,255,.85)}
 .lrn .nuance{margin-top:18px}
 /* 오늘 탭 맨 아래 — 따뜻한 한 줄 */
 .warm{text-align:center;margin:36px 0 6px;color:var(--soft);line-height:1.7}
@@ -921,6 +927,20 @@ function learnCard(){
   if(d.newDone && d.newCard && DB.cards[d.newCard]) return byDay(DB.cards[d.newCard].day);
   return newToday();
 }
+/* 내 문장으로 바꿔보기 — 틀이 있는 문장에만 칸이 생깁니다 */
+function swapHTML(s){
+  const pat = (typeof PATTERNS !== 'undefined') && PATTERNS[s.day];
+  if(!pat) return '';
+  return `
+    <details class="more"><summary>내 문장으로 바꿔보기</summary>
+      <div class="in2">
+        <p class="swapen" id="swapEn">${pat.before}<u>&nbsp;&nbsp;&nbsp;&nbsp;</u>${pat.after}</p>
+        <div class="swapo">${pat.opts.map((o,i) =>
+          `<button class="pill" data-sw="${i}">${o[0]}<span>${o[1]}</span></button>`).join('')}</div>
+        <button class="btn ghost hide" id="swapSay" style="margin:16px 0 0">🔊 들어보기</button>
+      </div>
+    </details>`;
+}
 function learnHTML(s, done){
   const d = DB.days[todayStr()] || {};
   const lines = arr => arr.map(e => `
@@ -951,6 +971,7 @@ function learnHTML(s, done){
     </div>
     <p class="nuance">${s.ko2} ${s.when}</p>
     <div class="sec2"><div class="bd">${s.bd.map(x => `<b>${x[0]}</b><span>${x[1]}</span>`).join('')}</div></div>
+    ${swapHTML(s)}
     <details class="more"><summary>더 알고 싶어요</summary>
       <div class="in2">
         <h4>예시</h4>${lines(s.ex)}
@@ -1026,6 +1047,22 @@ function wireLearn(s, done){
   key.onclick = () => openType(s.en, s.ko, 'learn-' + s.day, () => {
     DB.days[todayStr()].lrnKeyOK = true; key.classList.add('got'); save(); syncDone();
   });
+
+  /* 단어를 고르면 내 문장이 완성됩니다 (기록에는 남지 않습니다) */
+  const pat = (typeof PATTERNS !== 'undefined') && PATTERNS[s.day];
+  if(pat){
+    const line = document.getElementById('swapEn');
+    const sbtn = document.getElementById('swapSay');
+    let made = '';
+    box.querySelectorAll('[data-sw]').forEach(b => b.onclick = () => {
+      const o = pat.opts[+b.dataset.sw];
+      made = pat.before + o[0] + pat.after;
+      line.innerHTML = pat.before + '<u>' + o[0] + '</u>' + pat.after;
+      box.querySelectorAll('[data-sw]').forEach(x => x.classList.toggle('on', x === b));
+      sbtn.classList.remove('hide');
+    });
+    sbtn.onclick = () => { if(made) speak(made); };
+  }
 
   document.getElementById('lrnClose').onclick = closeLearn;
   document.getElementById('lrnDone').onclick = () => {
