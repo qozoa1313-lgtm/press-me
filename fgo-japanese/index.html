@@ -131,6 +131,18 @@ details.study p{margin:0;padding:0 12px 10px;font-size:15px}
 .logday h3{margin:0 0 4px;font-size:14px;color:var(--voice)}
 .logday p{margin:2px 0;font-size:15px}
 
+/* 복습 */
+.rev{display:flex;flex-direction:column;gap:10px;margin-top:6px}
+.rev .grp b,.grp b{color:var(--voice)}
+.rev-none{font-size:13px;color:var(--sub);text-align:center;margin:4px 0 0}
+.rev-btns{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.rev-btns button{padding:12px 4px;border-radius:12px;font-weight:700;font-size:14.5px;border:1.5px solid var(--line);background:var(--card)}
+.rev-btns [data-rev="ok"]{border-color:var(--ok);color:var(--ok)}
+.rev-btns [data-rev="no"]{border-color:var(--voice);color:var(--voice)}
+.bar{display:block;height:4px;border-radius:2px;background:var(--line);margin-top:6px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--voice)}
+.boxseg .st{font-size:12px;color:var(--sub)}
+
 /* 하단 탭 */
 nav{position:fixed;left:0;right:0;bottom:0;background:var(--nav);backdrop-filter:blur(8px);border-top:1px solid var(--line);
     padding-bottom:env(safe-area-inset-bottom)}

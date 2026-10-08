@@ -6,7 +6,7 @@
       "id": 901100, "collectionNo": 305,
       "nameJa": "アムール〔カレン〕", "nameKo": "카렌",
       "image": "https://static.atlasacademy.io/JP/Faces/f_9011000.png",
-      "learningData": "data/prototype_901100.json",
+      "learningData": "data/servant_901100.json",
       "enabled": true
     },
     "1100900": {
