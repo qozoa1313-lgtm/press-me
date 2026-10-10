@@ -888,6 +888,18 @@ function wordSpans(en){
   return en.split(/\s+/).map(w => `<span class="w">${w}</span>`).join(' ');
 }
 
+/* 복습 카드의 영어 줄 — 잘 안 들린 단어만 빨갛게.
+   말해본 적이 없으면(revLast 가 비었으면) 아무것도 칠하지 않습니다 */
+function paintRev(){
+  const line = document.getElementById('revEn');
+  if(!line) return;
+  const r = revLast;
+  line.querySelectorAll('.w').forEach((w,i) => {
+    w.classList.toggle('bad',  !!r && r.marks[i] === false && !r.half[i]);
+    w.classList.toggle('half', !!r && !!r.half[i]);
+  });
+}
+
 function viewNew(s, done){
   return `
   <div class="card today">
@@ -1224,6 +1236,7 @@ const esc = s => s.replace(/"/g,'&quot;');
 
 
 let openRev = null;   /* 지금 펼쳐둔 돌아온 카드의 day */
+let revLast = null;   /* 그 카드에서 마지막으로 말해본 결과 — 답 보기 때 색칠에 씁니다 */
 
 /* 말해보기 시도 횟수 — 3번 해야 넘어가기가 나옵니다 */
 let micTries = 0;
@@ -1313,7 +1326,7 @@ function wireToday(){
   };
 
   const revFold = document.getElementById('revFold');
-  if(revFold) revFold.onclick = () => { openRev = null; renderToday(); };
+  if(revFold) revFold.onclick = () => { openRev = null; revLast = null; renderToday(); };
 
   const againBtn = document.getElementById('againBtn');
   if(againBtn) againBtn.onclick = runMic;
@@ -1326,6 +1339,7 @@ function wireToday(){
 
   const showAns = () => {
     document.getElementById('ansBox').classList.remove('hide');
+    paintRev();
     document.getElementById('markBox').classList.remove('hide');
     const ab = document.getElementById('ansBtn');
     if(ab) ab.classList.add('hide');
@@ -1356,14 +1370,17 @@ function wireToday(){
     if(!c) return;
     const en = byDay(c.day).en;
     const tr = document.getElementById('revTry');
-    if(micJob){ micJob.cancel(); micJob = null; revMic.classList.remove('on'); tr.textContent = ''; return; }
+    if(micJob){ micJob.cancel(); micJob = null; revMic.classList.remove('on'); tr.textContent = '';
+                revLast = null; paintRev(); return; }
     revMic.classList.add('on');
+    revLast = null; paintRev();
     tr.textContent = '듣는 중… (한 번 더 누르면 멈춥니다)';
     micJob = listen(alts => {
       micJob = null;
       revMic.classList.remove('on');
       let best = { rate:-1 };
       alts.forEach(a => { const r = compare(en, a); if(r.rate > best.rate) best = r; });
+      revLast = best; paintRev();
       if(best.rate >= HEARD_OK){
         tr.innerHTML = '<b style="color:var(--accent)">' + heardMsg(best.rate) + '</b>';
         c.todayDone = Object.assign({ d: todayStr() }, c.todayDone, { mic:true });
@@ -1375,6 +1392,7 @@ function wireToday(){
     }, msg => {
       micJob = null;
       revMic.classList.remove('on');
+      revLast = null; paintRev();
       if(!msg) return;
       tr.innerHTML = '<b style="color:#C0392B">' + msg + '</b>';
     });
@@ -1382,6 +1400,7 @@ function wireToday(){
 
   document.querySelectorAll('[data-rev]').forEach(b => b.onclick = () => {
     openRev = +b.dataset.rev;
+    revLast = null;
     renderToday();
     setTimeout(() => {
       const el = document.querySelector('#todayBody .card');
