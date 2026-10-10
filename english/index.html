@@ -833,6 +833,16 @@ function renderToday(){
 
 /* 카드 속 내용 — 오늘 화면과 문장함이 같이 씁니다 */
 function detailHTML(s, open){
+  /* 추가 표현 — 네 번째 칸(설명)이 있는 줄에만 ? 버튼이 생깁니다 */
+  const xtra = (typeof EXTRA !== 'undefined') && EXTRA[s.day];
+  const xlines = arr => arr.map(e => `
+    <div class="line">
+      <b>${e[0]}<button class="sl" data-speak="${esc(e[0])}">🔊</button>${
+        e[3] ? `<button class="sl q" data-q="1" title="이게 무슨 말인지">?</button>` : ''}</b>
+      <span class="k">${e[1]}</span>
+      <span class="rdline">${e[2]}</span>
+      ${e[3] ? `<p class="qa hide">${e[3]}</p>` : ''}
+    </div>`).join('');
   const lines = arr => arr.map(e => `
     <div class="line">
       <b>${e[0]}<button class="sl" data-speak="${esc(e[0].replace(/^[AB]:\s*/,''))}">🔊</button></b>
@@ -847,6 +857,7 @@ function detailHTML(s, open){
       <div class="in2"><div class="when">${s.when}</div></div>
     </details>
     <details><summary>이렇게 써요</summary><div class="in2">${lines(s.ex)}</div></details>
+    ${xtra ? `<details><summary>추가 표현</summary><div class="in2">${xlines(xtra)}</div></details>` : ''}
     <details><summary>비슷한 표현</summary><div class="in2">${lines(s.sim)}</div></details>`;
 }
 
@@ -968,7 +979,7 @@ function learnHTML(s, done){
         e[3] ? `<button class="sl q" data-q="${i}" title="이게 무슨 말인지">?</button>` : ''}</b>
       <span class="k">${e[1]}</span>
       <span class="rdline">${e[2]}</span>
-      ${e[3] ? `<p class="qa hide" id="qa${i}">${e[3]}</p>` : ''}
+      ${e[3] ? `<p class="qa hide">${e[3]}</p>` : ''}
     </div>`).join('');
   const lines = arr => arr.map(e => `
     <div class="line">
@@ -1091,14 +1102,6 @@ function wireLearn(s, done){
     });
     sbtn.onclick = () => { if(made) speak(made); };
   }
-
-  /* ? 를 누르면 그 줄 설명만 폈다 접었다 합니다 */
-  box.querySelectorAll('[data-q]').forEach(b => b.onclick = () => {
-    const a = document.getElementById('qa' + b.dataset.q);
-    if(!a) return;
-    const shut = a.classList.toggle('hide');
-    b.classList.toggle('on', !shut);
-  });
 
   document.getElementById('lrnClose').onclick = closeLearn;
   document.getElementById('lrnDone').onclick = () => {
@@ -2066,6 +2069,16 @@ document.querySelectorAll('nav button').forEach(b => b.onclick = () => {
   closeLearn();
   switchTab(b.dataset.tab);
 });
+/* ? 버튼 — 어느 창에 있든 그 줄의 설명만 폈다 접었다 합니다 */
+document.addEventListener('click', e => {
+  const b = e.target.closest && e.target.closest('[data-q]');
+  if(!b) return;
+  const line = b.closest('.line');
+  const a = line && line.querySelector('.qa');
+  if(!a) return;
+  b.classList.toggle('on', a.classList.toggle('hide') === false);
+});
+
 document.getElementById('gearBtn').onclick = () => switchTab('Set');
 document.getElementById('setClose').onclick = () => switchTab('Log');
 
