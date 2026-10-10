@@ -166,6 +166,11 @@ details .in2{padding-top:12px}
 .line b{display:block;font-size:15.5px;font-weight:700}
 .line .k{display:block;font-size:14px;color:var(--soft);margin-top:2px}
 .sl{font-size:14px;margin-left:7px;opacity:.55}
+.sl.q{font-size:12px;font-weight:700;width:19px;height:19px;border-radius:50%;
+      border:1px solid var(--line);color:var(--soft);opacity:1;vertical-align:2px;padding:0}
+.sl.q.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.qa{font-size:13px;line-height:1.65;color:var(--ink);background:var(--band);
+    border-radius:10px;padding:10px 12px;margin:8px 0 0}
 /* 한글 발음 — 기본 숨김, 버튼으로 전체 켜기 */
 .rdline{display:none;font-size:13.5px;color:var(--accent);margin:5px 0 0;letter-spacing:.01em}
 body.showrd .rdline{display:block}
@@ -955,6 +960,16 @@ function swapHTML(s){
 }
 function learnHTML(s, done){
   const d = DB.days[todayStr()] || {};
+  /* 추가 표현 — 네 번째 칸(설명)이 있는 줄에만 ? 버튼이 생깁니다 */
+  const xtra = (typeof EXTRA !== 'undefined') && EXTRA[s.day];
+  const xlines = arr => arr.map((e, i) => `
+    <div class="line">
+      <b>${e[0]}<button class="sl" data-speak="${esc(e[0])}">🔊</button>${
+        e[3] ? `<button class="sl q" data-q="${i}" title="이게 무슨 말인지">?</button>` : ''}</b>
+      <span class="k">${e[1]}</span>
+      <span class="rdline">${e[2]}</span>
+      ${e[3] ? `<p class="qa hide" id="qa${i}">${e[3]}</p>` : ''}
+    </div>`).join('');
   const lines = arr => arr.map(e => `
     <div class="line">
       <b>${e[0]}<button class="sl" data-speak="${esc(e[0].replace(/^[AB]:\s*/,''))}">🔊</button></b>
@@ -987,6 +1002,7 @@ function learnHTML(s, done){
     <details class="more"><summary>더 알고 싶어요</summary>
       <div class="in2">
         <h4>예시</h4>${lines(s.ex)}
+        ${xtra ? `<h4 style="margin-top:20px">추가 표현</h4>${xlines(xtra)}` : ''}
         <h4 style="margin-top:20px">비슷한 표현</h4>${lines(s.sim)}
       </div>
     </details>
@@ -1075,6 +1091,14 @@ function wireLearn(s, done){
     });
     sbtn.onclick = () => { if(made) speak(made); };
   }
+
+  /* ? 를 누르면 그 줄 설명만 폈다 접었다 합니다 */
+  box.querySelectorAll('[data-q]').forEach(b => b.onclick = () => {
+    const a = document.getElementById('qa' + b.dataset.q);
+    if(!a) return;
+    const shut = a.classList.toggle('hide');
+    b.classList.toggle('on', !shut);
+  });
 
   document.getElementById('lrnClose').onclick = closeLearn;
   document.getElementById('lrnDone').onclick = () => {

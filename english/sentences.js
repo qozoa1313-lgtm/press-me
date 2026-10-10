@@ -338,5 +338,186 @@ const PATTERNS = {
         opts:[["a stable life","안정적인 삶"],["a quiet life","조용한 삶"],["more free time","여유 시간"],["a good sleep","푹 자는 것"]] }
 };
 
+/* 추가 표현 — 오늘 문장의 틀에 단어만 갈아끼운 문장들.
+   [영어, 뜻, 한글발음] 세 개가 기본이고, 네 번째 칸은 「? 설명」입니다.
+   오늘 문장에 없던 모양이 나올 때만 네 번째 칸을 답니다. 없으면 ? 버튼도 안 생깁니다.
+   열쇠는 DAY 번호. 없는 날은 칸 자체가 안 보입니다. 기존 30문장은 건드리지 않습니다 */
+const EXTRA = {
+1: [["I'm learning Korean.","한국어를 배우고 있어요.","아임 러닝 코리안"],
+    ["I'm learning to cook.","요리를 배우고 있어요.","아임 러닝 투 쿡",
+     "배우는 게 말·과목이면 그냥 붙여요 (English, Korean). 배우는 게 「하는 일」이면 앞에 to 를 넣어요. to cook = 요리하기, to drive = 운전하기."],
+    ["I'm learning something new.","새로운 걸 배우고 있어요.","아임 러닝 썸띵 뉴",
+     "something 은 「뭔가 하나」예요. 꾸미는 말을 뒤에 붙여서 something new = 새로운 뭔가 가 돼요."]],
+
+2: [["I'm a total beginner.","저 완전 초보예요.","아임 어 토털 비기너",
+     "complete 자리에 total 을 넣어도 뜻이 거의 같아요. 둘 다 「완전」이에요."],
+    ["I'm a complete beginner at cooking.","요리는 완전 초보예요.","아임 어 컴플릿 비기너 앳 쿠킹",
+     "뒤에 at 을 붙이면 「무엇에」 초보인지 말할 수 있어요. at 다음에 오는 동작은 -ing 을 붙여요. cook → cooking."],
+    ["I'm a beginner at this.","이건 제가 초보예요.","아임 어 비기너 앳 디스",
+     "complete 를 빼면 「완전」이 빠지고 그냥 초보가 돼요. this = 지금 이것."]],
+
+3: [["I'm taking it easy.","무리 안 하고 있어요.","아임 테이킹 잇 이지",
+     "slow 를 easy 로 바꾸면 「힘 빼고 편하게」가 돼요. 쉬엄쉬엄한다는 느낌이에요."],
+    ["We're taking it slow.","우리는 천천히 하고 있어요.","위어 테이킹 잇 슬로우",
+     "나 혼자면 I'm, 둘 이상이면 We're 로 바꿔요."],
+    ["I'm taking it one day at a time.","하루하루 해나가고 있어요.","아임 테이킹 잇 원 데이 앳 어 타임",
+     "one day at a time = 한 번에 하루씩. 멀리 안 보고 오늘만 본다는 말이에요."]],
+
+4: [["I like learning new words.","새 단어 배우는 걸 좋아해요.","아이 라익 러닝 뉴 워즈"],
+    ["I like meeting new people.","새로운 사람 만나는 걸 좋아해요.","아이 라익 미팅 뉴 피플",
+     "like 뒤에 오는 동작은 -ing 을 붙여요. meet → meeting, try → trying."],
+    ["I like trying new food.","새로운 음식 먹어보는 걸 좋아해요.","아이 라익 트라잉 뉴 푸드",
+     "try 는 「한번 해보다」예요. 음식에 쓰면 「먹어보다」가 돼요."]],
+
+5: [["I try to read a little every day.","매일 조금씩 읽으려고 해요.","아이 트라이 투 리드 어 리틀 에브리 데이"],
+    ["I try to walk every day.","매일 걸으려고 해요.","아이 트라이 투 웍 에브리 데이",
+     "a little(조금) 은 빼도 돼요. 빼면 「매일 걷는다」만 남아요."],
+    ["I try to study a little every night.","매일 밤 조금씩 공부하려고 해요.","아이 트라이 투 스터디 어 리틀 에브리 나잇",
+     "every day 자리에 every night(매일 밤), every week(매주) 도 넣을 수 있어요."]],
+
+6: [["I don't always have time.","항상 시간이 있는 건 아니에요.","아이 돈트 올웨이즈 해브 타임",
+     "don't always 는 「전혀 아니다」가 아니라 「항상 그런 건 아니다」예요. 가끔은 그렇다는 말이에요."],
+    ["I don't always feel like going out.","항상 나가고 싶은 건 아니에요.","아이 돈트 올웨이즈 필 라익 고잉 아웃",
+     "feel like 뒤에 하고 싶은 일을 넣을 때는 -ing 을 붙여요. go out → going out."],
+    ["I don't always feel like talking.","항상 말하고 싶은 건 아니에요.","아이 돈트 올웨이즈 필 라익 토킹"]],
+
+7: [["But I still do it.","그래도 해요.","벗 아이 스틸 두 잇",
+     "try(해보다) 자리에 do it(그걸 한다) 을 넣은 거예요."],
+    ["But I still go.","그래도 가요.","벗 아이 스틸 고우"],
+    ["I still want to try.","그래도 해보고 싶어요.","아이 스틸 원트 투 트라이",
+     "want to + 동작 = 「~하고 싶다」. 앞의 But 은 빼도 말이 돼요."]],
+
+8: [["I'm learning to drive.","운전을 배우고 있어요.","아임 러닝 투 드라이브"],
+    ["I'm learning to swim.","수영을 배우고 있어요.","아임 러닝 투 스윔"],
+    ["I'm learning to make videos.","영상 만드는 걸 배우고 있어요.","아임 러닝 투 메이크 비디오즈",
+     "to 뒤에는 동작 하나만 오는 게 아니라 「make videos(영상을 만들다)」처럼 이어 붙일 수도 있어요."]],
+
+9: [["I'm working on a new project.","새 프로젝트를 하고 있어요.","아임 워킹 온 어 뉴 프로젝트"],
+    ["I'm working on my English.","영어를 붙잡고 있어요.","아임 워킹 온 마이 잉글리시",
+     "work on 뒤에 공부나 실력을 넣으면 「그걸 늘리려고 애쓰는 중」이라는 뜻이 돼요."],
+    ["I'm working on something small.","작은 걸 하나 하고 있어요.","아임 워킹 온 썸띵 스몰",
+     "something 은 꾸미는 말을 뒤에 붙여요. something small = 작은 뭔가."]],
+
+10: [["I use my phone almost every day.","휴대폰을 거의 매일 써요.","아이 유즈 마이 폰 올모스트 에브리 데이"],
+     ["I use it every day.","그거 매일 써요.","아이 유즈 잇 에브리 데이",
+      "almost 를 빼면 「거의」가 빠지고 진짜 매일이 돼요."],
+     ["I use this app almost every morning.","이 앱을 거의 매일 아침 써요.","아이 유즈 디스 앱 올모스트 에브리 모닝"]],
+
+11: [["I worked on it again yesterday.","어제도 그거 했어요.","아이 웍트 온 잇 어게인 예스터데이",
+      "today(오늘) 자리에 yesterday(어제) 를 넣었어요. 이미 한 일이라 worked 는 그대로예요."],
+     ["I worked on my project today.","오늘 제 프로젝트를 했어요.","아이 웍트 온 마이 프로젝트 투데이",
+      "it(그거) 자리에 무엇을 했는지 그대로 넣을 수 있어요."],
+     ["I practiced again today.","오늘 또 연습했어요.","아이 프랙티스트 어게인 투데이",
+      "동작 뒤에 -ed 를 붙이면 「이미 한 일」이 돼요. practice → practiced, work → worked."]],
+
+12: [["I got a lot done.","많이 해냈어요.","아이 갓 어 랏 던",
+      "a little(조금) 자리에 a lot(많이) 을 넣으면 반대말이 돼요."],
+     ["I got nothing done.","아무것도 못 했어요.","아이 갓 낫띵 던",
+      "nothing 은 「아무것도 없음」이에요. 그래서 하나도 못 했다는 말이 돼요."],
+     ["I got a little done today.","오늘 조금 해냈어요.","아이 갓 어 리틀 던 투데이"]],
+
+13: [["I'm still learning.","아직 배우는 중이에요.","아임 스틸 러닝"],
+     ["We're still figuring it out.","우리도 아직 알아가는 중이에요.","위어 스틸 피겨링 잇 아웃",
+      "나 혼자면 I'm, 둘 이상이면 We're 예요."],
+     ["I'm still getting used to it.","아직 익숙해지는 중이에요.","아임 스틸 게팅 유즈드 투 잇",
+      "get used to ~ 는 「~에 익숙해지다」예요. 여기서 it 은 「그거」."]],
+
+14: [["I learn from other people.","다른 사람들한테서 배워요.","아이 런 프롬 아더 피플",
+      "from 은 「~한테서, ~에서」예요. 어디서 배웠는지를 넣는 자리예요."],
+     ["We learn from our mistakes.","우리는 실수하면서 배워요.","위 런 프롬 아워 미스테익스",
+      "나는 my, 우리는 our 로 바꿔요."],
+     ["I learned a lot from it.","그걸로 많이 배웠어요.","아이 런드 어 랏 프롬 잇",
+      "learn 에 -ed 를 붙이면 이미 배운 일이 돼요."]],
+
+15: [["I like making food.","음식 만드는 걸 좋아해요.","아이 라익 메이킹 푸드"],
+     ["I like making small things.","작은 거 만드는 걸 좋아해요.","아이 라익 메이킹 스몰 띵스"],
+     ["I like drawing.","그림 그리는 걸 좋아해요.","아이 라익 드로잉",
+      "like 뒤에 오는 동작은 -ing 을 붙여요. draw → drawing."]],
+
+16: [["I like having a plan.","계획이 있는 걸 좋아해요.","아이 라익 해빙 어 플랜"],
+     ["I like having a quiet morning.","조용한 아침을 좋아해요.","아이 라익 해빙 어 콰이엇 모닝"],
+     ["I like keeping things simple.","단순하게 두는 걸 좋아해요.","아이 라익 키핑 띵스 심플",
+      "keep ~ simple 은 「~을 단순한 채로 둔다」예요. have 자리에 keep 을 넣은 거예요."]],
+
+17: [["I spend a lot of time alone.","혼자 있는 시간이 많아요.","아이 스펜드 어 랏 오브 타임 얼론"],
+     ["I spend a lot of time on my phone.","휴대폰 보는 시간이 많아요.","아이 스펜드 어 랏 오브 타임 온 마이 폰",
+      "on my phone 은 「휴대폰 위에」가 아니라 「휴대폰으로 뭔가 하는 중」이에요."],
+     ["I don't spend much time outside.","밖에서 보내는 시간은 많지 않아요.","아이 돈트 스펜드 머치 타임 아웃사이드",
+      "아니라고 할 때는 a lot of 대신 don't ~ much 를 써요."]],
+
+18: [["I read books in my free time.","시간 날 때 책 읽어요.","아이 리드 북스 인 마이 프리 타임"],
+     ["I watch videos in my free time.","시간 날 때 영상 봐요.","아이 워치 비디오즈 인 마이 프리 타임"],
+     ["I knit in my free time.","시간 날 때 뜨개질해요.","아이 닛 인 마이 프리 타임",
+      "knit 의 k 는 소리를 안 내요. 「크닛」이 아니라 「닛」이에요."]],
+
+19: [["I also like cooking.","요리도 좋아해요.","아이 올소 라익 쿠킹"],
+     ["I also like walking.","걷는 것도 좋아해요.","아이 올소 라익 워킹"],
+     ["I also like quiet places.","조용한 곳도 좋아해요.","아이 올소 라익 콰이엇 플레이시스",
+      "like 뒤에 동작이 아니라 「것·곳」이 오면 -ing 을 안 붙여요."]],
+
+20: [["I like having time to think.","생각할 시간이 있는 걸 좋아해요.","아이 라익 해빙 타임 투 띵크",
+      "time to ~ 는 「~할 시간」이에요. to 뒤에 하고 싶은 일을 넣어요."],
+     ["I need time to myself.","혼자만의 시간이 필요해요.","아이 니드 타임 투 마이셀프",
+      "like(좋아해요) 자리에 need(필요해요) 를 넣으면 더 센 말이 돼요."],
+     ["I don't have much time to myself.","혼자만의 시간이 많지 않아요.","아이 돈트 해브 머치 타임 투 마이셀프"]],
+
+21: [["I get nervous about money sometimes.","가끔 돈 생각하면 불안해져요.","아이 겟 너버스 어바웃 머니 썸타임즈"],
+     ["I get nervous before a test.","시험 전에 긴장돼요.","아이 겟 너버스 비포 어 테스트",
+      "about(~에 대해) 대신 before(~전에) 를 쓰면 「언제」를 말하게 돼요."],
+     ["I don't get nervous about it anymore.","이제 그건 긴장 안 돼요.","아이 돈트 겟 너버스 어바웃 잇 애니모어",
+      "not ~ anymore 는 「이제는 아니다」예요."]],
+
+22: [["I worry about my health sometimes.","가끔 건강 걱정을 해요.","아이 워리 어바웃 마이 헬스 썸타임즈"],
+     ["I worry about work sometimes.","가끔 일 걱정을 해요.","아이 워리 어바웃 웍 썸타임즈"],
+     ["Don't worry about it.","그건 걱정 마세요.","돈트 워리 어바웃 잇",
+      "앞에 Don't 를 붙이면 상대에게 「하지 마세요」라고 하는 말이 돼요."]],
+
+23: [["I get tired sometimes.","가끔 지쳐요.","아이 겟 타이어드 썸타임즈",
+      "overwhelmed(벅찬) 자리에 다른 기분을 넣을 수 있어요. tired = 지친."],
+     ["I get overwhelmed at work.","일할 때 벅차요.","아이 겟 오버웰름드 앳 웍",
+      "sometimes(가끔) 자리에 「언제」를 넣은 거예요. at work = 일하는 자리에서."],
+     ["I don't get overwhelmed easily.","저는 쉽게 벅차하지 않아요.","아이 돈트 겟 오버웰름드 이질리"]],
+
+24: [["I take things slowly.","천천히 해요.","아이 테익 띵스 슬로울리",
+      "slow 에 -ly 를 붙이면 「천천히」라는 말이 돼요."],
+     ["We take things one step at a time.","우리는 하나씩 해요.","위 테익 띵스 원 스텝 앳 어 타임"],
+     ["I do one thing at a time.","한 번에 하나씩 해요.","아이 두 원 띵 앳 어 타임",
+      "one step at a time(한 걸음씩) 을 one thing at a time(한 가지씩) 으로 바꾼 거예요."]],
+
+25: [["It takes me a while to wake up.","저는 잠 깨는 데 시간이 좀 걸려요.","잇 테익스 미 어 와일 투 웨이크 업"],
+     ["It takes me a while to decide.","저는 정하는 데 시간이 좀 걸려요.","잇 테익스 미 어 와일 투 디사이드"],
+     ["It doesn't take long.","오래 안 걸려요.","잇 더즌트 테익 롱",
+      "아니라고 할 때는 doesn't 를 써요. a while(좀 오래) 대신 long(오래) 을 씁니다."]],
+
+26: [["Once I start, I don't stop.","한번 시작하면 안 멈춰요.","원스 아이 스타트, 아이 돈트 스탑",
+      "앞의 But 은 빼도 돼요. 빼면 앞 문장과 이어지는 느낌만 없어져요."],
+     ["Once I start, I can keep going.","한번 시작하면 계속할 수 있어요.","원스 아이 스타트, 아이 캔 킵 고잉",
+      "keep + -ing 는 「계속 ~하다」예요. keep going = 계속 가다."],
+     ["I can focus pretty well in the morning.","아침에는 꽤 집중이 잘 돼요.","아이 캔 포커스 프리티 웰 인 더 모닝"]],
+
+27: [["I'm trying to be more patient.","좀 더 참을성 있으려고 하고 있어요.","아임 트라잉 투 비 모어 페이션트"],
+     ["I'm trying to sleep more.","잠을 더 자려고 하고 있어요.","아임 트라잉 투 슬립 모어",
+      "be(~인 상태가 되다) 는 「어떤 사람이 되는」 말에 써요. 그냥 동작이면 be 를 빼고 바로 써요."],
+     ["I'm trying to eat better.","더 잘 먹으려고 하고 있어요.","아임 트라잉 투 잇 베터",
+      "well(잘) 의 「더」는 weller 가 아니라 better 예요."]],
+
+28: [["I just want a quiet life.","그냥 조용한 삶을 원해요.","아이 저스트 원트 어 콰이엇 라이프"],
+     ["I just want more time.","그냥 시간이 더 있었으면 해요.","아이 저스트 원트 모어 타임"],
+     ["I just want to rest.","그냥 쉬고 싶어요.","아이 저스트 원트 투 레스트",
+      "want 뒤에 「하고 싶은 일」이 오면 앞에 to 를 붙여요. to rest = 쉬기."]],
+
+29: [["I want to keep going.","계속 가고 싶어요.","아이 원트 투 킵 고잉"],
+     ["I want to keep trying.","계속 해보고 싶어요.","아이 원트 투 킵 트라잉",
+      "keep 뒤에 오는 동작은 -ing 을 붙여요. try → trying."],
+     ["I want to learn more.","더 배우고 싶어요.","아이 원트 투 런 모어",
+      "keep(계속) 을 빼고 바로 동작을 쓸 수도 있어요."]],
+
+30: [["I'm glad I started.","시작한 게 기뻐요.","아임 글래드 아이 스타티드"],
+     ["I'm glad I tried.","해본 게 기뻐요.","아임 글래드 아이 트라이드",
+      "tried 는 try(해보다) 의 「이미 한 일」 모양이에요."],
+     ["I'm glad you came.","와줘서 기뻐요.","아임 글래드 유 케임",
+      "I 자리에 you 를 넣으면 「당신이 ~한 것」이 기쁘다는 말이 돼요."]]
+};
+
 /* 복습 사다리 — 처음 배운 날을 0일로 */
 const LADDER = [1, 3, 7, 14, 30];
