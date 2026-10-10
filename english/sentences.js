@@ -398,7 +398,7 @@ const EXTRA = {
     ["I'm working on something small.","작은 걸 하나 하고 있어요.","아임 워킹 온 썸띵 스몰",
      "something 은 꾸미는 말을 뒤에 붙여요. something small = 작은 뭔가."]],
 
-10: [["I use my computer almost every day.","컴퓨터를 거의 매일 써요.","아이 유즈 마이 컴퓨터 올모스트 에브리 데이"],
+10: [["I use my phone almost every day.","휴대폰을 거의 매일 써요.","아이 유즈 마이 폰 올모스트 에브리 데이"],
      ["I use it every day.","그거 매일 써요.","아이 유즈 잇 에브리 데이",
       "almost 를 빼면 「거의」가 빠지고 진짜 매일이 돼요."],
      ["I use this app almost every morning.","이 앱을 거의 매일 아침 써요.","아이 유즈 디스 앱 올모스트 에브리 모닝"]],
