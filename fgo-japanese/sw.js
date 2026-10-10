@@ -3,7 +3,7 @@
 const CACHE = 'fgojp-v1';
 const SHELL = ['./','./index.html','./manifest.json','./icon-192.png','./icon-512.png',
                './js/store.js','./js/audio.js','./js/app.js',
-               './data/characters.json','./data/servant_901100.json'];
+               './data/characters.json','./data/servant_901100.json','./data/servant_300100.json'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE)
