@@ -346,7 +346,7 @@ const EXTRA = {
 1: [["I'm learning Korean.","한국어를 배우고 있어요.","아임 러닝 코리안"],
     ["I'm learning to cook.","요리를 배우고 있어요.","아임 러닝 투 쿡",
      "배우는 게 말·과목이면 그냥 붙여요 (English, Korean). 배우는 게 「하는 일」이면 앞에 to 를 넣어요. to cook = 요리하기, to drive = 운전하기."],
-    ["I'm learning something new.","새로운 걸 배우고 있어요.","아임 러닝 썸띵 뉴",
+    ["I'm learning something new every day.","매일 새로운 걸 배우고 있어요.","아임 러닝 썸띵 뉴 에브리 데이",
      "something 은 「뭔가 하나」예요. 꾸미는 말을 뒤에 붙여서 something new = 새로운 뭔가 가 돼요."]],
 
 2: [["I'm a total beginner.","저 완전 초보예요.","아임 어 토털 비기너",
@@ -422,8 +422,8 @@ const EXTRA = {
      ["I'm still getting used to it.","아직 익숙해지는 중이에요.","아임 스틸 게팅 유즈드 투 잇",
       "get used to ~ 는 「~에 익숙해지다」예요. 여기서 it 은 「그거」."]],
 
-14: [["I learn from other people.","다른 사람들한테서 배워요.","아이 런 프롬 아더 피플",
-      "from 은 「~한테서, ~에서」예요. 어디서 배웠는지를 넣는 자리예요."],
+14: [["I learn a lot from other people.","다른 사람들한테서 많이 배워요.","아이 런 어 랏 프롬 아더 피플",
+      "from 은 「~한테서, ~에서」예요. 어디서 배웠는지를 넣는 자리예요. a lot 은 「많이」."],
      ["We learn from our mistakes.","우리는 실수하면서 배워요.","위 런 프롬 아워 미스테익스",
       "나는 my, 우리는 our 로 바꿔요."],
      ["I learned a lot from it.","그걸로 많이 배웠어요.","아이 런드 어 랏 프롬 잇",
