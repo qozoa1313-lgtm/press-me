@@ -398,7 +398,7 @@ const EXTRA = {
     ["I'm working on something small.","작은 걸 하나 하고 있어요.","아임 워킹 온 썸띵 스몰",
      "something 은 꾸미는 말을 뒤에 붙여요. something small = 작은 뭔가."]],
 
-10: [["I use my phone almost every day.","휴대폰을 거의 매일 써요.","아이 유즈 마이 폰 올모스트 에브리 데이"],
+10: [["I use my computer almost every day.","컴퓨터를 거의 매일 써요.","아이 유즈 마이 컴퓨터 올모스트 에브리 데이"],
      ["I use it every day.","그거 매일 써요.","아이 유즈 잇 에브리 데이",
       "almost 를 빼면 「거의」가 빠지고 진짜 매일이 돼요."],
      ["I use this app almost every morning.","이 앱을 거의 매일 아침 써요.","아이 유즈 디스 앱 올모스트 에브리 모닝"]],
@@ -407,7 +407,7 @@ const EXTRA = {
       "today(오늘) 자리에 yesterday(어제) 를 넣었어요. 이미 한 일이라 worked 는 그대로예요."],
      ["I worked on my project today.","오늘 제 프로젝트를 했어요.","아이 웍트 온 마이 프로젝트 투데이",
       "it(그거) 자리에 무엇을 했는지 그대로 넣을 수 있어요."],
-     ["I practiced again today.","오늘 또 연습했어요.","아이 프랙티스트 어게인 투데이",
+     ["I practiced English again today.","오늘 또 영어 연습했어요.","아이 프랙티스트 잉글리시 어게인 투데이",
       "동작 뒤에 -ed 를 붙이면 「이미 한 일」이 돼요. practice → practiced, work → worked."]],
 
 12: [["I got a lot done.","많이 해냈어요.","아이 갓 어 랏 던",
@@ -429,7 +429,7 @@ const EXTRA = {
      ["I learned a lot from it.","그걸로 많이 배웠어요.","아이 런드 어 랏 프롬 잇",
       "learn 에 -ed 를 붙이면 이미 배운 일이 돼요."]],
 
-15: [["I like making food.","음식 만드는 걸 좋아해요.","아이 라익 메이킹 푸드"],
+15: [["I like making videos.","영상 만드는 걸 좋아해요.","아이 라익 메이킹 비디오즈"],
      ["I like making small things.","작은 거 만드는 걸 좋아해요.","아이 라익 메이킹 스몰 띵스"],
      ["I like drawing.","그림 그리는 걸 좋아해요.","아이 라익 드로잉",
       "like 뒤에 오는 동작은 -ing 을 붙여요. draw → drawing."]],
@@ -452,7 +452,7 @@ const EXTRA = {
 
 19: [["I also like cooking.","요리도 좋아해요.","아이 올소 라익 쿠킹"],
      ["I also like walking.","걷는 것도 좋아해요.","아이 올소 라익 워킹"],
-     ["I also like quiet places.","조용한 곳도 좋아해요.","아이 올소 라익 콰이엇 플레이시스",
+     ["I also like quiet places.","조용한 곳도 좋아해요.","아이 올소 라익 콰이엇 플레이시즈",
       "like 뒤에 동작이 아니라 「것·곳」이 오면 -ing 을 안 붙여요."]],
 
 20: [["I like having time to think.","생각할 시간이 있는 걸 좋아해요.","아이 라익 해빙 타임 투 띵크",
@@ -476,7 +476,7 @@ const EXTRA = {
       "overwhelmed(벅찬) 자리에 다른 기분을 넣을 수 있어요. tired = 지친."],
      ["I get overwhelmed at work.","일할 때 벅차요.","아이 겟 오버웰름드 앳 웍",
       "sometimes(가끔) 자리에 「언제」를 넣은 거예요. at work = 일하는 자리에서."],
-     ["I don't get overwhelmed easily.","저는 쉽게 벅차하지 않아요.","아이 돈트 겟 오버웰름드 이질리"]],
+     ["I don't get overwhelmed easily.","저는 쉽게 벅차하지 않아요.","아이 돈트 겟 오버웰름드 이즐리"]],
 
 24: [["I take things slowly.","천천히 해요.","아이 테익 띵스 슬로울리",
       "slow 에 -ly 를 붙이면 「천천히」라는 말이 돼요."],
