@@ -316,12 +316,14 @@ select,input[type=text],input[type=time]{
   margin:0 -18px 0;padding:14px 18px 12px;border-bottom:1px solid var(--line);
 }
 .lrntop{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}
-.lrn .enrow{display:flex;align-items:center;gap:8px}
-.lrn .enrow .en{flex:1 1 auto;margin:0;font-size:22px;font-weight:700;line-height:1.35}
-.lrn .korow{display:flex;align-items:center;gap:8px;margin-top:18px}
-.lrn .korow p{flex:1 1 auto;margin:0;font-size:18px;font-weight:700}
-.lrn .sec2{border-top:1px solid var(--line);margin-top:18px;padding-top:16px}
-.lrn details.more{margin-top:18px}
+.lrn .enrow,.cardbox .enrow{display:flex;align-items:center;gap:8px}
+.lrn .enrow .en,.cardbox .enrow .en{flex:1 1 auto;margin:0;font-size:22px;font-weight:700;line-height:1.35}
+.lrn .korow,.cardbox .korow{display:flex;align-items:center;gap:8px;margin-top:18px}
+.lrn .korow p,.cardbox .korow p{flex:1 1 auto;margin:0;font-size:18px;font-weight:700}
+.lrn .sec2,.cardbox .sec2{border-top:1px solid var(--line);margin-top:18px;padding-top:16px}
+.lrn details.more,.cardbox details.more{margin-top:18px}
+.cardbox .enrow{margin-top:16px}
+.cardbox .rdline{margin-top:4px}
 .swapen{font-size:18px;font-weight:700;margin:0 0 14px;line-height:1.55}
 .swapen u{text-decoration:none;color:var(--accent);border-bottom:2px solid var(--accent);padding:0 2px;margin:0 1px}
 .swapo{display:flex;flex-wrap:wrap;gap:8px}
@@ -933,7 +935,7 @@ function renderToday(){
 }
 
 /* 카드 속 내용 — 오늘 화면과 문장함이 같이 씁니다 */
-function detailHTML(s, open){
+function detailHTML(s){
   /* 추가 표현 — 네 번째 칸(설명)이 있는 줄에만 ? 버튼이 생깁니다 */
   const xtra = (typeof EXTRA !== 'undefined') && EXTRA[s.day];
   const xlines = arr => arr.map(e => `
@@ -951,15 +953,15 @@ function detailHTML(s, open){
       <span class="rdline">${e[2]}</span>
     </div>`).join('');
   return `
-    <details${open === false ? '' : ' open'}><summary>단어 쪼개보기</summary>
-      <div class="in2"><div class="bd">${s.bd.map(p=>`<b>${p[0]}</b><span>${p[1]}</span>`).join('')}</div></div>
-    </details>
-    <details><summary>💬 이런 순간에</summary>
-      <div class="in2"><div class="when">${s.when}</div></div>
-    </details>
-    <details><summary>이렇게 써요</summary><div class="in2">${lines(s.ex)}</div></details>
-    ${xtra ? `<details><summary>추가 표현</summary><div class="in2">${xlines(xtra)}</div></details>` : ''}
-    <details><summary>비슷한 표현</summary><div class="in2">${lines(s.sim)}</div></details>`;
+    <div class="sec2"><div class="bd">${s.bd.map(p=>`<b>${p[0]}</b><span>${p[1]}</span>`).join('')}</div></div>
+    ${swapHTML(s)}
+    <details class="more"><summary>더 알고 싶어요</summary>
+      <div class="in2">
+        <h4>예시</h4>${lines(s.ex)}
+        ${xtra ? `<h4 style="margin-top:20px">추가 표현</h4>${xlines(xtra)}` : ''}
+        <h4 style="margin-top:20px">비슷한 표현</h4>${lines(s.sim)}
+      </div>
+    </details>`;
 }
 
 /* ─── 새 문장 ─── */
@@ -1062,12 +1064,12 @@ function swapHTML(s){
   const pat = (typeof PATTERNS !== 'undefined') && PATTERNS[s.day];
   if(!pat) return '';
   return `
-    <details class="more"><summary>내 문장으로 바꿔보기</summary>
+    <details class="more" data-pat="${s.day}"><summary>내 문장으로 바꿔보기</summary>
       <div class="in2">
-        <p class="swapen" id="swapEn">${pat.before}<u>&nbsp;&nbsp;&nbsp;&nbsp;</u>${pat.after}</p>
+        <p class="swapen">${pat.before}<u>&nbsp;&nbsp;&nbsp;&nbsp;</u>${pat.after}</p>
         <div class="swapo">${pat.opts.map((o,i) =>
           `<button class="pill" data-sw="${i}">${o[0]}<span>${o[1]}</span></button>`).join('')}</div>
-        <button class="btn ghost hide" id="swapSay" style="margin:16px 0 0">🔊 들어보기</button>
+        <button class="btn ghost hide swapsay" style="margin:16px 0 0">들어보기</button>
       </div>
     </details>`;
 }
@@ -1189,22 +1191,6 @@ function wireLearn(s, done){
   key.onclick = () => openType(s.en, s.ko, 'learn-' + s.day, () => {
     DB.days[todayStr()].lrnKeyOK = true; key.classList.add('got'); save(); syncDone();
   });
-
-  /* 단어를 고르면 내 문장이 완성됩니다 (기록에는 남지 않습니다) */
-  const pat = (typeof PATTERNS !== 'undefined') && PATTERNS[s.day];
-  if(pat){
-    const line = document.getElementById('swapEn');
-    const sbtn = document.getElementById('swapSay');
-    let made = '';
-    box.querySelectorAll('[data-sw]').forEach(b => b.onclick = () => {
-      const o = pat.opts[+b.dataset.sw];
-      made = pat.before + o[0] + pat.after;
-      line.innerHTML = pat.before + '<u>' + o[0] + '</u>' + pat.after;
-      box.querySelectorAll('[data-sw]').forEach(x => x.classList.toggle('on', x === b));
-      sbtn.classList.remove('hide');
-    });
-    sbtn.onclick = () => { if(made) speak(made); };
-  }
 
   document.getElementById('lrnClose').onclick = closeLearn;
   document.getElementById('lrnDone').onclick = () => {
@@ -1641,18 +1627,20 @@ function renderBox(){
         <span class="dy">DAY ${s.day}</span>
       </span></summary>
       <div class="in2">
-        <div class="boxtop">
-          <p class="learned">${meta}</p>
-          <p class="rdline" style="margin-top:0">${s.rd}</p>
-          <div class="row" style="margin:0">
-            <button class="btn ol" data-speak="${esc(s.en)}" style="margin:0">🔊 들어보기</button>
-            <button class="btn ol" data-mic="${esc(s.en)}" style="margin:0">🎙 따라 말해보기</button>
-          </div>
+        <div class="boxtop"><p class="learned" style="margin:0">${meta}</p></div>
+        <div class="enrow">
+          <p class="en">${s.en}</p>
+          <button class="rnd" data-speak="${esc(s.en)}" title="들어보기">${ICO.ear}</button>
+          <button class="rnd" data-yg="${esc(s.en)}" title="영상에서 보기">${ICO.tv}</button>
+        </div>
+        <p class="rdline">${s.rd}</p>
+        <div class="korow">
+          <p>${s.ko}</p>
+          <button class="rnd" data-mic="${esc(s.en)}" title="따라 말해보기">${ICO.mic}</button>
         </div>
         <div class="micout"></div>
-        <p class="nuance">${s.ko2}</p>
-        ${detailHTML(s, false)}
-        <button class="btn ol" data-yg="${esc(s.en)}">📺 영상에서 보기</button>
+        <p class="nuance">${s.ko2} ${s.when}</p>
+        ${detailHTML(s)}
         ${c.step >= 2 ? `<button class="mini" data-reset="${c.day}">${grow(0, 15)} 처음부터 다시 외우기</button>` : ''}
       </div>
     </details>`;
@@ -2205,6 +2193,27 @@ document.querySelectorAll('nav button').forEach(b => b.onclick = () => {
   switchTab(b.dataset.tab);
 });
 /* ? 버튼 — 어느 창에 있든 그 줄의 설명만 폈다 접었다 합니다 */
+/* 내 문장으로 바꿔보기 — 학습 창과 문장함 어디서든 같게 (기록에는 남지 않습니다) */
+document.addEventListener('click', e => {
+  if(!e.target.closest) return;
+  const sw = e.target.closest('[data-sw]');
+  if(sw){
+    const wrap = sw.closest('[data-pat]');
+    const pat = wrap && PATTERNS[+wrap.dataset.pat];
+    if(!pat) return;
+    e.preventDefault();
+    const o = pat.opts[+sw.dataset.sw];
+    wrap.querySelector('.swapen').innerHTML = pat.before + '<u>' + o[0] + '</u>' + pat.after;
+    wrap.querySelectorAll('[data-sw]').forEach(x => x.classList.toggle('on', x === sw));
+    const say = wrap.querySelector('.swapsay');
+    say.classList.remove('hide');
+    say.dataset.made = pat.before + o[0] + pat.after;
+    return;
+  }
+  const say = e.target.closest('.swapsay');
+  if(say){ e.preventDefault(); if(say.dataset.made) speak(say.dataset.made); }
+});
+
 document.addEventListener('click', e => {
   const b = e.target.closest && e.target.closest('[data-q]');
   if(!b) return;
