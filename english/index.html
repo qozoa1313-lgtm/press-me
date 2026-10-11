@@ -31,15 +31,11 @@ button{font:inherit;color:inherit;border:none;background:none;cursor:pointer}
 .hdl{display:flex;align-items:center;gap:9px}
 .hd .cnt b{color:var(--accent);font-size:15px}
 .hd .cnt{text-align:right;line-height:1.3}
-.hd .cnt i{display:block;font-style:normal;font-size:10.5px;color:var(--soft);opacity:.85;margin-top:1px}
-/* 오늘 화면 위에 얹는 작은 숲 — 배운 문장만큼 나무가 섭니다 */
-.mini{display:flex;align-items:flex-end;gap:1px;flex-wrap:wrap;background:var(--band);
-      border-radius:14px;padding:9px 11px 6px;margin-bottom:14px;min-height:40px}
-.mini svg{flex:0 0 auto}
+.hd .cnt i{font-style:normal;font-size:10.5px;color:var(--soft);opacity:.85;margin-left:4px}
 .pic{display:inline-flex;align-items:flex-end;vertical-align:-3px;line-height:0}
 .stat1 .pic,.tdrec .pic,.hd .cnt .pic,.sheet .li b .pic{vertical-align:-4px}
 .pic svg{display:block}
-.seedtag{float:right;font-size:11.5px;color:var(--soft)}
+.seedtag{margin-left:auto;font-size:11.5px;color:var(--soft);display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
 /* 오늘 심은 것 · 준 물 */
 .tdrec{display:flex;align-items:center;justify-content:center;gap:14px;background:var(--band);
        border-radius:13px;padding:10px 14px;margin-top:16px;font-size:12.5px;color:var(--soft)}
@@ -110,6 +106,9 @@ h2.sec{font-size:13px;color:var(--soft);font-weight:700;margin:26px 0 10px;lette
 .sheet .li .mk.on{opacity:1}
 .sheet .li[data-day]{cursor:pointer}
 .sheet .li .n{font-size:11px;color:var(--soft);flex:0 0 auto}
+.sheet .li.one{gap:6px;align-items:center}
+.sheet .li.one b{font-size:14px;flex:0 0 auto;display:inline-flex;align-items:center;gap:5px}
+.sheet .li.one span{font-size:13px;color:var(--soft);flex:1 1 auto;min-width:0}
 .sheet h3{font-size:19px;margin:0 0 2px}
 .sheet .cnt{font-size:13px;color:var(--soft);margin:0}
 .calhd button{font-size:19px;color:var(--soft);padding:4px 14px}
@@ -418,7 +417,8 @@ body.showrd .warm .rdline{display:block}
 .revrow .rt span{display:block;font-size:12px;color:var(--soft);margin-top:2px}
 .revrow .rp{color:var(--soft);font-size:17px;flex:0 0 auto}
 .revrow.mine{border-color:var(--accent);border-width:2px}
-.later{display:block;width:100%;margin-top:12px;font-size:12.5px;color:var(--soft);text-align:center;padding:6px 0}
+.later{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;flex:0 0 auto;
+  border:1.5px solid var(--line);color:var(--soft);margin-left:7px;white-space:nowrap}
 nav button.dim{opacity:.32}
 /* 오늘의 문장을 끝냈을 때 위에 남는 줄 */
 .tdone{
@@ -508,7 +508,7 @@ nav button.dim{opacity:.32}
         <span class="date" id="hdDate">OCT 06</span>
         <button class="chip" id="rdBtn">발음 보기</button>
       </span>
-      <span class="cnt"><span id="hdCnt">—</span><i id="hdStreak"></i></span>
+      <span class="cnt" id="hdCnt">—</span>
     </div>
     <div id="todayBody"></div>
   </div>
@@ -520,7 +520,7 @@ nav button.dim{opacity:.32}
         <span class="date" id="boxDate">문장함</span>
         <button class="chip" id="boxRd">발음 보기</button>
       </span>
-      <span class="cnt"><span id="boxCnt">—</span><i id="boxStreak"></i></span>
+      <span class="cnt" id="boxCnt">—</span>
     </div>
     <div id="boxBody"></div>
   </div>
@@ -824,12 +824,12 @@ function heardMsg(rate){
 function paintHead(si){
   si = si || streakInfo();
   const seeds = Object.keys(DB.cards).length;
-  const top = `${grow(0, 17)} <b>${seeds}</b> · ${sunMini(16)} <b>${si.total}</b>일`;
   const sub = si.run > 1 ? si.run + '일 연속' : '';
-  [['hdCnt','hdStreak'], ['boxCnt','boxStreak']].forEach(([a, b]) => {
-    const x = document.getElementById(a), y = document.getElementById(b);
+  const top = `${grow(0, 17)} <b>${seeds}</b> · ${sunMini(16)} <b>${si.total}</b>일`
+            + (sub ? ` <i>${sub}</i>` : '');
+  ['hdCnt', 'boxCnt'].forEach(a => {
+    const x = document.getElementById(a);
     if(x) x.innerHTML = top;
-    if(y) y.textContent = sub;
   });
 }
 
@@ -860,11 +860,6 @@ function plantSVG(st, size){
      <circle cx="12" cy="15" r="6" fill="var(--l1)"/><circle cx="28" cy="23" r="5.4" fill="var(--l1)"/></svg>`;
 }
 /* 자람 그림 · 물방울 · 작은 해 — 화면 어디서나 같은 그림을 씁니다 */
-const emptyPlot = (size = 22) => `<span class="pic"><svg width="${size}" height="${Math.round(size*1.15)}"`
-  + ` viewBox="0 0 40 46" aria-hidden="true">`
-  + `<ellipse cx="20" cy="40" rx="13" ry="4.4" fill="var(--soil)"/>`
-  + `<path d="M11 38 q4 -2.6 9 0 q5 -2.6 9 0" stroke="var(--card)" stroke-width="1.5"`
-  + ` fill="none" opacity=".55" stroke-linecap="round"/></svg></span>`;
 const grow = (step, size) => `<span class="pic">${plantSVG(step, size)}</span>`;
 const dropSVG = (size = 15) => `<span class="pic"><svg width="${size}" height="${size}" viewBox="0 0 16 16" aria-hidden="true">`
   + `<path d="M8 1.6 C8 1.6 13 7.4 13 10.2 A5 5 0 0 1 3 10.2 C3 7.4 8 1.6 8 1.6 Z" fill="var(--drop)"/>`
@@ -878,12 +873,6 @@ const sunMini = (size = 15) => `<span class="pic"><svg width="${size}" height="$
            + ` stroke="var(--sun)" stroke-width="1.5" stroke-linecap="round" opacity=".8"/>`;
     }).join('')
   + `</svg></span>`;
-
-function miniForest(){
-  const cards = Object.values(DB.cards).sort((a,b) => a.day - b.day);
-  if(!cards.length) return '';
-  return `<div class="mini">${cards.map(c => plantSVG(c.step, 24)).join('')}</div>`;
-}
 
 /* 오늘 심은 씨앗과 준 물 */
 function todayRec(){
@@ -941,7 +930,6 @@ function renderToday(){
       + (due.length ? '' : viewDone());
   }
 
-  body.insertAdjacentHTML('afterbegin', miniForest());
   body.insertAdjacentHTML('beforeend', todayRec());
   body.insertAdjacentHTML('beforeend', warmHTML());
   /* 내일 다시 보기로 해둔 날은 하단 학습하기를 흐리게 둡니다 */
@@ -1040,8 +1028,10 @@ function viewNew(s, done){
   return `
   <div class="card today">
     <div class="cardtop">
-      <div class="ctrow"><span class="badge">DAY ${s.day}</span>${done ? '<span class="okmark">✓ 완료</span>' : '<span class="seedtag">오늘의 씨앗</span>'}</div>
-      <p class="en" id="enLine"><span class="grl">${grow(DB.cards[s.id] ? DB.cards[s.id].step : 0, 21)}</span>${wordSpans(s.en)}</p>
+      <div class="ctrow"><span class="badge">DAY ${s.day}</span>${done ? '<span class="okmark">✓ 완료</span>'
+        : `<span class="seedtag">${grow(0, 15)} 오늘의 씨앗</span>`
+          + '<button class="later" id="laterBtn">내일 다시 도전!</button>'}</div>
+      <p class="en" id="enLine">${wordSpans(s.en)}</p>
       <p class="rdline">${s.rd}</p>
 
       <div class="acts">
@@ -1057,7 +1047,6 @@ function viewNew(s, done){
     </div>
     <button class="btn lap${canLearn() ? '' : ' off'}" id="openBtn">학습하기</button>
     <p class="lk" id="lkMsg"></p>
-    ${done ? '' : '<button class="later" id="laterBtn">내일 다시 도전!</button>'}
   </div>
   <div id="micOut"></div>`;
 }
@@ -1116,7 +1105,7 @@ function learnHTML(s, done){
       <button class="chip" id="lrnRd">발음 보기</button>
     </div>
     <div class="enrow">
-      <p class="en" id="lrnEn"><span class="grl">${grow(DB.cards[s.id] ? DB.cards[s.id].step : 0, 21)}</span>${wordSpans(s.en)}</p>
+      <p class="en" id="lrnEn">${wordSpans(s.en)}</p>
       <button class="rnd" data-speak="${esc(s.en)}" title="들어보기">🔊</button>
       <button class="rnd" id="lrnYg" title="영상에서 보기">📺</button>
     </div>
@@ -1569,10 +1558,9 @@ function wireToday(){
 
   const recQ = document.getElementById('recQ');
   if(recQ) recQ.onclick = () => openSheet(`<h3>오늘의 기록</h3>
-    <div class="li"><b>${grow(0, 15)} 씨앗</b><span>오늘 새로 배운 문장 수입니다. 하루에 하나 심습니다.</span></div>
-    <div class="li"><b>${dropSVG(14)} 물</b><span>오늘 복습한 횟수입니다. 복습 카드에서 기억나요 · 헷갈려요 · 기억 안 나요 중 하나를 누르면 한 번으로 셉니다.</span></div>
-    <div class="li"><b>${sunMini()} 빛</b><span>맨 위에 있습니다. 앱을 열어서 뭐라도 한 날의 수예요.</span></div>
-    <p class="lead" style="margin-top:16px">물을 다섯 번 받은 문장은 나무가 되어 더 이상 복습에 나오지 않습니다.</p>`);
+    <div class="li one"><b>${grow(0, 16)} 씨앗 :</b><span>새로 배운 문장 수입니다</span></div>
+    <div class="li one"><b>${dropSVG(15)} 물 :</b><span>복습한 횟수입니다</span></div>
+    <div class="li one"><b>${sunMini(15)} 빛 :</b><span>앱을 연 횟수입니다</span></div>`);
 
   const laterBtn = document.getElementById('laterBtn');
   if(laterBtn) laterBtn.onclick = () => {
@@ -1849,7 +1837,8 @@ function renderCal(){
     const ds = y + '-' + String(m+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
     const g = dayLog(ds);
     const mk = g.made[0] && DB.cards['d' + g.made[0]];
-    const ico = mk ? grow(mk.step, 14) : '';
+    const rev = g.back.ok + g.back.mid + g.back.no + g.back.reset;
+    const ico = mk ? grow(mk.step, 14) : (rev ? dropSVG(12) : '');
     cells += `<button class="cell${g.any?' did':''}${ds===t?' today':''}${ds===calSel?' sel':''}${(start+d-1)%7===0?' sun':''}${ds>t?' future':''}" data-d="${ds}">
       ${d}<span class="dot${ico?' ico':''}">${ico}</span></button>`;
   }
@@ -1892,12 +1881,8 @@ function stgHelp(){
       이걸 <b>망각곡선 복습</b>이라고 합니다.</p>
     <p class="lead">복습에서 <b>✓ 기억나요</b> 를 누를 때마다 다음에 나오는 간격이 길어집니다
       (${gap}). <b>△ 헷갈려요</b> 나 <b>✕ 기억 안 나요</b> 를 누르면 다음 날 다시 나옵니다.</p>
-    <p class="lead" style="margin-top:14px">아래 칸은 <b>✓ 로 맞힌 횟수</b>로 나눈 것입니다.
-      맨 앞 칸은 아직 심지 않은 빈 땅이에요.</p>
-    <div class="list">
-      <div class="li"><span class="mk on">${emptyPlot(20)}</span>
-        <span class="tx"><b>빈 땅</b><span>아직 안 배운 문장이에요</span></span></div>
-      ${rows}</div>`;
+    <p class="lead" style="margin-top:14px">아래 칸은 <b>✓ 로 맞힌 횟수</b>로 나눈 것입니다.</p>
+    <div class="list">${rows}</div>`;
 }
 function stgSheet(i){
   const g = STG[i];
@@ -1993,14 +1978,11 @@ function renderLog(){
     else if(RVM[l.m]){ revAll++; if(wk) revWk++; }
   }));
 
-  const sunlit = !!(DB.days[t] && DB.days[t].done);
-  const left = 30 - cards.length;
   document.getElementById('logBody').innerHTML = `
     <div class="sunbar">
       ${sunSVG()}
       <span class="tx"><b>${si.total}일째 자라는 중이에요</b>
-        <i>${[si.run > 1 ? si.run + '일 연속' : '', DB.bestStreak > 1 ? '최고 ' + DB.bestStreak + '일' : ''].filter(Boolean).join(' · ')}</i>
-        <span>${sunlit ? '오늘도 해가 떴습니다' : '오늘 해를 기다리는 중이에요'}</span></span>
+        <i>${[si.run > 1 ? si.run + '일 연속' : '', DB.bestStreak > 1 ? '최고 ' + DB.bestStreak + '일' : ''].filter(Boolean).join(' · ')}</i></span>
     </div>` + renderCal() + `
     <div class="weekhd">
       <h2 class="sec" style="margin:0">SUMMARY</h2>
@@ -2011,7 +1993,6 @@ function renderLog(){
     </div>
     <h2 class="sec">복습 현황<button class="qm" id="stgQ">?</button></h2>
     <div class="stg">
-      <div class="stgb empty"><b>${emptyPlot(24)}</b><span>${left}</span></div>
       ${STG.map((g,i) => `<button class="stgb" data-stg="${i}">
         <b>${grow(g[0], 24)}</b><span>${cards.filter(g[2]).length}</span></button>`).join('')}
     </div>
@@ -2031,10 +2012,6 @@ function renderLog(){
 function renderSet(){
   const p = DB.pledge;
   document.getElementById('setBody').innerHTML = `
-    <h2 class="sec">나의 약속</h2>
-    <p>나는 <b>${timeLabel(p.time)}</b>에 <b>${p.cue}</b> 카드 한 장을 연다.</p>
-    <button class="btn ol" id="reBtn">약속 바꾸기</button>
-
     <h2 class="sec">아침 알림</h2>
     <p class="lead" id="pushState">확인 중…</p>
     <button class="btn ghost" id="pushBtn">알림 받기 켜기</button>
@@ -2064,13 +2041,6 @@ function renderSet(){
     <button class="btn ol" id="rstBtn">전부 지우고 다시 시작</button>`;
 
   wirePush();
-  document.getElementById('reBtn').onclick = () => {
-    document.getElementById('app').classList.add('hide');
-    document.getElementById('setup').classList.remove('hide');
-    document.getElementById('setTime').value = p.time;
-    document.getElementById('setCue').value = p.cue;
-    syncPledge();
-  };
   document.getElementById('expBtn').onclick = () => download('오늘딱한문장-' + todayStr() + '.json', JSON.stringify(DB, null, 2));
   document.getElementById('impBtn').onclick = () => document.getElementById('impFile').click();
   document.getElementById('impFile').onchange = e => {
