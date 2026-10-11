@@ -31,13 +31,8 @@ button{font:inherit;color:inherit;border:none;background:none;cursor:pointer}
 /* ───── 공통 ───── */
 .hd{display:flex;align-items:center;justify-content:space-between;margin:6px 0 18px}
 .hd .date{font-size:12px;letter-spacing:.14em;color:var(--soft);font-weight:700}
-.hd .cnt{font-size:12px;color:var(--soft)}
-.hdl{display:flex;align-items:center;gap:9px}
-.hd .cnt b{color:var(--accent);font-size:15px}
-.hd .cnt{text-align:right;line-height:1.3}
-.hd .cnt i{font-style:normal;font-size:10.5px;color:var(--soft);opacity:.85;margin-left:4px}
 .pic{display:inline-flex;align-items:flex-end;vertical-align:-3px;line-height:0}
-.stat1 .pic,.tdrec .pic,.hd .cnt .pic,.sheet .li b .pic{vertical-align:-4px}
+.stat1 .pic,.tdrec .pic,.sheet .li b .pic{vertical-align:-4px}
 .pic svg{display:block}
 /* 오늘 심은 것 · 준 물 */
 .tdrec{display:flex;align-items:center;justify-content:center;gap:14px;background:var(--band);
@@ -282,14 +277,14 @@ select,input[type=text],input[type=time]{
 .btn.lap{width:100%;margin:6px 0 0}
 .acts{display:flex;align-items:center;gap:6px;margin-top:16px;flex-wrap:wrap}
 .rnd{
-  width:42px;height:42px;border-radius:50%;background:var(--band);font-size:18px;
+  width:42px;height:42px;border-radius:50%;background:var(--band);
+  border:1.5px solid var(--line);color:var(--accent);
   display:flex;align-items:center;justify-content:center;flex:0 0 auto;
 }
-.rnd.mic{background:#D08A3E;color:#fff}
-.rnd.mic.on{background:var(--wrong)}
+.rnd svg{display:block}
+.rnd.mic.on{background:var(--wrong);border-color:var(--wrong);color:#fff}
 .tryn{font-size:12.5px;color:var(--soft);flex:1 1 100%;margin-top:2px}
 .rnd{position:relative}
-.rnd.key{background:var(--drop);color:#fff}
 .rnd.got::after{
   content:'✓';position:absolute;right:-3px;bottom:-3px;width:19px;height:19px;border-radius:50%;
   background:var(--accent);color:#fff;font-size:11px;font-weight:700;
@@ -380,7 +375,7 @@ body.showrd .warm .rdline{display:block}
 }
 .hintline{margin-top:12px;font-size:19px;font-weight:700;letter-spacing:.06em}
 .hintline .dim{color:#CFC6B6}
-.rnd.key.on{outline:3px solid rgba(91,127,168,.3)}
+.rnd.key.on{outline:3px solid var(--line)}
 .typebox{margin-top:14px;display:none}
 .typebox.show{display:block}
 .typebox input{
@@ -504,11 +499,8 @@ nav button.dim{opacity:.32}
   <!-- ─── 오늘 ─── -->
   <div class="wrap tab" id="tabToday">
     <div class="hd sticky">
-      <span class="hdl">
-        <span class="date" id="hdDate">OCT 06</span>
-        <button class="chip" id="rdBtn">발음 보기</button>
-      </span>
-      <span class="cnt" id="hdCnt">—</span>
+      <span class="date" id="hdDate">OCT 06</span>
+      <button class="chip" id="rdBtn">발음 보기</button>
     </div>
     <div id="todayBody"></div>
   </div>
@@ -516,11 +508,8 @@ nav button.dim{opacity:.32}
   <!-- ─── 문장함 ─── -->
   <div class="wrap tab hide" id="tabBox">
     <div class="hd sticky">
-      <span class="hdl">
-        <span class="date" id="boxDate">문장함</span>
-        <button class="chip" id="boxRd">발음 보기</button>
-      </span>
-      <span class="cnt" id="boxCnt">—</span>
+      <span class="date" id="boxDate">문장함</span>
+      <button class="chip" id="boxRd">발음 보기</button>
     </div>
     <div id="boxBody"></div>
   </div>
@@ -821,18 +810,6 @@ function heardMsg(rate){
 }
 
 /* 상단 띠 — 씨앗 몇 개, 빛 며칠. 오늘 화면과 문장함이 같이 씁니다 */
-function paintHead(si){
-  si = si || streakInfo();
-  const seeds = Object.keys(DB.cards).length;
-  const sub = si.run > 1 ? si.run + '일 연속' : '';
-  const top = `${grow(0, 17)} <b>${seeds}</b> · ${sunMini(16)} <b>${si.total}</b>일`
-            + (sub ? ` <i>${sub}</i>` : '');
-  ['hdCnt', 'boxCnt'].forEach(a => {
-    const x = document.getElementById(a);
-    if(x) x.innerHTML = top;
-  });
-}
-
 /* 작은 숲 — 복습 단계가 곧 나무 크기입니다 (0 씨앗 · 1 새싹 · 2 어린나무 · 3 나무) */
 function plantSVG(st, size){
   const o = `<svg width="${size}" height="${Math.round(size*1.15)}" viewBox="0 0 40 46" aria-hidden="true">`;
@@ -861,6 +838,24 @@ function plantSVG(st, size){
 }
 /* 자람 그림 · 물방울 · 작은 해 — 화면 어디서나 같은 그림을 씁니다 */
 const grow = (step, size) => `<span class="pic">${plantSVG(step, size)}</span>`;
+/* 동그란 단추 안 그림 — 이모지는 폰마다 달라 보여서 직접 그립니다 */
+const B = `fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"`;
+const ICO = {
+  ear: `<svg width="21" height="21" viewBox="0 0 24 24" aria-hidden="true">`
+     + `<path d="M4 9.3h3.3L12 5.4v13.2L7.3 14.7H4z" ${B}/>`
+     + `<path d="M15.6 9.4a3.8 3.8 0 0 1 0 5.2" ${B}/>`
+     + `<path d="M18.2 6.9a7.3 7.3 0 0 1 0 10.2" ${B}/></svg>`,
+  mic: `<svg width="21" height="21" viewBox="0 0 24 24" aria-hidden="true">`
+     + `<rect x="9" y="2.8" width="6" height="10.4" rx="3" ${B}/>`
+     + `<path d="M5.6 11.2a6.4 6.4 0 0 0 12.8 0" ${B}/>`
+     + `<path d="M12 17.6v3.2M8.6 20.8h6.8" ${B}/></svg>`,
+  key: `<svg width="21" height="21" viewBox="0 0 24 24" aria-hidden="true">`
+     + `<rect x="2.4" y="6" width="19.2" height="12" rx="2.6" ${B}/>`
+     + `<path d="M6.2 10h.01M9.4 10h.01M12.6 10h.01M15.8 10h.01M6.2 13.4h.01M8.4 16.6h7.2" ${B}/></svg>`,
+  tv:  `<svg width="21" height="21" viewBox="0 0 24 24" aria-hidden="true">`
+     + `<rect x="2.4" y="4.8" width="19.2" height="14.4" rx="2.6" ${B}/>`
+     + `<path d="M10.2 9.4l4.8 2.6-4.8 2.6z" fill="currentColor" stroke="none"/></svg>`
+};
 const dropSVG = (size = 15) => `<span class="pic"><svg width="${size}" height="${size}" viewBox="0 0 16 16" aria-hidden="true">`
   + `<path d="M8 1.6 C8 1.6 13 7.4 13 10.2 A5 5 0 0 1 3 10.2 C3 7.4 8 1.6 8 1.6 Z" fill="var(--drop)"/>`
   + `<ellipse cx="6.2" cy="10.4" rx="1.3" ry="2" fill="#fff" opacity=".35"/></svg></span>`;
@@ -894,8 +889,6 @@ function renderToday(){
   paintAccent();
   const d = new Date();
   document.getElementById('hdDate').textContent = MON[d.getMonth()] + ' ' + String(d.getDate()).padStart(2,'0');
-  const si = streakInfo();
-  paintHead(si);
 
   const body = document.getElementById('todayBody');
   const t = todayStr();
@@ -1034,9 +1027,9 @@ function viewNew(s, done){
       <p class="rdline">${s.rd}</p>
 
       <div class="acts">
-        <button class="rnd${DB.days[todayStr()].earOK ? ' got' : ''}" id="earBtn" title="들어보기">🔊</button>
-        <button class="rnd mic${DB.days[todayStr()].micOK ? ' got' : ''}" id="micBtn" title="말해보기">🎙</button>
-        <button class="rnd key${DB.days[todayStr()].keyOK ? ' got' : ''}" id="keyBtn" title="직접 써보기">⌨</button>
+        <button class="rnd${DB.days[todayStr()].earOK ? ' got' : ''}" id="earBtn" title="들어보기">${ICO.ear}</button>
+        <button class="rnd mic${DB.days[todayStr()].micOK ? ' got' : ''}" id="micBtn" title="말해보기">${ICO.mic}</button>
+        <button class="rnd key${DB.days[todayStr()].keyOK ? ' got' : ''}" id="keyBtn" title="직접 써보기">${ICO.key}</button>
         <span id="unlock" class="hide">
           <button class="pill" id="againBtn">재도전</button>
           <button class="pill on" id="doneBtn">그래도 넘어가기</button>
@@ -1105,14 +1098,14 @@ function learnHTML(s, done){
     </div>
     <div class="enrow">
       <p class="en" id="lrnEn">${wordSpans(s.en)}</p>
-      <button class="rnd" data-speak="${esc(s.en)}" title="들어보기">🔊</button>
-      <button class="rnd" id="lrnYg" title="영상에서 보기">📺</button>
+      <button class="rnd" data-speak="${esc(s.en)}" title="들어보기">${ICO.ear}</button>
+      <button class="rnd" id="lrnYg" title="영상에서 보기">${ICO.tv}</button>
     </div>
     <p class="rdline">${s.rd}</p>
     <div class="korow">
       <p>${s.ko}</p>
-      <button class="rnd mic${d.lrnMicOK ? ' got' : ''}" id="lrnMic" title="말해보기">🎙</button>
-      <button class="rnd key${d.lrnKeyOK ? ' got' : ''}" id="lrnKey" title="직접 써보기">⌨</button>
+      <button class="rnd mic${d.lrnMicOK ? ' got' : ''}" id="lrnMic" title="말해보기">${ICO.mic}</button>
+      <button class="rnd key${d.lrnKeyOK ? ' got' : ''}" id="lrnKey" title="직접 써보기">${ICO.key}</button>
     </div>
     <p class="tryn" id="lrnTry"></p>
     </div>
@@ -1257,14 +1250,14 @@ function viewReview(c){
     <span class="grl">${grow(c.step, 20)}</span><span class="badge">DAY ${s.day}</span>
     <div class="qline">
       <p class="en" style="font-size:21px;margin:0;flex:1 1 auto">${s.ko}</p>
-      <button class="rnd mic${done.mic ? ' got' : ''}" id="revMic" title="말해보기">🎙</button>
-      <button class="rnd key${done.key ? ' got' : ''}" id="rvKey" title="직접 써보기">⌨</button>
+      <button class="rnd mic${done.mic ? ' got' : ''}" id="revMic" title="말해보기">${ICO.mic}</button>
+      <button class="rnd key${done.key ? ' got' : ''}" id="rvKey" title="직접 써보기">${ICO.key}</button>
     </div>
     <p class="tryn" id="revTry"></p>
     <div id="ansBox" class="open hide">
       <div class="qline" style="margin-top:0">
         <p class="en" id="revEn" style="margin:0;flex:1 1 auto">${wordSpans(s.en)}</p>
-        <button class="rnd" data-speak="${esc(s.en)}">🔊</button>
+        <button class="rnd" data-speak="${esc(s.en)}">${ICO.ear}</button>
       </div>
       <p class="rdline">${s.rd}</p>
     </div>
@@ -1631,7 +1624,6 @@ function syncSticky(){
 
 function renderBox(){
   const cards = Object.values(DB.cards).sort((a,b) => b.day - a.day);
-  paintHead();
   const b = document.getElementById('boxBody');
   if(!cards.length){ b.innerHTML = '<p class="lead" style="text-align:center;padding:50px 0">아직 비어 있어요.<br>오늘 카드를 열면 여기에 쌓입니다.</p>'; return; }
   const t = todayStr();
