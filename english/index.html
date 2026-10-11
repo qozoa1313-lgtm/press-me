@@ -8,8 +8,11 @@
 <meta name="theme-color" content="#FAF8F4">
 <style>
 :root{
-  --paper:#FAF8F4; --ink:#2B2723; --soft:#8A817A; --line:#E8E1D8;
-  --card:#FFFFFF; --band:#F2EDE5; --accent:#3E7C76;
+  --paper:#F0F6F2; --ink:#1C2A24; --soft:#687C72; --line:#D5E5DB;
+  --card:#FFFFFF; --band:#E2EFE8; --accent:#2E6A59;
+  /* 숲과 하늘 — 씨앗·물·빛을 그릴 때 씁니다 */
+  --sun:#C08E22; --sky:#D5EADD; --soil:#C2B19C; --bark:#6B5340;
+  --l1:#9AC9AC; --l2:#6BA585; --l3:#3F7E62; --drop:#3E8E8E;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0}
@@ -27,6 +30,18 @@ button{font:inherit;color:inherit;border:none;background:none;cursor:pointer}
 .hd .cnt{font-size:12px;color:var(--soft)}
 .hdl{display:flex;align-items:center;gap:9px}
 .hd .cnt b{color:var(--accent);font-size:15px}
+.hd .cnt{text-align:right;line-height:1.3}
+.hd .cnt i{display:block;font-style:normal;font-size:10.5px;color:var(--soft);opacity:.85;margin-top:1px}
+/* 오늘 화면 위에 얹는 작은 숲 — 배운 문장만큼 나무가 섭니다 */
+.mini{display:flex;align-items:flex-end;gap:1px;flex-wrap:wrap;background:var(--band);
+      border-radius:14px;padding:9px 11px 6px;margin-bottom:14px;min-height:40px}
+.mini svg{flex:0 0 auto}
+.seedtag{float:right;font-size:11.5px;color:var(--soft)}
+/* 오늘 심은 것 · 준 물 */
+.tdrec{display:flex;align-items:center;justify-content:center;gap:14px;background:var(--band);
+       border-radius:13px;padding:10px 14px;margin-top:16px;font-size:12.5px;color:var(--soft)}
+.tdrec b{color:var(--ink)}
+.tdrec .qm{margin-left:2px}
 h2.sec{font-size:13px;color:var(--soft);font-weight:700;margin:26px 0 10px;letter-spacing:.02em}
 .btn{
   display:block;width:100%;padding:16px;border-radius:16px;background:var(--accent);
@@ -321,6 +336,8 @@ select,input[type=text],input[type=time]{
 .warm{text-align:center;margin:36px 0 6px;color:var(--soft);line-height:1.7}
 .warm b{display:block;font-size:13.5px;font-weight:700}
 .warm span{display:block;font-size:12.5px;margin-top:3px}
+.warm .rdline{display:none;color:var(--soft);opacity:.85}
+body.showrd .warm .rdline{display:block}
 .lrn h4{font-size:12px;letter-spacing:.06em;color:var(--soft);margin:0 0 10px;font-weight:700}
 .lk{font-size:12.5px;color:var(--soft);text-align:center;margin:8px 0 0}
 .btn[disabled],.btn.off{opacity:.4}
@@ -337,7 +354,15 @@ select,input[type=text],input[type=time]{
 .mk3 b{display:block;font-size:17px;font-weight:700;color:var(--ink)}
 .mk3 span{display:block;font-size:11px;margin-top:3px;white-space:nowrap}
 /* 기록 — 자람 단계 네 칸 */
-.stg{display:flex;gap:8px}
+/* 기록 맨 위 — 해와 하늘 */
+.sunbar{display:flex;align-items:center;gap:13px;background:var(--sky);
+        border-radius:16px;padding:14px 16px;margin-bottom:18px}
+.sunbar .tx{line-height:1.45}
+.sunbar .tx b{display:block;font-size:17px;font-weight:700}
+.sunbar .tx i{font-style:normal;font-size:11px;color:var(--soft);display:block;margin-top:1px}
+.sunbar .tx span{display:block;font-size:12.5px;color:var(--soft);margin-top:3px}
+.stg{display:flex;gap:6px}
+.stgb.empty{opacity:.75}
 .stgb{flex:1;border:1.5px solid var(--line);border-radius:14px;background:var(--card);padding:10px 0 9px}
 .stgb b{display:block;font-size:16px}
 .stgb span{display:block;font-size:17px;font-weight:700;margin-top:2px}
@@ -480,7 +505,7 @@ nav button.dim{opacity:.32}
         <span class="date" id="hdDate">OCT 06</span>
         <button class="chip" id="rdBtn">발음 보기</button>
       </span>
-      <span class="cnt"><b id="hdCnt">0</b>장 모음 · <span id="hdStreak">—</span></span>
+      <span class="cnt"><span id="hdCnt">—</span><i id="hdStreak"></i></span>
     </div>
     <div id="todayBody"></div>
   </div>
@@ -488,8 +513,11 @@ nav button.dim{opacity:.32}
   <!-- ─── 문장함 ─── -->
   <div class="wrap tab hide" id="tabBox">
     <div class="hd sticky">
-      <button class="chip" id="boxRd">발음 보기</button>
-      <span class="cnt"><b id="boxCnt">0</b>장 모았어요</span>
+      <span class="hdl">
+        <span class="date" id="boxDate">문장함</span>
+        <button class="chip" id="boxRd">발음 보기</button>
+      </span>
+      <span class="cnt"><span id="boxCnt">—</span><i id="boxStreak"></i></span>
     </div>
     <div id="boxBody"></div>
   </div>
@@ -529,7 +557,7 @@ nav button.dim{opacity:.32}
 <script>
 /* ═══════════════ 저장 ═══════════════ */
 const KEY = 'oneline.v1';
-const DAYCOLOR = ['#A08049','#3E7C76','#6E6AA8','#6E7C43','#96694A','#3F6E96','#8C4F63']; // 일~토
+const DAYCOLOR = ['#3E7F64','#2E6A59','#357268','#4A7A52','#2F6B5F','#58795A','#35707A']; // 일~토 (숲 계열)
 const MON = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
 
 const todayStr = (d) => {
@@ -788,6 +816,64 @@ function heardMsg(rate){
   return '다시 한 번 말해볼까요?';
 }
 
+/* 상단 띠 — 씨앗 몇 개, 빛 며칠. 오늘 화면과 문장함이 같이 씁니다 */
+function paintHead(si){
+  si = si || streakInfo();
+  const seeds = Object.keys(DB.cards).length;
+  const top = `🌱 <b>${seeds}</b> · ☀️ <b>${si.total}</b>일`;
+  const sub = si.run > 1 ? si.run + '일 연속' : '';
+  [['hdCnt','hdStreak'], ['boxCnt','boxStreak']].forEach(([a, b]) => {
+    const x = document.getElementById(a), y = document.getElementById(b);
+    if(x) x.innerHTML = top;
+    if(y) y.textContent = sub;
+  });
+}
+
+/* 작은 숲 — 복습 단계가 곧 나무 크기입니다 (0 씨앗 · 1 새싹 · 2 어린나무 · 3 나무) */
+function plantSVG(st, size){
+  const o = `<svg width="${size}" height="${Math.round(size*1.15)}" viewBox="0 0 40 46" aria-hidden="true">`;
+  const dirt = `<ellipse cx="20" cy="43" rx="11" ry="2.6" fill="var(--soil)" opacity=".55"/>`;
+  if(st <= 0) return o + dirt +
+    `<path d="M20 43 L20 36" stroke="var(--bark)" stroke-width="1.8" stroke-linecap="round"/>
+     <ellipse cx="15" cy="34" rx="5" ry="3.2" fill="var(--l1)" transform="rotate(-22 15 34)"/>
+     <ellipse cx="25" cy="34" rx="5" ry="3.2" fill="var(--l1)" transform="rotate(22 25 34)"/></svg>`;
+  if(st === 1) return o + dirt +
+    `<path d="M20 43 L20 28" stroke="var(--bark)" stroke-width="2.1" stroke-linecap="round"/>
+     <path d="M20 34 L13 29 M20 31 L27 26" stroke="var(--bark)" stroke-width="1.5" stroke-linecap="round"/>
+     <circle cx="12" cy="28" r="4.6" fill="var(--l2)"/><circle cx="28" cy="25" r="5" fill="var(--l2)"/>
+     <circle cx="20" cy="23" r="5.4" fill="var(--l1)"/></svg>`;
+  if(st <= 3) return o + dirt +
+    `<path d="M20 43 L20 24" stroke="var(--bark)" stroke-width="2.6" stroke-linecap="round"/>
+     <path d="M20 32 L11 25 M20 28 L29 21 M20 36 L13 32" stroke="var(--bark)" stroke-width="1.7" stroke-linecap="round"/>
+     <circle cx="10" cy="24" r="6" fill="var(--l2)"/><circle cx="30" cy="20" r="6.4" fill="var(--l2)"/>
+     <circle cx="20" cy="16" r="7.6" fill="var(--l3)"/><circle cx="14" cy="19" r="5" fill="var(--l1)"/></svg>`;
+  return o + dirt +
+    `<path d="M20 43 L20 21" stroke="var(--bark)" stroke-width="3.2" stroke-linecap="round"/>
+     <path d="M20 30 L9 21 M20 26 L31 17 M20 35 L11 29 M20 33 L30 27"
+           stroke="var(--bark)" stroke-width="2" stroke-linecap="round"/>
+     <circle cx="8" cy="19" r="7" fill="var(--l2)"/><circle cx="32" cy="15" r="7.6" fill="var(--l2)"/>
+     <circle cx="20" cy="11" r="9.2" fill="var(--l3)"/>
+     <circle cx="12" cy="15" r="6" fill="var(--l1)"/><circle cx="28" cy="23" r="5.4" fill="var(--l1)"/></svg>`;
+}
+function miniForest(){
+  const cards = Object.values(DB.cards).sort((a,b) => a.day - b.day);
+  if(!cards.length) return '';
+  return `<div class="mini">${cards.map(c => plantSVG(c.step, 24)).join('')}</div>`;
+}
+
+/* 오늘 심은 씨앗과 준 물 */
+function todayRec(){
+  const t = todayStr();
+  let seed = 0, drop = 0;
+  Object.values(DB.cards).forEach(c => c.log.forEach(l => {
+    if(l.d !== t) return;
+    if(l.m === 'new' || l.m === 'relearn') seed++;
+    else if(l.m === 'ok' || l.m === 'mid' || l.m === 'no') drop++;
+  }));
+  return `<p class="tdrec">오늘의 기록 <span>🌱 <b>${seed}</b></span><span>💧 <b>${drop}</b></span>
+    <button class="qm" id="recQ">?</button></p>`;
+}
+
 /* ═══════════════ 오늘 화면 ═══════════════ */
 let stage = null;   // {mode:'new'|'review'|'done', queue:[], idx}
 
@@ -795,9 +881,8 @@ function renderToday(){
   paintAccent();
   const d = new Date();
   document.getElementById('hdDate').textContent = MON[d.getMonth()] + ' ' + String(d.getDate()).padStart(2,'0');
-  document.getElementById('hdCnt').textContent = Object.keys(DB.cards).length;
   const si = streakInfo();
-  document.getElementById('hdStreak').textContent = si.run ? ('총 ' + si.total + '일 중 ' + si.run + '일 연속') : ('총 ' + si.total + '일');
+  paintHead(si);
 
   const body = document.getElementById('todayBody');
   const t = todayStr();
@@ -832,6 +917,8 @@ function renderToday(){
       + (due.length ? '' : viewDone());
   }
 
+  body.insertAdjacentHTML('afterbegin', miniForest());
+  body.insertAdjacentHTML('beforeend', todayRec());
   body.insertAdjacentHTML('beforeend', warmHTML());
   /* 내일 다시 보기로 해둔 날은 하단 학습하기를 흐리게 둡니다 */
   const lrnTab = document.querySelector('nav [data-tab="Learn"]');
@@ -929,7 +1016,7 @@ function viewNew(s, done){
   return `
   <div class="card today">
     <div class="cardtop">
-      <div class="ctrow"><span class="badge">DAY ${s.day}</span>${done ? '<span class="okmark">✓ 완료</span>' : ''}</div>
+      <div class="ctrow"><span class="badge">DAY ${s.day}</span>${done ? '<span class="okmark">✓ 완료</span>' : '<span class="seedtag">오늘의 씨앗</span>'}</div>
       <p class="en" id="enLine"><span class="grl">${maturity(DB.cards[s.id] ? DB.cards[s.id].step : 0)[0]}</span>${wordSpans(s.en)}</p>
       <p class="rdline">${s.rd}</p>
 
@@ -946,7 +1033,7 @@ function viewNew(s, done){
     </div>
     <button class="btn lap${canLearn() ? '' : ' off'}" id="openBtn">학습하기</button>
     <p class="lk" id="lkMsg"></p>
-    ${done ? '' : '<button class="later" id="laterBtn">오늘은 복습만 · 내일 다시 볼게요</button>'}
+    ${done ? '' : '<button class="later" id="laterBtn">내일 다시 도전!</button>'}
   </div>
   <div id="micOut"></div>`;
 }
@@ -1134,7 +1221,7 @@ function revRow(c){
   const n = c.log.filter(l => l.m !== 'new' && l.m !== 'reset').length;
   return `<button class="revrow" data-rev="${c.day}">
       <span class="rg">${gr}</span>
-      <span class="rt"><b>${s.ko}</b><span>DAY ${s.day}${n ? ' · ' + n + '회 복습' : ''}</span></span>
+      <span class="rt"><b>${s.ko}</b><span>DAY ${s.day}${n ? ' · ' + n + '번 복습' : ''} · ${Math.max(0, LADDER.length - c.step)}번 남음</span></span>
       <span class="rp">＋</span>
     </button>`;
 }
@@ -1185,7 +1272,7 @@ function viewReview(c){
 function viewRevSection(due){
   if(!due.length) return '';
   return `
-  <h2 class="sec" style="margin-top:30px">복습 ${due.length}장</h2>
+  <h2 class="sec" style="margin-top:30px">오늘 복습할 문장 ${due.length}개</h2>
   ${due.map(c => c.day === openRev ? viewReview(c) : revRow(c)).join('')}`;
 }
 
@@ -1199,41 +1286,42 @@ function viewTodayMini(){
 
 /* 오늘 탭 맨 아래 — 따뜻한 한 줄 (영어 + 뜻). 날마다 바뀝니다 */
 const WARM = [
-  ["Slow progress is still progress.", "느려도 나아가고 있어요."],
-  ["You showed up today.",             "오늘 열었잖아요. 그걸로 충분해요."],
-  ["Small steps count.",               "작은 걸음도 걸음이에요."],
-  ["You are doing enough.",            "지금도 충분히 하고 있어요."],
-  ["It's okay to be slow.",            "느려도 괜찮아요."],
-  ["One line a day is a lot.",         "하루 한 줄도 큰 거예요."],
-  ["You don't have to be perfect.",    "완벽하지 않아도 돼요."],
-  ["Today's you is enough.",           "오늘의 나로 충분해요."],
-  ["Rest is part of it.",              "쉬는 것도 과정이에요."],
-  ["You kept going.",                  "계속 왔잖아요."],
-  ["Mistakes mean you tried.",         "틀렸다는 건 해봤다는 뜻이에요."],
-  ["Be kind to yourself.",             "나한테도 다정하게."],
-  ["You can start small.",             "작게 시작해도 돼요."],
-  ["Nobody starts fluent.",            "처음부터 잘하는 사람은 없어요."],
-  ["Your pace is fine.",               "내 속도면 됩니다."],
-  ["Quiet days still count.",          "조용한 날도 하루예요."],
-  ["You're braver than you think.",    "생각보다 용감한 사람이에요."],
-  ["Keep your own time.",              "내 시간대로 가면 돼요."],
-  ["One sentence is a win.",           "한 문장도 이긴 거예요."],
-  ["You came back. That matters.",     "다시 왔다는 게 중요해요."],
-  ["Progress is quiet.",               "느는 건 조용히 옵니다."],
-  ["You're not behind.",               "늦은 거 아니에요."],
-  ["Trying is the hard part.",         "시도하는 게 제일 어려워요. 그걸 했어요."],
-  ["Good enough is good.",             "이만하면 잘한 거예요."],
-  ["You deserve a soft day.",          "가끔은 느슨해도 돼요."],
-  ["Little by little.",                "조금씩, 조금씩."],
-  ["Learning is brave.",               "배운다는 건 용기 있는 일이에요."],
-  ["Tomorrow you will know more.",     "내일의 나는 더 알고 있을 거예요."],
-  ["Still here. Still going.",         "아직 여기 있고, 아직 가는 중이에요."],
-  ["Be proud of today.",               "오늘의 나를 칭찬해도 됩니다."]
+  ["Slow progress is still progress.", "느려도 나아가고 있어요.", "슬로우 프로그레스 이즈 스틸 프로그레스"],
+  ["You showed up today.",             "오늘 열었잖아요. 그걸로 충분해요.", "유 쇼드 업 투데이"],
+  ["Small steps count.",               "작은 걸음도 걸음이에요.", "스몰 스텝스 카운트"],
+  ["You are doing enough.",            "지금도 충분히 하고 있어요.", "유 아 두잉 이너프"],
+  ["It's okay to be slow.",            "느려도 괜찮아요.", "잇츠 오케이 투 비 슬로우"],
+  ["One line a day is a lot.",         "하루 한 줄도 큰 거예요.", "원 라인 어 데이 이즈 어 랏"],
+  ["You don't have to be perfect.",    "완벽하지 않아도 돼요.", "유 돈트 해브 투 비 퍼펙트"],
+  ["Today's you is enough.",           "오늘의 나로 충분해요.", "투데이즈 유 이즈 이너프"],
+  ["Rest is part of it.",              "쉬는 것도 과정이에요.", "레스트 이즈 파트 오브 잇"],
+  ["You kept going.",                  "계속 왔잖아요.", "유 켑트 고잉"],
+  ["Mistakes mean you tried.",         "틀렸다는 건 해봤다는 뜻이에요.", "미스테익스 민 유 트라이드"],
+  ["Be kind to yourself.",             "나한테도 다정하게.", "비 카인드 투 유어셀프"],
+  ["You can start small.",             "작게 시작해도 돼요.", "유 캔 스타트 스몰"],
+  ["Nobody starts fluent.",            "처음부터 잘하는 사람은 없어요.", "노바디 스타츠 플루언트"],
+  ["Your pace is fine.",               "내 속도면 됩니다.", "유어 페이스 이즈 파인"],
+  ["Quiet days still count.",          "조용한 날도 하루예요.", "콰이엇 데이즈 스틸 카운트"],
+  ["You're braver than you think.",    "생각보다 용감한 사람이에요.", "유어 브레이버 댄 유 띵크"],
+  ["Keep your own time.",              "내 시간대로 가면 돼요.", "킵 유어 오운 타임"],
+  ["One sentence is a win.",           "한 문장도 이긴 거예요.", "원 센턴스 이즈 어 윈"],
+  ["You came back. That matters.",     "다시 왔다는 게 중요해요.", "유 케임 백. 댓 매터스"],
+  ["Progress is quiet.",               "느는 건 조용히 옵니다.", "프로그레스 이즈 콰이엇"],
+  ["You're not behind.",               "늦은 거 아니에요.", "유어 낫 비하인드"],
+  ["Trying is the hard part.",         "시도하는 게 제일 어려워요. 그걸 했어요.", "트라잉 이즈 더 하드 파트"],
+  ["Good enough is good.",             "이만하면 잘한 거예요.", "굿 이너프 이즈 굿"],
+  ["You deserve a soft day.",          "가끔은 느슨해도 돼요.", "유 디저브 어 소프트 데이"],
+  ["Little by little.",                "조금씩, 조금씩.", "리틀 바이 리틀"],
+  ["Learning is brave.",               "배운다는 건 용기 있는 일이에요.", "러닝 이즈 브레이브"],
+  ["Tomorrow you will know more.",     "내일의 나는 더 알고 있을 거예요.", "투모로우 유 윌 노우 모어"],
+  ["Still here. Still going.",         "아직 여기 있고, 아직 가는 중이에요.", "스틸 히어. 스틸 고잉"],
+  ["Be proud of today.",               "오늘의 나를 칭찬해도 됩니다.", "비 프라우드 오브 투데이"]
 ];
 function warmHTML(){
   const d = new Date();
   const w = WARM[(d.getDate() + d.getMonth() * 31) % WARM.length];
-  return `<p class="warm"><b>${w[0]}</b><span>${w[1]}</span></p>`;
+  return `<p class="warm"><b>${w[0]}</b><span>${w[1]}</span>`
+       + `<span class="rdline" style="font-size:11.5px;margin-top:2px">${w[2]}</span></p>`;
 }
 
 /* 끝냈을 때 뜨는 말 — 날마다 바뀝니다 */
@@ -1456,6 +1544,13 @@ function wireToday(){
     }, 40);
   });
 
+  const recQ = document.getElementById('recQ');
+  if(recQ) recQ.onclick = () => openSheet(`<h3>오늘의 기록</h3>
+    <div class="li"><b>🌱 씨앗</b><span>오늘 새로 배운 문장 수입니다. 하루에 하나 심습니다.</span></div>
+    <div class="li"><b>💧 물</b><span>오늘 복습한 횟수입니다. 복습 카드에서 기억나요 · 헷갈려요 · 기억 안 나요 중 하나를 누르면 한 번으로 셉니다.</span></div>
+    <div class="li"><b>☀️ 빛</b><span>맨 위에 있습니다. 앱을 열어서 뭐라도 한 날의 수예요.</span></div>
+    <p class="lead" style="margin-top:16px">물을 다섯 번 받은 문장은 나무가 되어 더 이상 복습에 나오지 않습니다.</p>`);
+
   const laterBtn = document.getElementById('laterBtn');
   if(laterBtn) laterBtn.onclick = () => {
     DB.days[todayStr()].later = true;
@@ -1526,7 +1621,7 @@ function syncSticky(){
 
 function renderBox(){
   const cards = Object.values(DB.cards).sort((a,b) => b.day - a.day);
-  document.getElementById('boxCnt').textContent = cards.length;
+  paintHead();
   const b = document.getElementById('boxBody');
   if(!cards.length){ b.innerHTML = '<p class="lead" style="text-align:center;padding:50px 0">아직 비어 있어요.<br>오늘 카드를 열면 여기에 쌓입니다.</p>'; return; }
   const t = todayStr();
@@ -1774,8 +1869,12 @@ function stgHelp(){
       이걸 <b>망각곡선 복습</b>이라고 합니다.</p>
     <p class="lead">복습에서 <b>✓ 기억나요</b> 를 누를 때마다 다음에 나오는 간격이 길어집니다
       (${gap}). <b>△ 헷갈려요</b> 나 <b>✕ 기억 안 나요</b> 를 누르면 다음 날 다시 나옵니다.</p>
-    <p class="lead" style="margin-top:14px">아래 네 칸은 <b>✓ 로 맞힌 횟수</b>로 나눈 것입니다.</p>
-    <div class="list">${rows}</div>`;
+    <p class="lead" style="margin-top:14px">아래 칸은 <b>✓ 로 맞힌 횟수</b>로 나눈 것입니다.
+      맨 앞 <b>🟫</b> 는 아직 심지 않은 빈 땅이에요.</p>
+    <div class="list">
+      <div class="li"><span class="mk on" style="font-size:16px">🟫</span>
+        <span class="tx"><b>빈 땅</b><span>아직 안 배운 문장이에요</span></span></div>
+      ${rows}</div>`;
 }
 function stgSheet(i){
   const g = STG[i];
@@ -1844,6 +1943,18 @@ function openInBox(day){
   }, 60);
 }
 
+/* 해 — 빛을 준 날을 나타냅니다 */
+function sunSVG(){
+  const ray = [0,45,90,135,180,225,270,315].map(a => {
+    const r = a * Math.PI / 180;
+    return `<path d="M${(21+Math.cos(r)*13).toFixed(1)} ${(21+Math.sin(r)*13).toFixed(1)}`
+         + ` L${(21+Math.cos(r)*18).toFixed(1)} ${(21+Math.sin(r)*18).toFixed(1)}"`
+         + ` stroke="var(--sun)" stroke-width="2.2" stroke-linecap="round" opacity=".75"/>`;
+  }).join('');
+  return `<svg width="42" height="42" viewBox="0 0 42 42" aria-hidden="true" style="flex:0 0 auto">
+    <circle cx="21" cy="21" r="9" fill="var(--sun)"/>${ray}</svg>`;
+}
+
 /* ═══════════════ 기록 ═══════════════ */
 function renderLog(){
   const t = todayStr(), d = new Date();
@@ -1859,17 +1970,25 @@ function renderLog(){
     else if(RVM[l.m]){ revAll++; if(wk) revWk++; }
   }));
 
-  document.getElementById('logBody').innerHTML = renderCal() + `
+  const sunlit = !!(DB.days[t] && DB.days[t].done);
+  const left = 30 - cards.length;
+  document.getElementById('logBody').innerHTML = `
+    <div class="sunbar">
+      ${sunSVG()}
+      <span class="tx"><b>${si.total}일째 자라는 중이에요</b>
+        <i>${[si.run > 1 ? si.run + '일 연속' : '', DB.bestStreak > 1 ? '최고 ' + DB.bestStreak + '일' : ''].filter(Boolean).join(' · ')}</i>
+        <span>${sunlit ? '오늘도 해가 떴습니다' : '오늘 해를 기다리는 중이에요'}</span></span>
+    </div>` + renderCal() + `
     <div class="weekhd">
       <h2 class="sec" style="margin:0">SUMMARY</h2>
     </div>
     <div class="stat1">
-      <div class="tap" id="statDone"><span>완료</span><b>${doneAll}</b><i>이번주 +${doneWk}</i></div>
-      <div class="tap" id="statRev"><span>복습</span><b>${revAll}</b><i>이번주 +${revWk}</i></div>
+      <div class="tap" id="statDone"><span>🌱 완료</span><b>${doneAll}</b><i>이번주 +${doneWk}</i></div>
+      <div class="tap" id="statRev"><span>💧 복습</span><b>${revAll}</b><i>이번주 +${revWk}</i></div>
     </div>
-    <p class="ol1"><em>연속 :</em>총 ${si.total}일 중 <b>${si.run}일 연속</b>${DB.bestStreak ? ' · 최고 ' + DB.bestStreak + '일' : ''}</p>
     <h2 class="sec">복습 현황<button class="qm" id="stgQ">?</button></h2>
     <div class="stg">
+      <div class="stgb empty"><b>🟫</b><span>${left}</span></div>
       ${STG.map((g,i) => `<button class="stgb" data-stg="${i}">
         <b>${g[0]}</b><span>${cards.filter(g[2]).length}</span></button>`).join('')}
     </div>
