@@ -389,6 +389,9 @@ select,input[type=text],input[type=time]{
 .revrow .rt b{display:block;font-size:15.5px;font-weight:700}
 .revrow .rt span{display:block;font-size:12px;color:var(--soft);margin-top:2px}
 .revrow .rp{color:var(--soft);font-size:17px;flex:0 0 auto}
+.revrow.mine{border-color:var(--accent);border-width:2px}
+.later{display:block;width:100%;margin-top:12px;font-size:12.5px;color:var(--soft);text-align:center;padding:6px 0}
+nav button.dim{opacity:.32}
 /* 오늘의 문장을 끝냈을 때 위에 남는 줄 */
 .tdone{
   background:var(--band);border-radius:14px;padding:13px 16px;font-size:13px;color:var(--soft);
@@ -813,6 +816,9 @@ function renderToday(){
       + viewNew(relearn)
       + (newPending ? `<div class="tdone" style="margin-top:14px">이걸 끝내면 오늘의 새 문장 <b>DAY ${n.day} · ${n.en}</b> 이 이어서 나옵니다</div>` : '')
       + viewRevSection(due);
+  }else if(newPending && DB.days[t].later){
+    stage = { mode:'later', card:n };
+    body.innerHTML = viewLater(n) + viewRevSection(due);
   }else if(newPending){
     if(!stage || stage.card !== n) micTries = 0;
     stage = { mode:'new', card:n };
@@ -827,6 +833,9 @@ function renderToday(){
   }
 
   body.insertAdjacentHTML('beforeend', warmHTML());
+  /* 내일 다시 보기로 해둔 날은 하단 학습하기를 흐리게 둡니다 */
+  const lrnTab = document.querySelector('nav [data-tab="Learn"]');
+  if(lrnTab) lrnTab.classList.toggle('dim', !!(newPending && DB.days[t].later));
   wireToday();
   save();
 }
@@ -937,6 +946,7 @@ function viewNew(s, done){
     </div>
     <button class="btn lap${canLearn() ? '' : ' off'}" id="openBtn">학습하기</button>
     <p class="lk" id="lkMsg"></p>
+    ${done ? '' : '<button class="later" id="laterBtn">오늘은 복습만 · 내일 다시 볼게요</button>'}
   </div>
   <div id="micOut"></div>`;
 }
@@ -1028,6 +1038,7 @@ function closeLearn(){ document.getElementById('learnModal').classList.add('hide
 function openLearn(){
   const s = learnCard();
   if(!s) return toast('오늘 배울 문장이 없습니다');
+  if(DB.days[todayStr()].later) return toast('오늘은 복습만 하기로 했어요');
   if(!canLearn()) return toast('먼저 듣고 · 말하고 · 써보세요');
   const d = DB.days[todayStr()] || {};
   document.getElementById('learnBody').innerHTML = learnHTML(s, !!d.newDone);
@@ -1124,6 +1135,15 @@ function revRow(c){
   return `<button class="revrow" data-rev="${c.day}">
       <span class="rg">${gr}</span>
       <span class="rt"><b>${s.ko}</b><span>DAY ${s.day}${n ? ' · ' + n + '회 복습' : ''}</span></span>
+      <span class="rp">＋</span>
+    </button>`;
+}
+
+/* 오늘의 문장을 「내일 다시 보기」로 접어둔 줄 — 그날 하루만 접혀 있습니다 */
+function viewLater(s){
+  return `<button class="revrow mine" id="unlater">
+      <span class="rg">🌱</span>
+      <span class="rt"><b>${s.ko}</b><span>DAY ${s.day} · 내일 다시 보기로 했어요</span></span>
       <span class="rp">＋</span>
     </button>`;
 }
@@ -1435,6 +1455,18 @@ function wireToday(){
       (all[all.length-1] || el).scrollIntoView({ behavior:'smooth', block:'center' });
     }, 40);
   });
+
+  const laterBtn = document.getElementById('laterBtn');
+  if(laterBtn) laterBtn.onclick = () => {
+    DB.days[todayStr()].later = true;
+    save(); renderToday();
+    toast('오늘은 복습만 해요');
+  };
+  const unlater = document.getElementById('unlater');
+  if(unlater) unlater.onclick = () => {
+    delete DB.days[todayStr()].later;
+    save(); renderToday();
+  };
 
   const goBox = document.getElementById('goBox');
   if(goBox) goBox.onclick = () => switchTab('Box');
