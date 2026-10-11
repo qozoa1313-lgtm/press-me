@@ -5,14 +5,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>오늘 딱 한 문장</title>
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#FAF8F4">
+<meta name="theme-color" content="#FBF7EF">
 <style>
 :root{
-  --paper:#F0F6F2; --ink:#1C2A24; --soft:#687C72; --line:#D5E5DB;
-  --card:#FFFFFF; --band:#E2EFE8; --accent:#2E6A59;
+  /* 따뜻한 종이 — 크림 바탕에 올리브. 검정은 쓰지 않습니다 */
+  --paper:#FBF7EF; --ink:#3F3A31; --soft:#8C8174; --line:#E8DFD0;
+  --card:#FFFFFF; --band:#F3EADA; --accent:#7A6A4F;
   /* 숲과 하늘 — 씨앗·물·빛을 그릴 때 씁니다 */
-  --sun:#C08E22; --sky:#D5EADD; --soil:#C2B19C; --bark:#6B5340;
-  --l1:#9AC9AC; --l2:#6BA585; --l3:#3F7E62; --drop:#3E8E8E;
+  --sun:#D9A441; --sky:#F3EADA; --soil:#CDBBA0; --bark:#7E6B52;
+  --l1:#B6C79B; --l2:#8FA977; --l3:#6B8A58; --drop:#6E9BA8;
+  /* 맞음·틀림 알림 */
+  --wrong:#B4553E; --okbg:#EFF1E0; --okink:#5E7A42; --okline:#C4D0A2;
+  --nobg:#F8E7E0; --noink:#A8513C; --noline:#EBC3B4;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0}
@@ -119,10 +123,10 @@ h2.sec{font-size:13px;color:var(--soft);font-weight:700;margin:26px 0 10px;lette
 .cell .dot{display:flex;align-items:center;justify-content:center;height:18px;
   margin:3px auto 0;background:none;border-radius:0;line-height:0}
 .cell .dot:not(.ico)::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--line)}
-.cell.did .dot:not(.ico)::before{background:#E08A3C}
+.cell.did .dot:not(.ico)::before{background:var(--sun)}
 .cell.today{outline:1.5px solid var(--accent);outline-offset:-1.5px}
 .cell.sel{background:var(--band)}
-.cell.future{color:#C9C2B8}
+.cell.future{color:#CFC6B6}
 .cell.future .dot::before{background:transparent}
 .dayinfo{
   background:var(--card);border:1.5px solid var(--line);border-radius:16px;
@@ -210,7 +214,7 @@ details.cardbox details{border-top:1px solid var(--line)}
 
 /* ───── 결과 ───── */
 .heard{font-size:15px;margin:14px 0 0;line-height:1.8}
-.heard i{font-style:normal;color:#C0C0C0}
+.heard i{font-style:normal;color:#CFC6B6}
 .heard b{font-weight:700;color:var(--accent)}
 .ok{text-align:center;padding:30px 0}
 .ok .big{font-size:21px;font-weight:700}
@@ -272,8 +276,8 @@ select,input[type=text],input[type=time]{
 .okmark{margin-left:auto;font-size:11.5px;font-weight:700;color:var(--accent)}
 .fold{float:right;font-size:17px;line-height:1;color:var(--soft);padding:0 2px 4px 10px}
 .card .fold.corner{position:absolute;top:16px;right:18px;float:none;padding:4px 8px;font-size:20px}
-.w.bad{color:#C0392B}
-.w.half{color:#C0392B;text-decoration:underline dotted}
+.w.bad{color:var(--wrong)}
+.w.half{color:var(--wrong);text-decoration:underline dotted}
 /* 카드 아래에 걸쳐 앉는 버튼 */
 .btn.lap{width:100%;margin:6px 0 0}
 .acts{display:flex;align-items:center;gap:6px;margin-top:16px;flex-wrap:wrap}
@@ -281,11 +285,11 @@ select,input[type=text],input[type=time]{
   width:42px;height:42px;border-radius:50%;background:var(--band);font-size:18px;
   display:flex;align-items:center;justify-content:center;flex:0 0 auto;
 }
-.rnd.mic{background:#E8903F;color:#fff}
-.rnd.mic.on{background:#C0392B}
+.rnd.mic{background:#D08A3E;color:#fff}
+.rnd.mic.on{background:var(--wrong)}
 .tryn{font-size:12.5px;color:var(--soft);flex:1 1 100%;margin-top:2px}
 .rnd{position:relative}
-.rnd.key{background:#5B7FA8;color:#fff}
+.rnd.key{background:var(--drop);color:#fff}
 .rnd.got::after{
   content:'✓';position:absolute;right:-3px;bottom:-3px;width:19px;height:19px;border-radius:50%;
   background:var(--accent);color:#fff;font-size:11px;font-weight:700;
@@ -375,7 +379,7 @@ body.showrd .warm .rdline{display:block}
   font-size:11px;font-weight:700;color:var(--soft);line-height:1;margin-left:7px;vertical-align:middle;
 }
 .hintline{margin-top:12px;font-size:19px;font-weight:700;letter-spacing:.06em}
-.hintline .dim{color:#C9C2B8}
+.hintline .dim{color:#CFC6B6}
 .rnd.key.on{outline:3px solid rgba(91,127,168,.3)}
 .typebox{margin-top:14px;display:none}
 .typebox.show{display:block}
@@ -391,11 +395,11 @@ body.showrd .warm .rdline{display:block}
 .blur{filter:blur(7px);user-select:none}
 /* 답 확인 띠 — 듀오링고 방식 */
 .fb{margin-top:14px;border-radius:14px;padding:14px 16px;font-size:15px;font-weight:700}
-.fb.ok{background:#E2F0E6;color:#2E6B4A;border-top:2px solid #A7D8B9}
-.fb.no{background:#FBE6E4;color:#B4443C;border-top:2px solid #F2BDB8}
+.fb.ok{background:var(--okbg);color:var(--okink);border-top:2px solid var(--okline)}
+.fb.no{background:var(--nobg);color:var(--noink);border-top:2px solid var(--noline)}
 .fb .t{font-size:11.5px;letter-spacing:.04em;display:block;opacity:.75}
 .fb .ans{margin-top:5px;font-size:19px;color:var(--ink)}
-.fb .ans u{text-decoration-color:#C0392B;text-underline-offset:3px}
+.fb .ans u{text-decoration-color:var(--wrong);text-underline-offset:3px}
 .pill{
   font-size:12.5px;font-weight:700;border:1.5px solid var(--line);border-radius:999px;
   padding:9px 10px;margin-left:3px;color:var(--soft);white-space:nowrap;
@@ -556,7 +560,7 @@ nav button.dim{opacity:.32}
 <script>
 /* ═══════════════ 저장 ═══════════════ */
 const KEY = 'oneline.v1';
-const DAYCOLOR = ['#3E7F64','#2E6A59','#357268','#4A7A52','#2F6B5F','#58795A','#35707A']; // 일~토 (숲 계열)
+const DAYCOLOR = ['#8A6A52','#7A6A4F','#6B7A52','#7E6A58','#6E7558','#85714F','#5F7560']; // 일~토 (크림·올리브 계열)
 const MON = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
 
 const todayStr = (d) => {
@@ -1184,7 +1188,7 @@ function wireLearn(s, done){
     }, msg => {
       micJob = null;
       mic.classList.remove('on');
-      if(msg) say('<b style="color:#C0392B">' + msg + '</b>');
+      if(msg) say('<b style="color:var(--wrong)">' + msg + '</b>');
     });
   };
 
@@ -1451,7 +1455,7 @@ function wireToday(){
       micJob = null;
       micBtn.classList.remove('on');
       if(!msg) return;
-      tryText('<b style="color:#C0392B">' + msg + '</b>');   /* 실패 횟수는 세지 않습니다 */
+      tryText('<b style="color:var(--wrong)">' + msg + '</b>');   /* 실패 횟수는 세지 않습니다 */
       unlock();
     });
   };
@@ -1536,7 +1540,7 @@ function wireToday(){
       revMic.classList.remove('on');
       revLast = null; paintRev();
       if(!msg) return;
-      tr.innerHTML = '<b style="color:#C0392B">' + msg + '</b>';
+      tr.innerHTML = '<b style="color:var(--wrong)">' + msg + '</b>';
     });
   };
 
