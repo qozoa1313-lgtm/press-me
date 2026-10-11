@@ -35,7 +35,6 @@ button{font:inherit;color:inherit;border:none;background:none;cursor:pointer}
 .pic{display:inline-flex;align-items:flex-end;vertical-align:-3px;line-height:0}
 .stat1 .pic,.tdrec .pic,.hd .cnt .pic,.sheet .li b .pic{vertical-align:-4px}
 .pic svg{display:block}
-.seedtag{margin-left:auto;font-size:11.5px;color:var(--soft);display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
 /* 오늘 심은 것 · 준 물 */
 .tdrec{display:flex;align-items:center;justify-content:center;gap:14px;background:var(--band);
        border-radius:13px;padding:10px 14px;margin-top:16px;font-size:12.5px;color:var(--soft)}
@@ -117,17 +116,14 @@ h2.sec{font-size:13px;color:var(--soft);font-weight:700;margin:26px 0 10px;lette
 .cell{padding:7px 0 9px;border-radius:12px;font-size:13.5px;color:var(--ink);position:relative}
 .cell.out{color:transparent;pointer-events:none}
 .cell.sun{color:#B4675E}
-.cell .dot{display:block;width:6px;height:6px;border-radius:50%;background:var(--line);margin:4px auto 0}
-.cell .dot{width:7px;height:7px}
-.cell.did .dot{background:#E08A3C}
-.cell .dot.ico,.cell.did .dot.ico{
-  width:auto;height:auto;background:none;border-radius:0;font-size:10px;line-height:1;
-  margin-top:3px;
-}
+.cell .dot{display:flex;align-items:center;justify-content:center;height:18px;
+  margin:3px auto 0;background:none;border-radius:0;line-height:0}
+.cell .dot:not(.ico)::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--line)}
+.cell.did .dot:not(.ico)::before{background:#E08A3C}
 .cell.today{outline:1.5px solid var(--accent);outline-offset:-1.5px}
 .cell.sel{background:var(--band)}
 .cell.future{color:#C9C2B8}
-.cell.future .dot{background:transparent}
+.cell.future .dot::before{background:transparent}
 .dayinfo{
   background:var(--card);border:1.5px solid var(--line);border-radius:16px;
   padding:16px;margin-top:14px;font-size:14.5px;
@@ -365,8 +361,8 @@ body.showrd .warm .rdline{display:block}
 .sunbar .tx span{display:block;font-size:12.5px;color:var(--soft);margin-top:3px}
 .stg{display:flex;gap:6px}
 .stgb.empty{opacity:.75}
-.stgb{flex:1;border:1.5px solid var(--line);border-radius:14px;background:var(--card);padding:10px 0 9px}
-.stgb b{display:block;font-size:16px}
+.stgb{flex:1;border:1.5px solid var(--line);border-radius:14px;background:var(--card);padding:10px 0 9px;text-align:center}
+.stgb b{display:flex;justify-content:center;font-size:16px}
 .stgb span{display:block;font-size:17px;font-weight:700;margin-top:2px}
 .grl{margin-right:6px;vertical-align:-4px;line-height:0}
 .ol1{font-size:14px;margin:16px 0 0}
@@ -418,7 +414,7 @@ body.showrd .warm .rdline{display:block}
 .revrow .rp{color:var(--soft);font-size:17px;flex:0 0 auto}
 .revrow.mine{border-color:var(--accent);border-width:2px}
 .later{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;flex:0 0 auto;
-  border:1.5px solid var(--line);color:var(--soft);margin-left:7px;white-space:nowrap}
+  border:1.5px solid var(--line);color:var(--soft);margin-left:auto;white-space:nowrap}
 nav button.dim{opacity:.32}
 /* 오늘의 문장을 끝냈을 때 위에 남는 줄 */
 .tdone{
@@ -1029,8 +1025,7 @@ function viewNew(s, done){
   <div class="card today">
     <div class="cardtop">
       <div class="ctrow"><span class="badge">DAY ${s.day}</span>${done ? '<span class="okmark">✓ 완료</span>'
-        : `<span class="seedtag">${grow(0, 15)} 오늘의 씨앗</span>`
-          + '<button class="later" id="laterBtn">내일 다시 도전!</button>'}</div>
+        : '<button class="later" id="laterBtn">내일 다시 도전!</button>'}</div>
       <p class="en" id="enLine">${wordSpans(s.en)}</p>
       <p class="rdline">${s.rd}</p>
 
@@ -1893,7 +1888,7 @@ function stgSheet(i){
       <span class="tx"><b>${x.en}</b><span>${x.ko}</span></span>
       <button class="mk on" data-speak="${esc(x.en)}">🔊</button></div>`;
   }).join('') || '<p class="lead">아직 없습니다.</p>';
-  return `<h3>${g[0]} ${g[1]} 맞힌 카드</h3><p class="cnt">${list.length}장</p>
+  return `<h3>${g[1]} 맞힌 카드</h3><p class="cnt">${list.length}장</p>
     <div class="list">${rows}</div>`;
 }
 
