@@ -214,7 +214,6 @@ details.cardbox details{border-top:1px solid var(--line)}
 .ok{text-align:center;padding:30px 0}
 .ok .big{font-size:21px;font-weight:700}
 .ok .sub{font-size:14px;color:var(--soft);margin-top:8px}
-.pledge{font-size:14px;color:var(--soft);margin-top:26px;text-align:center;line-height:1.8}
 
 /* ───── 문장함 ───── */
 .item{
@@ -245,8 +244,6 @@ nav button .ic{display:block;font-size:17px;margin-bottom:3px}
 nav button.on{color:var(--accent)}
 
 /* ───── 설정 / 처음 켤 때 ───── */
-.field{margin:18px 0}
-.field label{display:block;font-size:13px;color:var(--soft);font-weight:700;margin-bottom:7px}
 textarea{
   width:100%;padding:12px;border:1.5px solid var(--line);border-radius:12px;
   background:var(--band);font:13px/1.5 ui-monospace,Consolas,monospace;color:var(--soft);
@@ -256,8 +253,6 @@ select,input[type=text],input[type=time]{
   width:100%;padding:14px;border:1.5px solid var(--line);border-radius:14px;
   background:var(--card);font:inherit;color:inherit;
 }
-.pl{font-size:20px;line-height:1.9;font-weight:700;text-align:center;margin:10px 0 24px}
-.pl em{font-style:normal;color:var(--accent);border-bottom:2px solid var(--accent)}
 .hide{display:none!important}
 /* 오늘 카드 — 윗부분(DAY · 문장 · 버튼) 통째로 고정 */
 .cardtop{
@@ -431,47 +426,6 @@ nav button.dim{opacity:.32}
 </style>
 </head>
 <body>
-
-<!-- ══════════ 처음 켤 때 ══════════ -->
-<div class="wrap" id="setup">
-  <h1 style="font-size:23px;margin:30px 0 6px">오늘 딱 한 문장</h1>
-  <p class="lead" style="margin-bottom:30px">하루에 영어 한 문장. 30일이면 내 이야기가 됩니다.</p>
-
-  <p class="lead">시작하기 전에 약속 하나만 정해요.</p>
-  <div class="pl">
-    나는 <em id="plT">아침 7시</em>에<br>
-    <em id="plC">이불에서 나오기 전</em><br>
-    카드 한 장을 연다.
-  </div>
-
-  <div class="field">
-    <label>몇 시에</label>
-    <select id="setTime">
-      <option value="06:00">아침 6시</option>
-      <option value="07:00" selected>아침 7시</option>
-      <option value="08:00">아침 8시</option>
-      <option value="09:00">아침 9시</option>
-      <option value="12:00">점심 12시</option>
-      <option value="21:00">밤 9시</option>
-      <option value="23:00">밤 11시</option>
-    </select>
-  </div>
-  <div class="field">
-    <label>무엇을 할 때</label>
-    <select id="setCue">
-      <option>이불에서 나오기 전</option>
-      <option>양치하고 나서</option>
-      <option>커피 마시며</option>
-      <option>출근 버스에서</option>
-      <option>점심 먹고 나서</option>
-      <option>자기 전에</option>
-    </select>
-  </div>
-  <button class="btn" id="startBtn">이걸로 시작하기</button>
-  <p class="lead" style="margin-top:16px;text-align:center;font-size:13px">
-    「꾸준한 사람이 되자」보다<br>「언제·무엇을」 정해둔 쪽이 두 배 잘 지켜집니다.
-  </p>
-</div>
 
 <!-- ══════════ 직접 써보기 창 ══════════ -->
 <div id="typeModal" class="modal hide">
@@ -1338,7 +1292,6 @@ const praise = n => PRAISE[(n + new Date().getDate()) % PRAISE.length];
 function viewDone(){
   const si = streakInfo();
   const n = Object.keys(DB.cards).length;
-  const p = DB.pledge;
   const t = todayStr();
   const next = Object.values(DB.cards).map(c => c.due).filter(d => d > t).sort()[0];
   const inDays = next ? diffDays(t, next) : null;
@@ -1350,12 +1303,7 @@ function viewDone(){
   ${ inDays !== null ? `<p class="lead" style="text-align:center">
        ${inDays === 1 ? '내일' : inDays + '일 뒤'} 카드가 돌아옵니다.
        그때 <b>✓ △ ✕</b> 로 표시하게 됩니다.</p>` : '' }
-  <button class="btn ghost" id="goBox">문장함 열어보기</button>
-  <p class="pledge">나는 ${timeLabel(p.time)}에 ${p.cue}<br>카드 한 장을 연다.</p>`;
-}
-function timeLabel(t){
-  const h = +t.split(':')[0];
-  return h < 12 ? ('아침 '+h+'시') : (h === 12 ? '점심 12시' : '밤 '+(h-12)+'시');
+  <button class="btn ghost" id="goBox">문장함 열어보기</button>`;
 }
 const esc = s => s.replace(/"/g,'&quot;');
 
@@ -1989,7 +1937,6 @@ function renderLog(){
 
 /* ═══════════════ 설정 ═══════════════ */
 function renderSet(){
-  const p = DB.pledge;
   document.getElementById('setBody').innerHTML = `
     <h2 class="sec">아침 알림</h2>
     <p class="lead" id="pushState">확인 중…</p>
@@ -2002,7 +1949,7 @@ function renderSet(){
       <textarea id="subTxt" readonly rows="4"></textarea>
       <button class="btn ghost" id="copyBtn">등록 코드 복사</button>
     </div>
-    <p class="lead" style="font-size:13px">폰 <b>시계 앱</b> 알람(<b>${p.time}</b>)도 함께 맞춰두시면 더 확실합니다.</p>
+    <p class="lead" style="font-size:13px">폰 <b>시계 앱</b> 알람도 함께 맞춰두시면 더 확실합니다.</p>
 
     <h2 class="sec">기록</h2>
     <button class="btn ghost" id="expBtn">기록 내보내기</button>
@@ -2149,22 +2096,6 @@ function switchTab(name){
 function renderAll(){ renderToday(); renderBox(); renderLog(); }
 
 /* ═══════════════ 시작 ═══════════════ */
-function syncPledge(){
-  document.getElementById('plT').textContent = timeLabel(document.getElementById('setTime').value);
-  document.getElementById('plC').textContent = document.getElementById('setCue').value;
-}
-document.getElementById('setTime').onchange = syncPledge;
-document.getElementById('setCue').onchange = syncPledge;
-document.getElementById('startBtn').onclick = () => {
-  const time = document.getElementById('setTime').value;
-  const cue  = document.getElementById('setCue').value;
-  if(DB) DB.pledge = { time, cue };
-  else   DB = fresh(time, cue);
-  save();
-  document.getElementById('setup').classList.add('hide');
-  document.getElementById('app').classList.remove('hide');
-  stage = null; switchTab('Today');
-};
 document.getElementById('sheetClose').onclick = closeSheet;
 document.getElementById('sheetWrap').onclick = e => { if(e.target.id === 'sheetWrap') closeSheet(); };
 document.getElementById('mClose').onclick = closeType;
@@ -2227,9 +2158,9 @@ document.getElementById('gearBtn').onclick = () => switchTab('Set');
 document.getElementById('setClose').onclick = () => switchTab('Log');
 
 paintAccent();
-if(!DB){ DB = fresh('07:00', '이불에서 나오기 전'); save(); }   /* 약속 화면은 설정에서만 */
+/* 처음 켜면 아무것도 묻지 않고 바로 시작합니다. 약속 화면은 없앴습니다 */
+if(!DB){ DB = fresh('07:00', '이불에서 나오기 전'); save(); }
 tidy();
-document.getElementById('setup').classList.add('hide');
 document.getElementById('app').classList.remove('hide');
 switchTab('Today');
 
