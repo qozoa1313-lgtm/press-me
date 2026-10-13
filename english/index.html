@@ -639,6 +639,20 @@ const MICMSG = {
 };
 const micSay = code => (MICMSG[code] || '마이크 오류') + ' (' + code + ')';
 
+/* 마이크를 아예 못 여는 경우 — 권한 말고도 이유가 여러 가지입니다 */
+const DENY = {
+  'NotAllowedError'  : '마이크 권한이 꺼져 있어요. 주소창 옆 자물쇠에서 켜주세요',
+  'SecurityError'    : '마이크 권한이 꺼져 있어요. 주소창 옆 자물쇠에서 켜주세요',
+  'NotReadableError' : '마이크를 다른 곳에서 쓰는 중이에요. 잠깐 뒤에 다시 눌러보세요',
+  'TrackStartError'  : '마이크를 다른 곳에서 쓰는 중이에요. 잠깐 뒤에 다시 눌러보세요',
+  'AbortError'       : '마이크가 중간에 멈췄어요. 다시 눌러보세요',
+  'NotFoundError'    : '이 기기에서 마이크를 찾지 못했어요',
+};
+const denySay = st => {
+  const name = st.split(':')[1] || '?';
+  return (DENY[name] || '마이크를 열지 못했어요') + ' (' + name + ')';
+};
+
 function listen(onResult, onFail){
   const SR = getSR();
   if(!SR){ onFail('이 브라우저는 마이크를 못 씁니다 (no-api)'); return null; }
@@ -649,7 +663,7 @@ function listen(onResult, onFail){
   const lose = m => { if(!settled){ settled = true; onFail(m); } };
 
   micReady().then(st => {
-    if(st.indexOf('denied') === 0){ lose(micSay('not-allowed') + ' ' + st); return; }
+    if(st.indexOf('denied') === 0){ lose(denySay(st)); return; }
     attempt();
   });
 
@@ -1072,7 +1086,10 @@ function learnHTML(s, done){
     <p class="lk" id="lrnLk"></p>
   </div>`;
 }
-function closeLearn(){ document.getElementById('learnModal').classList.add('hide'); }
+function closeLearn(){
+  if(micJob){ micJob.cancel(); micJob = null; }   /* 듣던 마이크는 끄고 닫습니다 */
+  document.getElementById('learnModal').classList.add('hide');
+}
 function openLearn(){
   const s = learnCard();
   if(!s) return toast('오늘 배울 문장이 없습니다');
@@ -1574,7 +1591,7 @@ function renderBox(){
         <p class="rdline">${s.rd}</p>
         <div class="korow">
           <p>${s.ko}</p>
-          <button class="rnd" data-mic="${esc(s.en)}" title="따라 말해보기">${ICO.mic}</button>
+          <button class="rnd mic" data-mic="${esc(s.en)}" title="따라 말해보기">${ICO.mic}</button>
         </div>
         <div class="micout"></div>
         <p class="nuance">${s.ko2} ${s.when}</p>
@@ -1606,11 +1623,13 @@ function renderBox(){
     e.preventDefault();
     const out = x.closest('.in2').querySelector('.micout');
     const target = x.dataset.mic;
-    if(micJob){ micJob.cancel(); micJob = null; x.textContent = '🎙 따라 말해보기'; return; }
-    x.textContent = '🎙 듣는 중… (다시 누르면 멈춤)';
+    const stop = () => { x.classList.remove('on'); };
+    if(micJob){ micJob.cancel(); micJob = null; stop(); out.innerHTML = ''; return; }
+    x.classList.add('on');
+    out.innerHTML = '<p class="lead" style="font-size:13px">듣는 중… (다시 누르면 멈춤)</p>';
     micJob = listen(alts => {
       micJob = null;
-      x.textContent = '🎙 따라 말해보기';
+      stop();
       let best = { rate:-1 };
       alts.forEach(a => { const r = compare(target, a); if(r.rate > best.rate) best = r; });
       out.innerHTML = '<p class="heard">' +
@@ -1618,7 +1637,7 @@ function renderBox(){
         '</p><p class="lead" style="font-size:13px">' + heardMsg(best.rate) + ' · 연습이라 기록에는 안 남습니다</p>';
     }, msg => {
       micJob = null;
-      x.textContent = '🎙 따라 말해보기';
+      stop();
       out.innerHTML = '<p class="lead" style="font-size:13px">' + msg + '</p>';
     });
   });
@@ -2084,6 +2103,7 @@ function report(){
 
 /* ═══════════════ 탭 ═══════════════ */
 function switchTab(name){
+  if(micJob){ micJob.cancel(); micJob = null; }   /* 듣던 마이크는 끄고 넘어갑니다 */
   ['Today','Box','Log','Set'].forEach(n =>
     document.getElementById('tab'+n).classList.toggle('hide', n !== name));
   document.querySelectorAll('nav button').forEach(b =>
