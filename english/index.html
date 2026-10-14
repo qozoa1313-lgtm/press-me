@@ -212,6 +212,11 @@ details.cardbox details{border-top:1px solid var(--line)}
 
 /* ───── 결과 ───── */
 .heard{font-size:15px;margin:14px 0 0;line-height:1.8}
+.sc{display:block;font-size:12px;color:var(--soft);font-weight:400;margin-top:4px}
+.sc b{color:var(--accent)}
+/* 틀린 단어는 눌러서 다시 들을 수 있습니다 */
+.w.bad,.w.half{cursor:pointer;text-underline-offset:3px}
+.hint2{font-size:12.5px;color:var(--soft);margin:6px 0 0;line-height:1.7}
 .heard i{font-style:normal;color:#CFC6B6}
 .heard b{font-weight:700;color:var(--accent)}
 .ok{text-align:center;padding:30px 0}
@@ -786,6 +791,13 @@ function heardMsg(rate){
   if(rate >= 0.6)      return '거의 다 왔어요. 한 번 더 해볼까요?';
   return '다시 한 번 말해볼까요?';
 }
+/* 몇 단어 중 몇 개가 들렸는지 — 「얼마나 맞혀야 통과인지」를 눈에 보이게 합니다 */
+function heardScore(r){
+  const all  = r.marks.length;
+  const got  = r.marks.filter(Boolean).length;
+  const need = Math.ceil(all * HEARD_OK);
+  return `<span class="sc">들린 단어 <b>${got}</b> / ${all}개 · <b>${need}개</b>부터 통과</span>`;
+}
 
 /* 상단 띠 — 씨앗 몇 개, 빛 며칠. 오늘 화면과 문장함이 같이 씁니다 */
 /* 작은 숲 — 복습 단계가 곧 나무 크기입니다 (0 씨앗 · 1 새싹 · 2 어린나무 · 3 나무) */
@@ -1122,23 +1134,43 @@ function wireLearn(s, done){
   const paint = r => document.querySelectorAll('#lrnEn .w').forEach((w,i) => {
     w.classList.toggle('bad',  !!r && r.marks[i] === false && !r.half[i]);
     w.classList.toggle('half', !!r && !!r.half[i]);
+    /* 빨간 단어를 누르면 그 단어만 다시 들려줍니다 */
+    w.onclick = () => { if(w.classList.contains('bad') || w.classList.contains('half')) speak(w.textContent); };
   });
+  /* 들린 말을 그대로 보여줍니다 — 무엇이 어떻게 들렸는지 알아야 고칠 수 있습니다 */
+  const heardLine = (best, raw) => '<p class="heard">' +
+    best.want.map((w,i) => best.marks[i] ? '<b>'+w+'</b>' : '<i>'+w+'</i>').join(' ') +
+    heardScore(best) + '</p>' +
+    (raw ? '<p class="hint2">이렇게 들렸어요 : <b>' + raw + '</b></p>' : '') +
+    '<p class="hint2">빨간 단어를 누르면 그 단어만 다시 들려줍니다.</p>';
 
   const mic = document.getElementById('lrnMic');
+  let tries = 0;
+  const PASS = 5;                    /* 다섯 번 못 알아들으면 넘어갈 수 있게 합니다 */
+  const giveUp = () => '<button class="pill on" id="lrnPass" style="margin-top:10px">'
+    + '그래도 넘어가기 (' + tries + '번 했어요)</button>';
   mic.onclick = () => {
     if(micJob){ micJob.cancel(); micJob = null; mic.classList.remove('on'); say(''); return; }
     paint(null); mic.classList.add('on'); say('듣는 중… (한 번 더 누르면 멈춥니다)');
     micJob = listen(alts => {
       micJob = null;
       mic.classList.remove('on');
-      let best = { rate:-1 };
+      let best = { rate:-1 }, raw = alts[0] || '';
       alts.forEach(a => { const r = compare(s.en, a); if(r.rate > best.rate) best = r; });
       paint(best);
       if(best.rate >= HEARD_OK){
-        say('<b style="color:var(--accent)">' + heardMsg(best.rate) + '</b>');
+        say(heardLine(best, '') + '<p class="hint2"><b style="color:var(--accent)">'
+            + heardMsg(best.rate) + '</b></p>');
         DB.days[todayStr()].lrnMicOK = true; mic.classList.add('got'); save(); syncDone();
       }else{
-        say(heardMsg(best.rate));
+        tries++;
+        say(heardLine(best, raw) + '<p class="hint2">' + heardMsg(best.rate) + '</p>'
+            + (tries >= PASS ? giveUp() : ''));
+        const pb = document.getElementById('lrnPass');
+        if(pb) pb.onclick = () => {
+          DB.days[todayStr()].lrnMicOK = true; mic.classList.add('got'); save(); syncDone();
+          say('<p class="hint2">넘어갔습니다. 복습에서 또 나오니 그때 다시 해보세요.</p>');
+        };
       }
     }, msg => {
       micJob = null;
