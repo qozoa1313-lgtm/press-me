@@ -1110,8 +1110,7 @@ function wireLearn(s, done){
   sync();
   rd.onclick = () => { document.body.classList.toggle('showrd'); sync(); };
 
-  document.getElementById('lrnYg').onclick = () =>
-    window.open('https://youglish.com/pronounce/' + encodeURIComponent(s.en.replace(/[^\w\s']/g,'')) + '/english', '_blank');
+  document.getElementById('lrnYg').onclick = () => openYg(s.en);
 
   const say = t => { const e = document.getElementById('lrnTry'); if(e) e.innerHTML = t; };
   /* 말하기와 쓰기를 둘 다 해야 완료하기가 눌립니다 */
@@ -1190,7 +1189,8 @@ function viewLater(s){
 /* 돌아온 카드 — 펼친 것 */
 function viewReview(c){
   const s = byDay(c.day);
-  const done = c.todayDone || {};
+  /* 어제 한 표시는 오늘 쓰지 않습니다 — 날마다 다시 시작합니다 */
+  const done = (c.todayDone && c.todayDone.d === todayStr()) ? c.todayDone : {};
   return `
   <div class="card">
     <button class="fold corner" id="revFold">－</button>
@@ -1204,7 +1204,8 @@ function viewReview(c){
     <div id="ansBox" class="open hide">
       <div class="qline" style="margin-top:0">
         <p class="en" id="revEn" style="margin:0;flex:1 1 auto">${wordSpans(s.en)}</p>
-        <button class="rnd" data-speak="${esc(s.en)}">${ICO.ear}</button>
+        <button class="rnd" data-speak="${esc(s.en)}" title="들어보기">${ICO.ear}</button>
+        <button class="rnd" id="revYg" title="영상에서 보기">${ICO.tv}</button>
       </div>
       <p class="rdline">${s.rd}</p>
     </div>
@@ -1294,6 +1295,27 @@ const PRAISE = [
   '한 문장쯤은<br>이제 내 것이 되어가고 있어요.',
 ];
 const praise = n => PRAISE[(n + new Date().getDate()) % PRAISE.length];
+
+/* 영상 검색어 — 복습에서는 누를 때마다 다른 묶음이 나오도록 조각도 섞습니다 */
+function ygTerms(s){
+  const t = [s.en];
+  (s.bd || []).forEach(p => {
+    const w = p[0].trim();
+    const n = w.split(/\s+/).length;
+    /* 두 단어 이상이거나, 한 단어라도 I'm · it 같은 짧은 말이 아니면 넣습니다 */
+    if((n >= 2 || w.length >= 5) && t.indexOf(w) < 0) t.push(w);
+  });
+  const ws = s.en.replace(/[^\w\s']/g, '').split(/\s+/);
+  if(ws.length >= 5){
+    const tail = ws.slice(-3).join(' ');
+    if(t.indexOf(tail) < 0) t.push(tail);
+  }
+  return t.slice(0, 3);
+}
+function openYg(text){
+  window.open('https://youglish.com/pronounce/'
+    + encodeURIComponent(text.replace(/[^\w\s']/g, '')) + '/english', '_blank');
+}
 
 /* ─── 다 끝 ─── */
 function viewDone(){
@@ -1429,6 +1451,15 @@ function wireToday(){
 
   const ansBtn = document.getElementById('ansBtn');
   if(ansBtn) ansBtn.onclick = showAns;
+
+  /* 복습 카드 영상 — 누를 때마다 다른 검색어라 다른 영상이 나옵니다 */
+  const revYg = document.getElementById('revYg');
+  if(revYg) revYg.onclick = () => {
+    const c = DB.cards['d' + openRev];
+    if(!c) return;
+    const t = ygTerms(byDay(c.day));
+    openYg(t[Math.floor(Math.random() * t.length)]);
+  };
 
   /* 복습 카드 — 직접 써보기 (창으로 띄웁니다) */
   const rvKey = document.getElementById('rvKey');
@@ -1641,8 +1672,7 @@ function renderBox(){
       out.innerHTML = '<p class="lead" style="font-size:13px">' + msg + '</p>';
     });
   });
-  b.querySelectorAll('[data-yg]').forEach(x => x.onclick = () =>
-    window.open('https://youglish.com/pronounce/' + encodeURIComponent(x.dataset.yg.replace(/[^\w\s']/g,'')) + '/english', '_blank'));
+  b.querySelectorAll('[data-yg]').forEach(x => x.onclick = () => openYg(x.dataset.yg));
   b.querySelectorAll('details.cardbox').forEach(dt =>
     dt.addEventListener('toggle', () => setTimeout(syncSticky, 0)));
   syncSticky();
