@@ -274,8 +274,11 @@ select,input[type=text],input[type=time]{
 .okmark{margin-left:auto;font-size:11.5px;font-weight:700;color:var(--accent)}
 .fold{float:right;font-size:17px;line-height:1;color:var(--soft);padding:0 2px 4px 10px}
 .card .fold.corner{position:absolute;top:16px;right:18px;float:none;padding:4px 8px;font-size:20px}
-.w.bad{color:var(--wrong)}
+.w.bad{color:var(--wrong);text-decoration:underline dotted}
 .w.half{color:var(--wrong);text-decoration:underline dotted}
+.w.bad,.w.half{cursor:pointer;text-underline-offset:4px}
+/* 길게 누를 때 글자가 선택되거나 메뉴가 뜨지 않게 */
+[data-speak],.w.bad,.w.half{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 /* 카드 아래에 걸쳐 앉는 버튼 */
 .btn.lap{width:100%;margin:6px 0 0}
 .acts{display:flex;align-items:center;gap:6px;margin-top:16px;flex-wrap:wrap}
@@ -617,13 +620,40 @@ function streakInfo(){
 }
 
 /* ═══════════════ 소리 ═══════════════ */
-function speak(text){
+function speak(text, rate){
   if(!('speechSynthesis' in window)) return toast('이 브라우저는 읽어주기를 지원하지 않습니다');
   speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
-  u.lang = 'en-US'; u.rate = 0.88;
+  u.lang = 'en-US'; u.rate = rate || 0.88;
   speechSynthesis.speak(u);
 }
+
+/* ① 길게 누르면 천천히 읽어줍니다 (듣기 단추 · 틀린 단어 모두)
+   ③ 틀린 단어를 누르면 그 단어만 들려줍니다
+   화면마다 따로 걸지 않고 문서에서 한 번만 받습니다 */
+const SAYSEL = '[data-speak],.w.bad,.w.half';
+const sayText = el => el.dataset && el.dataset.speak ? el.dataset.speak : el.textContent.trim();
+let holdT = null, held = false, toldSlow = false;
+document.addEventListener('pointerdown', e => {
+  const b = e.target.closest && e.target.closest(SAYSEL);
+  if(!b) return;
+  held = false;
+  clearTimeout(holdT);
+  holdT = setTimeout(() => {
+    held = true;
+    speak(sayText(b), 0.5);
+    toast('천천히 읽어드릴게요');
+  }, 550);
+}, true);
+['pointerup','pointercancel','pointerleave'].forEach(n =>
+  document.addEventListener(n, () => clearTimeout(holdT), true));
+document.addEventListener('click', e => {
+  if(held){ held = false; e.stopPropagation(); e.preventDefault(); return; }   /* 길게 누른 뒤엔 또 읽지 않습니다 */
+  const w = e.target.closest && e.target.closest('.w.bad,.w.half');
+  if(!w) return;
+  speak(w.textContent.trim());
+  if(!toldSlow){ toldSlow = true; toast('길게 누르면 더 천천히 읽어줍니다'); }
+}, true);
 const getSR = () => window.SpeechRecognition || window.webkitSpeechRecognition;
 /* 마이크 권한을 먼저 직접 받아둡니다 — 설치한 앱에서 권한 창이 안 뜨는 경우가 있어서 */
 function micReady(){
@@ -1134,15 +1164,13 @@ function wireLearn(s, done){
   const paint = r => document.querySelectorAll('#lrnEn .w').forEach((w,i) => {
     w.classList.toggle('bad',  !!r && r.marks[i] === false && !r.half[i]);
     w.classList.toggle('half', !!r && !!r.half[i]);
-    /* 빨간 단어를 누르면 그 단어만 다시 들려줍니다 */
-    w.onclick = () => { if(w.classList.contains('bad') || w.classList.contains('half')) speak(w.textContent); };
   });
   /* 들린 말을 그대로 보여줍니다 — 무엇이 어떻게 들렸는지 알아야 고칠 수 있습니다 */
   const heardLine = (best, raw) => '<p class="heard">' +
     best.want.map((w,i) => best.marks[i] ? '<b>'+w+'</b>' : '<i>'+w+'</i>').join(' ') +
     heardScore(best) + '</p>' +
     (raw ? '<p class="hint2">이렇게 들렸어요 : <b>' + raw + '</b></p>' : '') +
-    '<p class="hint2">빨간 단어를 누르면 그 단어만 다시 들려줍니다.</p>';
+    '<p class="hint2">빨간 단어를 누르면 그 단어만 들려줍니다. <b>길게 누르면 더 천천히</b> 읽어줍니다.</p>';
 
   const mic = document.getElementById('lrnMic');
   let tries = 0;
