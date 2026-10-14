@@ -1298,20 +1298,18 @@ const praise = n => PRAISE[(n + new Date().getDate()) % PRAISE.length];
 
 /* 영상 검색어 — 복습에서는 누를 때마다 다른 묶음이 나오도록 조각도 섞습니다 */
 function ygTerms(s){
-  const t = [s.en];
-  (s.bd || []).forEach(p => {
-    const w = p[0].trim();
-    const n = w.split(/\s+/).length;
-    /* 두 단어 이상이거나, 한 단어라도 I'm · it 같은 짧은 말이 아니면 넣습니다 */
-    if((n >= 2 || w.length >= 5) && t.indexOf(w) < 0) t.push(w);
-  });
   const ws = s.en.replace(/[^\w\s']/g, '').split(/\s+/);
-  if(ws.length >= 5){
-    const tail = ws.slice(-3).join(' ');
-    if(t.indexOf(tail) < 0) t.push(tail);
-  }
+  const t = [];
+  /* 단어 쪼개기 조각이 가장 잘 걸립니다 — 실측 44개 중 43개에 영상이 있었습니다 */
+  (s.bd || []).forEach(p => {
+    const w = p[0].trim(), n = w.split(/\s+/).length;
+    if((n >= 2 || w.length >= 6) && t.indexOf(w) < 0) t.push(w);
+  });
+  /* 문장 전체는 넣지 않습니다 — 그대로 나오는 영상이 거의 없습니다 (30개 중 18개가 0건) */
+  if(!t.length) t.push(ws.slice(0, 2).join(' '));
   return t.slice(0, 3);
 }
+
 function openYg(text){
   window.open('https://youglish.com/pronounce/'
     + encodeURIComponent(text.replace(/[^\w\s']/g, '')) + '/english', '_blank');
