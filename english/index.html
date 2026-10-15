@@ -1288,8 +1288,7 @@ function wireLearn(s, done){
   mic.onclick = () => {
     if(micJob){ micJob.cancel(); micJob = null; mic.classList.remove('on'); say(''); return; }
     paint(null); mic.classList.add('on');
-    say('<b style="color:var(--accent)">듣는 중…</b>'
-      + '<p class="hint2">말이 멎고 2.5초가 지나면 끝냅니다 · 한 번 더 누르면 멈춥니다</p>');
+    say('<b style="color:var(--accent)">듣는 중…</b>');
     /* 말하는 동안에는 윗줄 단어 색만 바뀝니다 */
     const live = t => paintLive(lrnWords(), s.en, t);
     micJob = listen(alts => {
@@ -1585,8 +1584,7 @@ function wireToday(){
     if(micJob){ micJob.cancel(); micJob = null; micBtn.classList.remove('on'); tryText(''); return; }
     paintWords(null);
     micBtn.classList.add('on');
-    tryText('<b style="color:var(--accent)">듣는 중…</b>'
-      + '<p class="hint2">말이 멎고 2.5초가 지나면 끝냅니다 · 한 번 더 누르면 멈춥니다</p>');
+    tryText('<b style="color:var(--accent)">듣는 중…</b>');
     const live = t => paintLive(todayWords(), s.en, t);
     micJob = listen(alts => {
       micJob = null;
@@ -1695,8 +1693,7 @@ function wireToday(){
       };
     };
     revLast = null; paintRev();
-    revOut.status('<b style="color:var(--accent)">듣는 중…</b>'
-      + '<p class="hint2">말이 멎고 2.5초가 지나면 끝냅니다 · 한 번 더 누르면 멈춥니다</p>');
+    revOut.status('<b style="color:var(--accent)">듣는 중…</b>');
     micJob = listen(alts => {
       micJob = null;
       revMic.classList.remove('on');
@@ -1876,8 +1873,7 @@ function renderBox(){
     x.classList.add('on');
     paintMarks(words(), null);
     out.status('<p class="lead" style="font-size:13px">'
-      + '<b style="color:var(--accent)">듣는 중…</b></p>'
-      + '<p class="hint2">말이 멎고 2.5초가 지나면 끝냅니다 · 한 번 더 누르면 멈춥니다</p>');
+      + '<b style="color:var(--accent)">듣는 중…</b></p>');
     const live = t => paintLive(words(), target, t);
     micJob = listen(alts => {
       micJob = null;
