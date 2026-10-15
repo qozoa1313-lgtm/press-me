@@ -724,11 +724,23 @@ function listen(onResult, onFail, onHeard){
       clearTimeout(hush);
       hush = setTimeout(() => { try{ r.stop(); }catch(e){} }, HUSH);
     };
-    /* 끊겨 들어온 조각들을 하나로 잇습니다 */
+    /* 끊겨 들어온 조각들을 하나로 잇습니다.
+       뒤 조각이 앞 조각을 통째로 품고 있으면(기기에 따라 그렇게 옵니다) 앞 것은 버립니다 */
+    const stitch = list => {
+      const out = [];
+      list.forEach(t => {
+        const p = out.length ? out[out.length - 1] : '';
+        if(p && (t.indexOf(p) === 0 || p.indexOf(t) === 0)){
+          out[out.length - 1] = t.length >= p.length ? t : p;    /* 긴 쪽만 남깁니다 */
+        }else out.push(t);
+      });
+      return out.join(' ').replace(/\s+/g, ' ').trim();
+    };
+    const joinedText = () => stitch(parts.map(p => p[0]).concat(interim ? [interim] : []));
     const joined = () => {
-      if(!parts.length) return interim ? [interim] : [];
-      if(parts.length === 1) return interim ? [parts[0][0] + ' ' + interim].concat(parts[0]) : parts[0];
-      const one = parts.map(p => p[0]).join(' ') + (interim ? ' ' + interim : '');
+      const one = joinedText();
+      if(!one) return [];
+      if(parts.length === 1 && !interim) return parts[0];        /* 조각이 하나면 후보도 같이 */
       return [one];
     };
     const finish = () => {
@@ -738,17 +750,20 @@ function listen(onResult, onFail, onHeard){
     };
 
     r.onresult = e => {
-      for(let i = e.resultIndex; i < e.results.length; i++){
+      const fin = [];
+      let itm = '';
+      for(let i = 0; i < e.results.length; i++){     /* 0부터 통째로 다시 읽습니다 */
         const res = e.results[i];
         if(res.isFinal){
           const alts = [];
           for(let j = 0; j < res.length; j++) alts.push(res[j].transcript);
-          parts.push(alts); interim = '';
+          fin.push(alts);
         }else{
-          interim = res[0].transcript;
+          itm = res[0].transcript;
         }
       }
-      if(onHeard) onHeard((parts.map(p => p[0]).join(' ') + ' ' + interim).trim());
+      parts = fin; interim = itm;                    /* 쌓지 않고 바꿔 끼웁니다 */
+      if(onHeard) onHeard(joinedText());
       touch();
     };
     r.onerror = e => {
@@ -842,7 +857,19 @@ function align(target, said, slack){
   };
 }
 /* 말하기 — 음성인식이 흔들릴 수 있으니 글자 하나 차이는 봐줍니다 */
-function compare(target, heard){ return align(target, heard, true); }
+/* 「every day」 를 「everyday」 로 붙여 듣는 일이 잦습니다.
+   정답에 있는 두 단어가 붙어서 들렸으면 떼어놓고 비교합니다 */
+function unglue(heard, target){
+  const tw = norm(target).split(' ');
+  let h = ' ' + norm(heard) + ' ';
+  for(let i = 0; i < tw.length - 1; i++){
+    const glued = tw[i] + tw[i+1];
+    if(glued.length < 5) continue;
+    h = h.split(' ' + glued + ' ').join(' ' + tw[i] + ' ' + tw[i+1] + ' ');
+  }
+  return h.trim();
+}
+function compare(target, heard){ return align(target, unglue(heard, target), true); }
 /* 쓰기 — 철자까지 그대로 맞아야 합니다 */
 function typeCheck(typed, target){ return align(target, typed, false); }
 
@@ -1205,8 +1232,7 @@ function wireLearn(s, done){
   const heardLine = (best, raw) => '<p class="heard">' +
     best.want.map((w,i) => best.marks[i] ? '<b>'+w+'</b>' : '<i>'+w+'</i>').join(' ') +
     heardScore(best) + '</p>' +
-    (raw ? '<p class="hint2">이렇게 들렸어요 : <b>' + raw + '</b></p>' : '') +
-    '<p class="hint2">빨간 단어를 누르면 그 단어만 들려줍니다. <b>길게 누르면 더 천천히</b> 읽어줍니다.</p>';
+    (raw ? '<p class="hint2">이렇게 들렸어요 : <b>' + raw + '</b></p>' : '');
 
   const mic = document.getElementById('lrnMic');
   let tries = 0;
@@ -1422,20 +1448,12 @@ function openYg(text){
 function icoHelp(){
   const row = (pic, name, desc) =>
     `<div class="li one"><b>${pic} ${name}</b><span>${desc}</span></div>`;
-  return `<h3>이 그림들이 뭔가요?</h3>
-    <p class="cnt">누르면 이런 일이 생깁니다</p>
-    <div class="list" style="margin-top:12px">
-      ${row(ICO.ear, '소리', '발음 듣기 · <b>길게 누르면 더 천천히</b>')}
-      ${row(ICO.mic, '마이크', '따라 말해보기 · 말이 멎으면 끝납니다')}
-      ${row(ICO.key, '자판', '직접 영어로 써보기')}
-      ${row(ICO.tv,  '화면', '실제로 쓰는 영상 보기')}
-      ${row(grow(3, 20), '나무', '복습을 할수록 자랍니다')}
-      ${row(grow(0, 20), '씨앗', '오늘 새로 배운 문장')}
-      ${row(dropSVG(16), '물방울', '복습한 횟수')}
-      ${row(sunMini(16), '해', '앱을 열어서 뭐라도 한 날')}
-    </div>
-    <p class="lead" style="margin-top:14px;font-size:13px">
-      말하기에서 <b>빨간 단어</b>를 누르면 그 단어만 다시 들려줍니다.</p>`;
+  return `<div class="list" style="margin-top:4px">
+      ${row(ICO.ear, '듣기', '<b>꾹 누르면</b> 천천히 들립니다')}
+      ${row(ICO.mic, '말하기', '<b>빨간 단어</b>를 누르면 그 단어만 다시 들려줍니다 · 길게 누르면 더 천천히')}
+      ${row(ICO.key, '쓰기', '영어로 직접 써보세요')}
+      ${row(ICO.tv,  '영상', '어떤 상황에서 쓰는지 영상으로 확인해보세요')}
+    </div>`;
 }
 
 /* ─── 다 끝 ─── */
