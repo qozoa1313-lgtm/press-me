@@ -111,6 +111,8 @@ h2.sec{font-size:13px;color:var(--soft);font-weight:700;margin:26px 0 10px;lette
 .sheet .li .n{font-size:11px;color:var(--soft);flex:0 0 auto}
 .sheet .li.one{gap:6px;align-items:center}
 .sheet .li.one b{font-size:14px;flex:0 0 auto;display:inline-flex;align-items:center;gap:5px}
+.sheet button.li.one{width:100%;text-align:left;font-family:inherit;cursor:pointer}
+.sheet h4{font-size:11.5px;color:var(--soft);letter-spacing:.06em;margin:0 0 7px}
 .sheet .li.one span{font-size:13px;color:var(--soft);flex:1 1 auto;min-width:0}
 .sheet h3{font-size:19px;margin:0 0 2px}
 .sheet .cnt{font-size:13px;color:var(--soft);margin:0}
@@ -1138,10 +1140,9 @@ function swapHTML(s){
   const pat = (typeof PATTERNS !== 'undefined') && PATTERNS[s.day];
   if(!pat) return '';
   return `
-    <details class="more" data-pat="${s.day}"><summary>내 문장으로 바꿔보기${
-      pat.q ? `<button class="sl q" data-q="1" title="이게 무슨 말인지">?</button>` : ''}</summary>
+    <details class="more" data-pat="${s.day}"><summary>내 문장으로 바꿔보기</summary>
       <div class="in2">
-        ${pat.q ? `<p class="qa hide">${pat.q}</p>` : ''}
+        ${pat.q ? `<p class="qa">${pat.q}</p>` : ''}
         <div class="swapline">
           <p class="swapen">${pat.before}<u>&nbsp;&nbsp;&nbsp;&nbsp;</u>${pat.after}</p>
           <button class="rnd swapsay hide" title="들어보기">${ICO.ear}</button>
@@ -1437,10 +1438,27 @@ function ygTerms(s){
   return t.slice(0, 3);
 }
 
-/* 영상 열기 — 세 화면 모두 이 길로 갑니다. 문장 전체로 찾으면 0건인 날이 많습니다 */
-function openYgFor(s){
-  const t = ygTerms(s);
-  openYg(t[Math.floor(Math.random() * t.length)]);
+/* 영상 — 어디서 찾을지 고르게 합니다.
+   긴 문장이 있는지 미리 물어볼 방법이 없습니다 (세 곳 모두 기계 조회를 막습니다).
+   그래서 고르는 창을 띄우고, 없으면 짧은 쪽을 누르시게 합니다. */
+function openYgFor(s){ openSheet(ygSheet(s)); }
+function ygSheet(s){
+  const q = encodeURIComponent(s.en.replace(/[^\w\s']/g, '').trim());
+  const row = (url, name, desc) =>
+    `<button class="li one" data-url="${url}"><b>${name}</b><span>${desc}</span></button>`;
+  const short = ygTerms(s).map(x =>
+    row('https://youglish.com/pronounce/' + encodeURIComponent(x) + '/english',
+        x, '유튜브에서 이 부분만')).join('');
+  return `<h3>어디서 찾아볼까요?</h3>
+    <p class="cnt">문장 그대로는 없을 수도 있어요. 없으면 아래 짧은 쪽을 눌러보세요</p>
+    <h4 style="margin-top:16px">문장 그대로</h4>
+    <div class="list">
+      ${row('https://www.playphrase.me/#/search?q=' + q, 'PlayPhrase', '영화 · 드라마 대사')}
+      ${row('https://getyarn.io/yarn-find?text=' + q, 'Yarn', '영화 · 드라마 장면')}
+      ${row('https://filmot.com/search/' + q + '/1', 'Filmot', '유튜브 자막 (사람인지 확인을 한 번 거칩니다)')}
+    </div>
+    <h4 style="margin-top:18px">짧게 쪼개서</h4>
+    <div class="list">${short}</div>`;
 }
 function openYg(text){
   window.open('https://youglish.com/pronounce/'
@@ -2341,6 +2359,15 @@ document.querySelectorAll('nav button').forEach(b => b.onclick = () => {
 });
 /* ? 버튼 — 어느 창에 있든 그 줄의 설명만 폈다 접었다 합니다 */
 /* 내 문장으로 바꿔보기 — 학습 창과 문장함 어디서든 같게 (기록에는 남지 않습니다) */
+/* 고르는 창에서 누른 곳으로 엽니다 */
+document.addEventListener('click', e => {
+  const u = e.target.closest && e.target.closest('[data-url]');
+  if(!u) return;
+  e.preventDefault();
+  closeSheet();
+  window.open(u.dataset.url, '_blank');
+});
+
 document.addEventListener('click', e => {
   if(!e.target.closest) return;
   const sw = e.target.closest('[data-sw]');
