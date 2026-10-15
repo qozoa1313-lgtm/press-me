@@ -82,10 +82,14 @@ h2.sec{font-size:13px;color:var(--soft);font-weight:700;margin:26px 0 10px;lette
 .weekhd{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:26px 0 10px}
 .weekhd .sec{letter-spacing:.06em}
 /* 완료 · 복습 — 한 줄에 둘 다 */
-.stat1{display:flex;background:var(--card);border:1.5px solid var(--line);border-radius:14px;overflow:hidden}
+.stat1{display:grid;grid-template-columns:1fr 1fr;background:var(--card);
+  border:1.5px solid var(--line);border-radius:14px;overflow:hidden}
 .stat1>div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
   gap:2px;padding:11px 8px;min-width:0;text-align:center}
-.stat1>div+div{border-left:1px solid var(--line)}
+.stat1>div{border-top:1px solid var(--line);border-left:1px solid var(--line)}
+.stat1>div:nth-child(-n+2){border-top:none}
+.stat1>div:nth-child(odd){border-left:none}
+.stat1 svg{width:15px;height:15px;vertical-align:-2px}
 .stat1 span{font-size:13px;color:var(--soft);flex:none}
 .stat1 b{font-size:19px;font-weight:700}
 .stat1 i{font-style:normal;font-size:11px;color:var(--soft);white-space:nowrap;flex:none}
@@ -119,6 +123,7 @@ h2.sec{font-size:13px;color:var(--soft);font-weight:700;margin:26px 0 10px;lette
 .sheet .li[data-day]{cursor:pointer}
 .sheet .li .n{font-size:11px;color:var(--soft);flex:0 0 auto;text-align:right}
 .sheet .li .n i{display:block;font-style:normal;font-size:10px;opacity:.75;margin-top:2px}
+.sheet .li .n{line-height:1.35}
 .sheet .li.one{gap:6px;align-items:center}
 .sheet .li.one b{font-size:14px;flex:0 0 auto;display:inline-flex;align-items:center;gap:5px}
 .sheet button.li.one{width:100%;text-align:left;font-family:inherit;cursor:pointer}
@@ -1816,14 +1821,15 @@ function renderBox(){
   const t = todayStr();
   b.innerHTML = cards.map(c => {
     const s = byDay(c.day);
-    const rev = c.log.filter(l => l.m !== 'new' && l.m !== 'reset');
-    const cnt = ['ok','mid','no'].map(k => rev.filter(l => l.m === k).length);
+    const rv = revCount(c.log), pr = pracCount(c.log);
+    const cnt = ['ok','mid','no'].map(k => c.log.filter(l => l.m === k).length);
     const [ly, lm, ld] = c.learnedOn.split('-');
-    const meta = `${+lm}월 ${+ld}일에 배움` +
-      (rev.length ? ` · ${rev.length}회 복습 (✓${cnt[0]} △${cnt[1]} ✕${cnt[2]})` : '');
+    const meta = `${+lm}월 ${+ld}일에 배움`
+      + (rv ? ` · 복습 ${rv}회 (✓${cnt[0]} △${cnt[1]} ✕${cnt[2]})` : '')
+      + (pr ? ` · 연습 ${half2(pr)}번` : '');
     return `<details class="cardbox" data-day="${c.day}"><summary>
       <span class="item" style="border:none;padding:0;flex:1;min-width:0">
-        <span class="gr" title="${rev.length}회 복습">${grow(c.step, 22)}</span>
+        <span class="gr" title="복습 ${rv}회">${grow(c.step, 22)}</span>
         <span class="tx"><b>${s.en}</b><span>${s.ko}</span></span>
         <span class="dy">DAY ${s.day}</span>
       </span></summary>
@@ -1957,7 +1963,26 @@ function dayLog(date){
 }
 
 /* ─── 목록 창 ─── */
+/* 0.5 는 0.5 로, 1 은 1 로 적습니다 */
+const half2 = n => (n % 1 ? n.toFixed(1) : String(n));
+
 const RVM = { ok:1, mid:1, no:1 };      /* 복습 표시 세 가지 */
+
+/* 기준 두 가지 — 어느 화면에서나 똑같이 셉니다
+     복습 = ✓ △ ✕ 를 누른 횟수
+     연습 = 🎙 말하기 0.5 + ⌨ 쓰기 0.5. 같은 날 여러 번 해도 하루에 한 번만 셉니다 */
+function revCount(log, from){
+  return log.filter(l => RVM[l.m] && (!from || l.d >= from)).length;
+}
+function pracCount(log, from){
+  const seen = {};
+  log.forEach(l => {
+    if(l.m !== 'speak' && l.m !== 'type') return;
+    if(from && l.d < from) return;
+    seen[l.m + l.d] = 1;
+  });
+  return Object.keys(seen).length / 2;
+}
 function openSheet(html, bare){
   const b = document.getElementById('sheetBody');
   b.innerHTML = html;
@@ -1998,38 +2023,30 @@ function doneSheet(){
   return `<h3>완료한 문장</h3><p class="cnt">${cards.length}장</p><div class="list">${rows}</div>`;
 }
 
-/* 0.5 는 0.5 로, 1 은 1 로 적습니다 */
-const half2 = n => (n % 1 ? n.toFixed(1) : String(n));
-
 /* 지금까지 복습한 문장 */
 function revSheet(from){
   const f = from || '';
   const rows = [];
-  let sp = 0, ty = 0, times = 0;
+  let revT = 0, prT = 0;
   Object.values(DB.cards).sort((a,b) => b.day - a.day).forEach(c => {
-    const mine = c.log.filter(l =>
-      l.d >= f && l.m !== 'new' && l.m !== 'relearn' && l.d !== c.learnedOn);
-    if(!mine.length) return;
-    const mic = mine.some(l => l.m === 'speak');
-    const key = mine.some(l => l.m === 'type');
-    if(mic) sp++;
-    if(key) ty++;
-    const half = (mine.filter(l => l.m === 'speak').length
-                + mine.filter(l => l.m === 'type').length) / 2;
-    times += half;
+    const rv = revCount(c.log, f), pr = pracCount(c.log, f);
+    if(!rv && !pr) return;
+    revT += rv; prT += pr;
+    const mic = c.log.some(l => l.m === 'speak' && l.d >= f);
+    const key = c.log.some(l => l.m === 'type'  && l.d >= f);
     const s = byDay(c.day);
-    const n = half;
     rows.push(`<div class="li" data-day="${s.day}">
       <span class="tx"><b>${s.en}</b><span>${s.ko}</span></span>
-      <span class="n">총 ${half2(n)}번</span>
+      <span class="n">복습 ${rv}<i>연습 ${half2(pr)}</i></span>
       <span class="mk${mic ? ' on' : ''}">🎙</span>
       <span class="mk${key ? ' on' : ''}">⌨</span></div>`);
   });
   return `<h3>복습한 문장<button class="qm" data-tip="revTip">?</button></h3>
-    <p class="cnt">총 ${half2(times)}번 · 🎙 ${sp}장 · ⌨ ${ty}장</p>
+    <p class="cnt">복습 ${revT}번 · 연습 ${half2(prT)}번</p>
     <p class="lead hide" id="revTip" style="margin-top:10px">
-      여기서 복습 횟수는 <b>🎙 말해보기 0.5번 + ⌨ 써보기 0.5번</b> 으로 셉니다.
-      둘 다 하면 <b>1번</b>, 하나만 하면 <b>0.5번</b> 입니다.</p>
+      <b>복습</b> 은 <b>✓ △ ✕</b> 를 누른 횟수입니다.<br>
+      <b>연습</b> 은 <b>🎙 말해보기 0.5번 + ⌨ 써보기 0.5번</b> 입니다.
+      둘 다 하면 <b>1번</b>, 하나만 하면 <b>0.5번</b>. 같은 날 여러 번 해도 하루치만 셉니다.</p>
     <div class="list">${rows.join('') || '<p class="lead">아직 없습니다.</p>'}</div>`;
 }
 
@@ -2175,12 +2192,13 @@ function renderLog(){
   const openDays = Object.keys(DB.days);
   const openAll = openDays.length, openWk = openDays.filter(k => k >= mon).length;
 
-  let doneAll = 0, doneWk = 0, revAll = 0, revWk = 0;
+  let doneAll = 0, doneWk = 0;
   cards.forEach(c => c.log.forEach(l => {
-    const wk = l.d >= mon;
-    if(l.m === 'new'){ doneAll++; if(wk) doneWk++; }
-    else if(RVM[l.m]){ revAll++; if(wk) revWk++; }
+    if(l.m === 'new'){ doneAll++; if(l.d >= mon) doneWk++; }
   }));
+  const sum = (f, from) => cards.reduce((n, c) => n + f(c.log, from), 0);
+  const revAll = sum(revCount), revWk = sum(revCount, mon);
+  const prAll  = sum(pracCount), prWk = sum(pracCount, mon);
 
   document.getElementById('logBody').innerHTML = `
     <div class="sunbar">
@@ -2195,6 +2213,7 @@ function renderLog(){
       <div><span>${sunMini(14)} 접속</span><b>${openAll}</b><i>이번주 +${openWk}</i></div>
       <div class="tap" id="statDone"><span>${grow(0, 16)} 완료</span><b>${doneAll}</b><i>이번주 +${doneWk}</i></div>
       <div class="tap" id="statRev"><span>${dropSVG(14)} 복습</span><b>${revAll}</b><i>이번주 +${revWk}</i></div>
+      <div class="tap" id="statPr"><span>${ICO.mic} 연습</span><b>${half2(prAll)}</b><i>이번주 +${half2(prWk)}</i></div>
     </div>
     <h2 class="sec">복습 현황<button class="qm" id="stgQ">?</button></h2>
     <div class="stg">
@@ -2208,6 +2227,8 @@ function renderLog(){
   if(sd) sd.onclick = () => openSheet(doneSheet());
   const sr = document.getElementById('statRev');
   if(sr) sr.onclick = () => openSheet(revSheet());
+  const sp2 = document.getElementById('statPr');
+  if(sp2) sp2.onclick = () => openSheet(revSheet());
   document.querySelectorAll('[data-stg]').forEach(b =>
     b.onclick = () => openSheet(stgSheet(+b.dataset.stg)));
   const sq = document.getElementById('stgQ');
