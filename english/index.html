@@ -282,6 +282,7 @@ select,input[type=text],input[type=time]{
 .okmark{margin-left:auto;font-size:11.5px;font-weight:700;color:var(--accent)}
 .fold{float:right;font-size:17px;line-height:1;color:var(--soft);padding:0 2px 4px 10px}
 .card .fold.corner{position:absolute;top:16px;right:18px;float:none;padding:4px 8px;font-size:20px}
+.w.got{color:var(--okink)}
 .w.bad{color:var(--wrong);text-decoration:underline dotted}
 .w.half{color:var(--wrong);text-decoration:underline dotted}
 .w.bad,.w.half{cursor:pointer;text-underline-offset:4px}
@@ -882,7 +883,44 @@ const HEARD_OK = 0.8;
 function heardMsg(rate){
   if(rate >= HEARD_OK) return '잘 알아들었어요 ✓';
   if(rate >= 0.6)      return '거의 다 왔어요. 한 번 더 해볼까요?';
-  return '다시 한 번 말해볼까요?';
+  return '';                       /* 못 알아들었을 때는 아무 말도 하지 않습니다 */
+}
+/* 할 말이 없으면 빈 줄도 만들지 않습니다 */
+function heardTip(rate){
+  const m = heardMsg(rate);
+  return m ? '<p class="hint2">' + m + '</p>' : '';
+}
+/* 말하기 칸 — 지난 결과는 그대로 두고 위의 상태줄만 바꿉니다.
+   마이크를 다시 눌러도 「이렇게 들렸어요」가 사라지지 않습니다.
+   지난 결과는 그 칸(요소)에 매달아 둡니다. 화면을 다시 그리면 자연히 비워집니다 */
+const micLast = new WeakMap();
+function micBox(el){
+  const get = () => (typeof el === 'string') ? document.getElementById(el) : el;
+  const draw = now => {
+    const e = get();
+    if(e) e.innerHTML = (now || '') + (micLast.get(e) || '');
+  };
+  return {
+    status: now => draw(now),
+    result: html => { const e = get(); if(e){ micLast.set(e, html); draw(''); } },
+    reset:  () => { const e = get(); if(e){ micLast.delete(e); draw(''); } }
+  };
+}
+/* 말하는 중 — 들린 단어만 켭니다. 아직 안 나온 단어를 빨갛게 칠하지 않습니다 */
+function paintLive(ws, target, heard){
+  const r = heard ? compare(target, heard) : null;
+  ws.forEach((w, i) => {
+    w.classList.remove('bad', 'half');
+    w.classList.toggle('got', !!(r && r.marks[i]));
+  });
+}
+/* 말이 끝난 뒤 — 못 알아들은 단어를 빨갛게 */
+function paintMarks(ws, r){
+  ws.forEach((w, i) => {
+    w.classList.remove('got');
+    w.classList.toggle('bad',  !!r && r.marks[i] === false && !r.half[i]);
+    w.classList.toggle('half', !!r && !!r.half[i]);
+  });
 }
 /* 들린 말을 그대로 보여줍니다 — 무엇이 어떻게 들렸는지 알아야 고칠 수 있습니다.
    네 화면(오늘·학습하기·복습·문장함)이 같이 씁니다 */
@@ -1090,11 +1128,7 @@ function wordSpans(en){
 function paintRev(){
   const line = document.getElementById('revEn');
   if(!line) return;
-  const r = revLast;
-  line.querySelectorAll('.w').forEach((w,i) => {
-    w.classList.toggle('bad',  !!r && r.marks[i] === false && !r.half[i]);
-    w.classList.toggle('half', !!r && !!r.half[i]);
-  });
+  paintMarks(line.querySelectorAll('.w'), revLast);
 }
 
 function viewNew(s, done){
@@ -1235,17 +1269,16 @@ function wireLearn(s, done){
   document.getElementById('lrnQ').onclick = () => openSheet(icoHelp());
   document.getElementById('lrnYg').onclick = () => openYgFor(s);
 
-  const say = t => { const e = document.getElementById('lrnTry'); if(e) e.innerHTML = t; };
+  const lrnOut = micBox('lrnTry');
+  const say = t => lrnOut.status(t);
   /* 말하기와 쓰기를 둘 다 해야 완료하기가 눌립니다 */
   const syncDone = () => {
     const dd = DB.days[todayStr()] || {};
     const ok = !done && dd.lrnMicOK && dd.lrnKeyOK;
     document.getElementById('lrnDone').classList.toggle('off', !ok);
   };
-  const paint = r => document.querySelectorAll('#lrnEn .w').forEach((w,i) => {
-    w.classList.toggle('bad',  !!r && r.marks[i] === false && !r.half[i]);
-    w.classList.toggle('half', !!r && !!r.half[i]);
-  });
+  const lrnWords = () => document.querySelectorAll('#lrnEn .w');
+  const paint = r => paintMarks(lrnWords(), r);
 
   const mic = document.getElementById('lrnMic');
   let tries = 0;
@@ -1254,9 +1287,11 @@ function wireLearn(s, done){
     + '그래도 넘어가기 (' + tries + '번 했어요)</button>';
   mic.onclick = () => {
     if(micJob){ micJob.cancel(); micJob = null; mic.classList.remove('on'); say(''); return; }
-    paint(null); mic.classList.add('on'); say('듣는 중… (한 번 더 누르면 멈춥니다)');
-    const live = t => say('<b style="color:var(--accent)">듣는 중…</b> ' + (t || '')
-      + '<p class="hint2">말이 멎고 2.5초가 지나면 끝냅니다</p>');
+    paint(null); mic.classList.add('on');
+    say('<b style="color:var(--accent)">듣는 중…</b>'
+      + '<p class="hint2">말이 멎고 2.5초가 지나면 끝냅니다 · 한 번 더 누르면 멈춥니다</p>');
+    /* 말하는 동안에는 윗줄 단어 색만 바뀝니다 */
+    const live = t => paintLive(lrnWords(), s.en, t);
     micJob = listen(alts => {
       micJob = null;
       mic.classList.remove('on');
@@ -1264,17 +1299,17 @@ function wireLearn(s, done){
       alts.forEach(a => { const r = compare(s.en, a); if(r.rate > best.rate) best = r; });
       paint(best);
       if(best.rate >= HEARD_OK){
-        say(heardLine(best, '') + '<p class="hint2"><b style="color:var(--accent)">'
+        lrnOut.result(heardLine(best, raw) + '<p class="hint2"><b style="color:var(--accent)">'
             + heardMsg(best.rate) + '</b></p>');
         DB.days[todayStr()].lrnMicOK = true; mic.classList.add('got'); save(); syncDone();
       }else{
         tries++;
-        say(heardLine(best, raw) + '<p class="hint2">' + heardMsg(best.rate) + '</p>'
+        lrnOut.result(heardLine(best, raw) + heardTip(best.rate)
             + (tries >= PASS ? giveUp() : ''));
         const pb = document.getElementById('lrnPass');
         if(pb) pb.onclick = () => {
           DB.days[todayStr()].lrnMicOK = true; mic.classList.add('got'); save(); syncDone();
-          say('<p class="hint2">넘어갔습니다. 복습에서 또 나오니 그때 다시 해보세요.</p>');
+          lrnOut.result('<p class="hint2">넘어갔습니다. 복습에서 또 나오니 그때 다시 해보세요.</p>');
         };
       }
     }, msg => {
@@ -1539,22 +1574,20 @@ function wireToday(){
   };
 
   const micBtn = document.getElementById('micBtn');
-  const paintWords = r => {
-    document.querySelectorAll('#enLine .w').forEach((w,i) => {
-      w.classList.toggle('bad',  !!r && r.marks[i] === false && !r.half[i]);
-      w.classList.toggle('half', !!r && !!r.half[i]);
-    });
-  };
+  const todayWords = () => document.querySelectorAll('#enLine .w');
+  const paintWords = r => paintMarks(todayWords(), r);
   const unlock = () => { const u = document.getElementById('unlock'); if(u) u.classList.remove('hide'); };
-  const tryText = t => { const e = document.getElementById('tryN'); if(e) e.innerHTML = t; };
+  const todayOut = micBox('tryN');
+  const tryText = t => todayOut.status(t);
 
   const runMic = () => {
     const s = stage.card, out = document.getElementById('micOut');
     if(micJob){ micJob.cancel(); micJob = null; micBtn.classList.remove('on'); tryText(''); return; }
     paintWords(null);
     micBtn.classList.add('on');
-    tryText('듣는 중… (한 번 더 누르면 멈춥니다)');
-    const live = t => tryText('<b style="color:var(--accent)">듣는 중…</b> ' + (t || ''));
+    tryText('<b style="color:var(--accent)">듣는 중…</b>'
+      + '<p class="hint2">말이 멎고 2.5초가 지나면 끝냅니다 · 한 번 더 누르면 멈춥니다</p>');
+    const live = t => paintLive(todayWords(), s.en, t);
     micJob = listen(alts => {
       micJob = null;
       micBtn.classList.remove('on');
@@ -1564,13 +1597,13 @@ function wireToday(){
       out.innerHTML = '';
       paintWords(best);
       if(best.rate >= HEARD_OK){
-        tryText(heardLine(best, '') + '<p class="hint2"><b style="color:var(--accent)">'
+        todayOut.result(heardLine(best, raw) + '<p class="hint2"><b style="color:var(--accent)">'
                 + heardMsg(best.rate) + '</b></p>');
         DB.days[todayStr()].micOK = true;
         save(); renderToday();
         return;
       }
-      tryText(heardLine(best, raw) + '<p class="hint2">' + heardMsg(best.rate) + '</p>');
+      todayOut.result(heardLine(best, raw) + heardTip(best.rate));
       if(micTries >= MICNEED) unlock();
     }, msg => {
       micJob = null;
@@ -1645,10 +1678,12 @@ function wireToday(){
     if(!c) return;
     const en = byDay(c.day).en;
     const tr = document.getElementById('revTry');
-    if(micJob){ micJob.cancel(); micJob = null; revMic.classList.remove('on'); tr.textContent = '';
+    const revOut = micBox(tr);
+    if(micJob){ micJob.cancel(); micJob = null; revMic.classList.remove('on'); revOut.status('');
                 revLast = null; paintRev(); return; }
     revMic.classList.add('on');
-    const live = t => tr.innerHTML = '<b style="color:var(--accent)">듣는 중…</b> ' + (t || '');
+    const revWords = () => document.querySelectorAll('#revEn .w');
+    const live = t => paintLive(revWords(), en, t);
     const giveUp = () => '<button class="pill on" id="revPass" style="margin-top:10px">'
       + '그래도 넘어가기 (' + revTries + '번 했어요)</button>';
     const wirePass = () => {
@@ -1656,11 +1691,12 @@ function wireToday(){
       if(pb) pb.onclick = () => {
         c.todayDone = Object.assign({ d: todayStr() }, c.todayDone, { mic:true });
         save(); revMic.classList.add('got');
-        tr.innerHTML = '<p class="hint2">넘어갔습니다. 아래에서 ✓ △ ✕ 로 표시해주세요.</p>';
+        revOut.result('<p class="hint2">넘어갔습니다. 아래에서 ✓ △ ✕ 로 표시해주세요.</p>');
       };
     };
     revLast = null; paintRev();
-    tr.textContent = '듣는 중… (한 번 더 누르면 멈춥니다)';
+    revOut.status('<b style="color:var(--accent)">듣는 중…</b>'
+      + '<p class="hint2">말이 멎고 2.5초가 지나면 끝냅니다 · 한 번 더 누르면 멈춥니다</p>');
     micJob = listen(alts => {
       micJob = null;
       revMic.classList.remove('on');
@@ -1668,15 +1704,15 @@ function wireToday(){
       alts.forEach(a => { const r = compare(en, a); if(r.rate > best.rate) best = r; });
       revLast = best; paintRev();
       if(best.rate >= HEARD_OK){
-        tr.innerHTML = heardLine(best, '') + '<p class="hint2"><b style="color:var(--accent)">'
-          + heardMsg(best.rate) + '</b></p>';
+        revOut.result(heardLine(best, raw) + '<p class="hint2"><b style="color:var(--accent)">'
+          + heardMsg(best.rate) + '</b></p>');
         c.todayDone = Object.assign({ d: todayStr() }, c.todayDone, { mic:true });
         c.log.push({ d: todayStr(), m:'speak' });
         save(); revMic.classList.add('got');
       }else{
         revTries++;
-        tr.innerHTML = heardLine(best, raw) + '<p class="hint2">' + heardMsg(best.rate) + '</p>'
-          + (revTries >= PASSN ? giveUp() : '');
+        revOut.result(heardLine(best, raw) + heardTip(best.rate)
+          + (revTries >= PASSN ? giveUp() : ''));
         wirePass();
       }
     }, msg => {
@@ -1684,7 +1720,7 @@ function wireToday(){
       revMic.classList.remove('on');
       revLast = null; paintRev();
       if(!msg) return;
-      tr.innerHTML = '<b style="color:var(--wrong)">' + msg + '</b>';
+      revOut.status('<b style="color:var(--wrong)">' + msg + '</b>');
     }, live);
   };
 
@@ -1794,7 +1830,7 @@ function renderBox(){
       <div class="in2">
         <div class="boxtop"><p class="learned" style="margin:0">${meta}</p></div>
         <div class="enrow">
-          <p class="en">${s.en}</p>
+          <p class="en">${wordSpans(s.en)}</p>
           <button class="rnd" data-speak="${esc(s.en)}" title="들어보기">${ICO.ear}</button>
           <button class="rnd" data-yg="${s.day}" title="영상에서 보기">${ICO.tv}</button>
         </div>
@@ -1831,25 +1867,31 @@ function renderBox(){
   b.querySelectorAll('[data-speak]').forEach(x => x.onclick = e => { e.preventDefault(); speak(x.dataset.speak); });
   b.querySelectorAll('[data-mic]').forEach(x => x.onclick = e => {
     e.preventDefault();
-    const out = x.closest('.in2').querySelector('.micout');
+    const in2 = x.closest('.in2');
+    const out = micBox(in2.querySelector('.micout'));
+    const words = () => in2.querySelectorAll('.en .w');
     const target = x.dataset.mic;
     const stop = () => { x.classList.remove('on'); };
-    if(micJob){ micJob.cancel(); micJob = null; stop(); out.innerHTML = ''; return; }
+    if(micJob){ micJob.cancel(); micJob = null; stop(); out.status(''); return; }
     x.classList.add('on');
-    out.innerHTML = '<p class="lead" style="font-size:13px">듣는 중… (다시 누르면 멈춤)</p>';
-    const live = t => out.innerHTML = '<p class="lead" style="font-size:13px">'
-      + '<b style="color:var(--accent)">듣는 중…</b> ' + (t || '') + '</p>';
+    paintMarks(words(), null);
+    out.status('<p class="lead" style="font-size:13px">'
+      + '<b style="color:var(--accent)">듣는 중…</b></p>'
+      + '<p class="hint2">말이 멎고 2.5초가 지나면 끝냅니다 · 한 번 더 누르면 멈춥니다</p>');
+    const live = t => paintLive(words(), target, t);
     micJob = listen(alts => {
       micJob = null;
       stop();
       let best = { rate:-1 }, raw = alts[0] || '';
       alts.forEach(a => { const r = compare(target, a); if(r.rate > best.rate) best = r; });
-      out.innerHTML = heardLine(best, best.rate >= HEARD_OK ? '' : raw)
-        + '<p class="hint2">' + heardMsg(best.rate) + ' · 연습이라 기록에는 안 남습니다</p>';
+      paintMarks(words(), best);
+      out.result(heardLine(best, raw)
+        + '<p class="hint2">' + (heardMsg(best.rate) ? heardMsg(best.rate) + ' · ' : '')
+        + '연습이라 기록에는 안 남습니다</p>');
     }, msg => {
       micJob = null;
       stop();
-      out.innerHTML = '<p class="lead" style="font-size:13px">' + msg + '</p>';
+      out.status('<p class="lead" style="font-size:13px">' + msg + '</p>');
     }, live);
   });
   b.querySelectorAll('[data-yg]').forEach(x => x.onclick = () => openYgFor(byDay(+x.dataset.yg)));
