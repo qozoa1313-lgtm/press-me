@@ -75,7 +75,7 @@ h2.sec{font-size:13px;color:var(--soft);font-weight:700;margin:26px 0 10px;lette
 .weekhd .sec{letter-spacing:.06em}
 /* 완료 · 복습 — 한 줄에 둘 다 */
 .stat1{display:flex;background:var(--card);border:1.5px solid var(--line);border-radius:14px;overflow:hidden}
-.stat1>div{flex:1;display:flex;align-items:baseline;gap:6px;padding:12px 12px;min-width:0}
+.stat1>div{flex:1;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 6px;padding:12px 10px;min-width:0}
 .stat1>div+div{border-left:1px solid var(--line)}
 .stat1 span{font-size:13px;color:var(--soft);flex:none}
 .stat1 b{font-size:19px;font-weight:700}
@@ -1007,7 +1007,9 @@ function todayRec(){
     if(l.m === 'new' || l.m === 'relearn') seed++;
     else if(l.m === 'ok' || l.m === 'mid' || l.m === 'no') drop++;
   }));
-  return `<p class="tdrec">오늘의 기록 <span>${grow(0, 16)} <b>${seed}</b></span><span>${dropSVG(14)} <b>${drop}</b></span>
+  const sun = DB.days[t] ? 1 : 0;        /* 앱을 열기만 해도 1 입니다 */
+  return `<p class="tdrec">오늘의 기록 <span>${sunMini(14)} <b>${sun}</b></span>`
+    + `<span>${grow(0, 16)} <b>${seed}</b></span><span>${dropSVG(14)} <b>${drop}</b></span>
     <button class="qm" id="recQ">?</button></p>`;
 }
 
@@ -1724,9 +1726,9 @@ function wireToday(){
 
   const recQ = document.getElementById('recQ');
   if(recQ) recQ.onclick = () => openSheet(`<h3>오늘의 기록</h3>
+    <div class="li one"><b>${sunMini(15)} 빛 :</b><span>앱을 연 횟수입니다</span></div>
     <div class="li one"><b>${grow(0, 16)} 씨앗 :</b><span>새로 배운 문장 수입니다</span></div>
-    <div class="li one"><b>${dropSVG(15)} 물 :</b><span>복습한 횟수입니다</span></div>
-    <div class="li one"><b>${sunMini(15)} 빛 :</b><span>앱을 연 횟수입니다</span></div>`);
+    <div class="li one"><b>${dropSVG(15)} 물 :</b><span>복습한 횟수입니다</span></div>`);
 
   const laterBtn = document.getElementById('laterBtn');
   if(laterBtn) laterBtn.onclick = () => {
@@ -2155,6 +2157,10 @@ function renderLog(){
   const si = streakInfo();
 
   /* 큰 숫자 = 전체 / 작은 글씨 = 이번 주 */
+  /* 접속 = 앱을 연 날. 그 날짜 칸이 만들어져 있으면 연 날로 봅니다 */
+  const openDays = Object.keys(DB.days);
+  const openAll = openDays.length, openWk = openDays.filter(k => k >= mon).length;
+
   let doneAll = 0, doneWk = 0, revAll = 0, revWk = 0;
   cards.forEach(c => c.log.forEach(l => {
     const wk = l.d >= mon;
@@ -2172,6 +2178,7 @@ function renderLog(){
       <h2 class="sec" style="margin:0">SUMMARY</h2>
     </div>
     <div class="stat1">
+      <div><span>${sunMini(14)} 접속</span><b>${openAll}</b><i>이번주 +${openWk}</i></div>
       <div class="tap" id="statDone"><span>${grow(0, 16)} 완료</span><b>${doneAll}</b><i>이번주 +${doneWk}</i></div>
       <div class="tap" id="statRev"><span>${dropSVG(14)} 복습</span><b>${revAll}</b><i>이번주 +${revWk}</i></div>
     </div>
