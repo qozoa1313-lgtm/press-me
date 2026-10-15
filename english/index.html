@@ -1449,7 +1449,7 @@ function warmHTML(){
        + `<span class="rdline" style="font-size:11.5px;margin-top:2px">${w[2]}</span></p>`;
 }
 
-/* 끝냈을 때 뜨는 말 — 날마다 바뀝니다 */
+/* 기록 탭 맨 아래 한 줄 — 날마다 바뀝니다 (오늘 화면에서는 빼기로 했습니다) */
 const PRAISE = [
   '나는 오늘도 했다.',
   '완벽하지 않아도 괜찮아요.<br>오늘 했잖아요.',
@@ -1513,21 +1513,9 @@ function icoHelp(){
 }
 
 /* ─── 다 끝 ─── */
+/* 오늘 걸 다 끝냈을 때 — 칭찬도 숫자도 넣지 않습니다 (기록 탭으로 옮겼습니다) */
 function viewDone(){
-  const si = streakInfo();
-  const n = Object.keys(DB.cards).length;
-  const t = todayStr();
-  const next = Object.values(DB.cards).map(c => c.due).filter(d => d > t).sort()[0];
-  const inDays = next ? diffDays(t, next) : null;
-  return `
-  <div class="ok">
-    <p class="big">${praise(n)}</p>
-    <p class="sub">${n}장째 · 총 ${si.total}일 중 ${si.run}일 연속${DB.bestStreak>si.run?' (최고 '+DB.bestStreak+'일)':''}</p>
-  </div>
-  ${ inDays !== null ? `<p class="lead" style="text-align:center">
-       ${inDays === 1 ? '내일' : inDays + '일 뒤'} 카드가 돌아옵니다.
-       그때 <b>✓ △ ✕</b> 로 표시하게 됩니다.</p>` : '' }
-  <button class="btn ghost" id="goBox">문장함 열어보기</button>`;
+  return '<button class="btn ghost" id="goBox">문장함 열어보기</button>';
 }
 const esc = s => s.replace(/"/g,'&quot;');
 
@@ -2192,7 +2180,8 @@ function renderLog(){
       ${STG.map((g,i) => `<button class="stgb" data-stg="${i}">
         <b>${grow(g[0], 24)}</b><span>${cards.filter(g[2]).length}</span></button>`).join('')}
     </div>
-    <p class="ol1"><em>진도 :</em>30장 중 <b>${cards.length}장</b>을 모았습니다</p>`;
+    <p class="ol1"><em>진도 :</em>30장 중 <b>${cards.length}장</b>을 모았습니다</p>
+    <div class="ok"><p class="big">${praise(0)}</p></div>`;
   wireCal();
   const sd = document.getElementById('statDone');
   if(sd) sd.onclick = () => openSheet(doneSheet());
