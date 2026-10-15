@@ -341,7 +341,9 @@ select,input[type=text],input[type=time]{
 .swapen{font-size:18px;font-weight:700;margin:0 0 14px;line-height:1.55}
 .swapen u{text-decoration:none;color:var(--accent);border-bottom:2px solid var(--accent);padding:0 2px;margin:0 1px}
 .swapline{display:flex;align-items:center;gap:9px;margin-bottom:12px}
-.swapline .swapen{flex:1 1 auto;min-width:0;margin:0}
+.swapline .swapbox{flex:1 1 auto;min-width:0}
+.swapline .swapen{margin:0}
+.swaprd{margin-top:4px}
 .swapo{display:flex;flex-wrap:wrap;gap:8px}
 .swapo .pill{display:flex;flex-direction:column;align-items:flex-start;gap:1px;line-height:1.3;text-align:left}
 .swapo .pill span{font-size:11px;color:var(--soft);font-weight:400}
@@ -1136,6 +1138,10 @@ function learnCard(){
   return newToday();
 }
 /* 내 문장으로 바꿔보기 — 틀이 있는 문장에만 칸이 생깁니다 */
+/* 바꿔보기 발음 — 아직 안 골랐으면 가운데를 비워 둡니다 */
+function swapRd(pat, rd){
+  return [pat.rdb, rd || '○○○', pat.rda].filter(Boolean).join(' ');
+}
 function swapHTML(s){
   const pat = (typeof PATTERNS !== 'undefined') && PATTERNS[s.day];
   if(!pat) return '';
@@ -1144,7 +1150,10 @@ function swapHTML(s){
       <div class="in2">
         ${pat.q ? `<p class="qa">${pat.q}</p>` : ''}
         <div class="swapline">
-          <p class="swapen">${pat.before}<u>&nbsp;&nbsp;&nbsp;&nbsp;</u>${pat.after}</p>
+          <div class="swapbox">
+            <p class="swapen">${pat.before}<u>&nbsp;&nbsp;&nbsp;&nbsp;</u>${pat.after}</p>
+            <p class="rdline swaprd">${swapRd(pat, null)}</p>
+          </div>
           <button class="rnd swapsay hide" title="들어보기">${ICO.ear}</button>
         </div>
         <div class="swapo">${pat.opts.map((o,i) =>
@@ -1424,45 +1433,35 @@ const PRAISE = [
 ];
 const praise = n => PRAISE[(n + new Date().getDate()) % PRAISE.length];
 
-/* 영상 검색어 — 복습에서는 누를 때마다 다른 묶음이 나오도록 조각도 섞습니다 */
-function ygTerms(s){
-  const ws = s.en.replace(/[^\w\s']/g, '').split(/\s+/);
-  const t = [];
-  /* 단어 쪼개기 조각이 가장 잘 걸립니다 — 실측 44개 중 43개에 영상이 있었습니다 */
-  (s.bd || []).forEach(p => {
-    const w = p[0].trim(), n = w.split(/\s+/).length;
-    if((n >= 2 || w.length >= 6) && t.indexOf(w) < 0) t.push(w);
-  });
-  /* 문장 전체는 넣지 않습니다 — 그대로 나오는 영상이 거의 없습니다 (30개 중 18개가 0건) */
-  if(!t.length) t.push(ws.slice(0, 2).join(' '));
-  return t.slice(0, 3);
+/* 영상 쪼개기 — 문장을 가운데에서 한 번만 자릅니다. 너무 짧은 토막은 쓰지 않습니다.
+   예) I try to do a little every day → 「I try to do」 「a little every day」
+   네 단어 이하는 그대로도 찾아지니 쪼개지 않습니다 */
+function ygHalf(s){
+  const ws = s.en.replace(/[^\w\s']/g, '').split(/\s+/).filter(Boolean);
+  if(ws.length <= 4) return [];
+  const cut = Math.ceil(ws.length / 2);
+  return [ws.slice(0, cut).join(' '), ws.slice(cut).join(' ')];
 }
 
 /* 영상 — 어디서 찾을지 고르게 합니다.
-   긴 문장이 있는지 미리 물어볼 방법이 없습니다 (세 곳 모두 기계 조회를 막습니다).
-   그래서 고르는 창을 띄우고, 없으면 짧은 쪽을 누르시게 합니다. */
+   영상이 있는지 미리 물어볼 방법이 없습니다 (두 곳 모두 기계 조회를 막습니다).
+   그래서 고르는 창을 띄우고, 없으면 쪼갠 쪽을 누르시게 합니다. */
 function openYgFor(s){ openSheet(ygSheet(s)); }
 function ygSheet(s){
-  const q = encodeURIComponent(s.en.replace(/[^\w\s']/g, '').trim());
+  const yg = x => 'https://youglish.com/pronounce/' + encodeURIComponent(x) + '/english';
+  const q = s.en.replace(/[^\w\s']/g, '').trim();
   const row = (url, name, desc) =>
     `<button class="li one" data-url="${url}"><b>${name}</b><span>${desc}</span></button>`;
-  const short = ygTerms(s).map(x =>
-    row('https://youglish.com/pronounce/' + encodeURIComponent(x) + '/english',
-        x, '유튜브에서 이 부분만')).join('');
+  const half = ygHalf(s).map(x => row(yg(x), x, '유튜브에서 이 부분만')).join('');
   return `<h3>어디서 찾아볼까요?</h3>
-    <p class="cnt">문장 그대로는 없을 수도 있어요. 없으면 아래 짧은 쪽을 눌러보세요</p>
+    <p class="cnt">문장 그대로는 없을 수도 있어요. 없으면 아래 쪼갠 쪽을 눌러보세요</p>
     <h4 style="margin-top:16px">문장 그대로</h4>
     <div class="list">
-      ${row('https://www.playphrase.me/#/search?q=' + q, 'PlayPhrase', '영화 · 드라마 대사')}
-      ${row('https://getyarn.io/yarn-find?text=' + q, 'Yarn', '영화 · 드라마 장면')}
-      ${row('https://filmot.com/search/' + q + '/1', 'Filmot', '유튜브 자막 (사람인지 확인을 한 번 거칩니다)')}
+      ${row(yg(q), 'YouGlish', '유튜브에서 이 문장 그대로')}
+      ${row('https://www.playphrase.me/#/search?q=' + encodeURIComponent(q), 'PlayPhrase', '영화 · 드라마 대사')}
     </div>
-    <h4 style="margin-top:18px">짧게 쪼개서</h4>
-    <div class="list">${short}</div>`;
-}
-function openYg(text){
-  window.open('https://youglish.com/pronounce/'
-    + encodeURIComponent(text.replace(/[^\w\s']/g, '')) + '/english', '_blank');
+    ${half ? `<h4 style="margin-top:18px">짧게 쪼개서</h4>
+    <div class="list">${half}</div>` : ''}`;
 }
 
 /* 그림이 무슨 뜻인지 — 오늘 화면과 학습하기 창의 ? 가 같이 씁니다 */
@@ -2378,6 +2377,8 @@ document.addEventListener('click', e => {
     e.preventDefault();
     const o = pat.opts[+sw.dataset.sw];
     wrap.querySelector('.swapen').innerHTML = pat.before + '<u>' + o[0] + '</u>' + pat.after;
+    const rl = wrap.querySelector('.swaprd');
+    if(rl) rl.textContent = swapRd(pat, o[2]);
     wrap.querySelectorAll('[data-sw]').forEach(x => x.classList.toggle('on', x === sw));
     const say = wrap.querySelector('.swapsay');
     say.classList.remove('hide');
