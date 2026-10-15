@@ -36,6 +36,14 @@ button{font:inherit;color:inherit;border:none;background:none;cursor:pointer}
 .hdr{display:flex;align-items:center}
 /* 뜻만 보기 — 네모 크기는 그대로 두고 영어만 가립니다 */
 body.koonly #boxBody .cardbox > summary .tx b{visibility:hidden}
+/* 펼친 카드 안도 똑같이 — 영어만 가리고 뜻 · 발음은 남깁니다 */
+body.koonly #boxBody .cardbox .en,
+body.koonly #boxBody .cardbox .bd b,
+body.koonly #boxBody .cardbox .swapen,
+body.koonly #boxBody .cardbox .swapo .pill b,
+body.koonly #boxBody .cardbox .line b{visibility:hidden}
+body.koonly #boxBody .cardbox .line b{position:relative}
+body.koonly #boxBody .cardbox .line b button{visibility:visible;position:absolute;left:0;top:0}
 .pic{display:inline-flex;align-items:flex-end;vertical-align:-3px;line-height:0}
 .stat1 .pic,.tdrec .pic,.sheet .li b .pic{vertical-align:-4px}
 .pic svg{display:block}
@@ -348,6 +356,7 @@ select,input[type=text],input[type=time]{
 .swaprd{margin-top:4px}
 .swapo{display:flex;flex-wrap:wrap;gap:8px}
 .swapo .pill{display:flex;flex-direction:column;align-items:flex-start;gap:1px;line-height:1.3;text-align:left}
+.swapo .pill b{font-weight:inherit}
 .swapo .pill span{font-size:11px;color:var(--soft);font-weight:400}
 .swapo .pill.on span{color:rgba(255,255,255,.85)}
 .lrn .nuance{margin-top:18px}
@@ -393,6 +402,7 @@ body.showrd .warm .rdline{display:block}
 }
 .qm{
   width:18px;height:18px;border-radius:50%;border:1.5px solid var(--line);
+  display:inline-flex;align-items:center;justify-content:center;padding:0;
   font-size:11px;font-weight:700;color:var(--soft);line-height:1;margin-left:7px;vertical-align:middle;
 }
 .hintline{margin-top:12px;font-size:19px;font-weight:700;letter-spacing:.06em}
@@ -1196,7 +1206,7 @@ function swapHTML(s){
           <button class="rnd swapsay hide" title="들어보기">${ICO.ear}</button>
         </div>
         <div class="swapo">${pat.opts.map((o,i) =>
-          `<button class="pill" data-sw="${i}">${o[0]}<span>${o[1]}</span></button>`).join('')}</div>
+          `<button class="pill" data-sw="${i}"><b>${o[0]}</b><span>${o[1]}</span></button>`).join('')}</div>
       </div>
     </details>`;
 }
@@ -1829,6 +1839,8 @@ function renderBox(){
         <div class="korow">
           <p>${s.ko}</p>
           <button class="rnd mic" data-mic="${esc(s.en)}" title="따라 말해보기">${ICO.mic}</button>
+          <button class="rnd key" data-key="${esc(s.en)}" data-ko="${esc(s.ko)}" data-dk="${s.day}"
+            title="직접 써보기">${ICO.key}</button>
         </div>
         <div class="micout"></div>
         <p class="nuance">${s.ko2} ${s.when}</p>
@@ -1848,7 +1860,7 @@ function renderBox(){
 
   /* 뜻만 보기 ↔ 뜻+영문 보기 */
   const bq = document.getElementById('boxQ');
-  if(bq) bq.onclick = () => openSheet(stgHelp());
+  if(bq) bq.onclick = () => openSheet(icoHelp() + stgHelp());
 
   const eb = document.getElementById('boxEn');
   const syncEn = () => {
@@ -1886,6 +1898,11 @@ function renderBox(){
       stop();
       out.status('<p class="lead" style="font-size:13px">' + msg + '</p>');
     }, live);
+  });
+  /* 쓰기 — 연습이라 기록에는 남지 않습니다 */
+  b.querySelectorAll('[data-key]').forEach(x => x.onclick = e => {
+    e.preventDefault();
+    openType(x.dataset.key, x.dataset.ko, 'box-' + x.dataset.dk, null);
   });
   b.querySelectorAll('[data-yg]').forEach(x => x.onclick = () => openYgFor(byDay(+x.dataset.yg)));
   b.querySelectorAll('details.cardbox').forEach(dt =>
@@ -2061,19 +2078,10 @@ const STG = [
   [4,'4번 이상', c => c.step >= 4,                '거의 내 것이 된 문장입니다']
 ];
 function stgHelp(){
-  const gap = LADDER.join('일 → ') + '일';
   const rows = STG.map(g => `<div class="li">
       <span class="mk on">${grow(g[0], 20)}</span>
       <span class="tx"><b>${g[1]} 맞힘</b><span>${g[3]}</span></span></div>`).join('');
-  return `<h3>복습 현황</h3>
-    <p class="cnt">잊을 때쯤 다시 보여드립니다</p>
-    <p class="lead" style="margin-top:14px">사람은 외운 것을 빠르게 잊습니다.
-      그래서 이 앱은 외운 문장을 <b>잊을 때쯤 다시</b> 꺼내 보여줍니다.
-      이걸 <b>망각곡선 복습</b>이라고 합니다.</p>
-    <p class="lead">복습에서 <b>✓ 기억나요</b> 를 누를 때마다 다음에 나오는 간격이 길어집니다
-      (${gap}). <b>△ 헷갈려요</b> 나 <b>✕ 기억 안 나요</b> 를 누르면 다음 날 다시 나옵니다.</p>
-    <p class="lead" style="margin-top:14px">아래 칸은 <b>✓ 로 맞힌 횟수</b>로 나눈 것입니다.</p>
-    <div class="list">${rows}</div>`;
+  return `<h3>복습 현황</h3><div class="list">${rows}</div>`;
 }
 function stgSheet(i){
   const g = STG[i];
