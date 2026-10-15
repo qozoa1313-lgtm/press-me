@@ -82,13 +82,11 @@ h2.sec{font-size:13px;color:var(--soft);font-weight:700;margin:26px 0 10px;lette
 .weekhd{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:26px 0 10px}
 .weekhd .sec{letter-spacing:.06em}
 /* 완료 · 복습 — 한 줄에 둘 다 */
-.stat1{display:grid;grid-template-columns:1fr 1fr;background:var(--card);
-  border:1.5px solid var(--line);border-radius:14px;overflow:hidden}
+.stat1{display:flex;background:var(--card);border:1.5px solid var(--line);
+  border-radius:14px;overflow:hidden}
 .stat1>div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
   gap:2px;padding:11px 8px;min-width:0;text-align:center}
-.stat1>div{border-top:1px solid var(--line);border-left:1px solid var(--line)}
-.stat1>div:nth-child(-n+2){border-top:none}
-.stat1>div:nth-child(odd){border-left:none}
+.stat1>div+div{border-left:1px solid var(--line)}
 .stat1 svg{width:15px;height:15px;vertical-align:-2px}
 .stat1 span{font-size:13px;color:var(--soft);flex:none}
 .stat1 b{font-size:19px;font-weight:700}
@@ -352,6 +350,7 @@ select,input[type=text],input[type=time]{
 .lrn .korow p,.cardbox .korow p{flex:1 1 auto;margin:0;font-size:18px;font-weight:700}
 .lrn .sec2,.cardbox .sec2{border-top:1px solid var(--line);margin-top:18px;padding-top:16px}
 .lrn details.more,.cardbox details.more{margin-top:10px}
+.lrn details.more:not([open]),.cardbox details.more:not([open]){padding-bottom:5px}
 .cardbox .enrow{margin-top:16px}
 .cardbox .rdline{margin-top:4px}
 .swapen{font-size:18px;font-weight:700;margin:0 0 14px;line-height:1.55}
@@ -1090,7 +1089,13 @@ function detailHTML(s){
       <span class="rdline">${e[2]}</span>
     </div>`).join('');
   return `
-    <div class="sec2"><div class="bd">${s.bd.map(p=>`<b>${p[0]}</b><span>${p[1]}</span>`).join('')}</div></div>
+    <details class="more" open><summary>이런 뜻이에요</summary>
+      <div class="in2">
+        <p class="nuance" style="margin:0">${s.ko2} ${s.when}</p>
+        <div class="sec2" style="margin-top:12px"><div class="bd">${
+          s.bd.map(p=>`<b>${p[0]}</b><span>${p[1]}</span>`).join('')}</div></div>
+      </div>
+    </details>
     ${swapHTML(s)}
     <details class="more"><summary>더 알고 싶어요</summary>
       <div class="in2">
@@ -1821,12 +1826,11 @@ function renderBox(){
   const t = todayStr();
   b.innerHTML = cards.map(c => {
     const s = byDay(c.day);
-    const rv = revCount(c.log), pr = pracCount(c.log);
+    const rv = revCount(c.log);
     const cnt = ['ok','mid','no'].map(k => c.log.filter(l => l.m === k).length);
     const [ly, lm, ld] = c.learnedOn.split('-');
     const meta = `${+lm}월 ${+ld}일에 배움`
-      + (rv ? ` · 복습 ${rv}회 (✓${cnt[0]} △${cnt[1]} ✕${cnt[2]})` : '')
-      + (pr ? ` · 연습 ${half2(pr)}번` : '');
+      + (rv ? ` · 복습 ${rv}회 (✓${cnt[0]} △${cnt[1]} ✕${cnt[2]})` : '');
     return `<details class="cardbox" data-day="${c.day}"><summary>
       <span class="item" style="border:none;padding:0;flex:1;min-width:0">
         <span class="gr" title="복습 ${rv}회">${grow(c.step, 22)}</span>
@@ -1848,9 +1852,6 @@ function renderBox(){
             title="직접 써보기">${ICO.key}</button>
         </div>
         <div class="micout"></div>
-        <details class="more"><summary>이런 뜻이에요</summary>
-          <div class="in2"><p class="nuance" style="margin-top:0">${s.ko2} ${s.when}</p></div>
-        </details>
         ${detailHTML(s)}
         ${c.step >= 2 ? `<button class="mini" data-reset="${c.day}">${grow(0, 15)} 처음부터 다시 외우기</button>` : ''}
       </div>
@@ -2198,7 +2199,6 @@ function renderLog(){
   }));
   const sum = (f, from) => cards.reduce((n, c) => n + f(c.log, from), 0);
   const revAll = sum(revCount), revWk = sum(revCount, mon);
-  const prAll  = sum(pracCount), prWk = sum(pracCount, mon);
 
   document.getElementById('logBody').innerHTML = `
     <div class="sunbar">
@@ -2213,7 +2213,6 @@ function renderLog(){
       <div><span>${sunMini(14)} 접속</span><b>${openAll}</b><i>이번주 +${openWk}</i></div>
       <div class="tap" id="statDone"><span>${grow(0, 16)} 완료</span><b>${doneAll}</b><i>이번주 +${doneWk}</i></div>
       <div class="tap" id="statRev"><span>${dropSVG(14)} 복습</span><b>${revAll}</b><i>이번주 +${revWk}</i></div>
-      <div class="tap" id="statPr"><span>${ICO.mic} 연습</span><b>${half2(prAll)}</b><i>이번주 +${half2(prWk)}</i></div>
     </div>
     <h2 class="sec">복습 현황<button class="qm" id="stgQ">?</button></h2>
     <div class="stg">
@@ -2227,8 +2226,6 @@ function renderLog(){
   if(sd) sd.onclick = () => openSheet(doneSheet());
   const sr = document.getElementById('statRev');
   if(sr) sr.onclick = () => openSheet(revSheet());
-  const sp2 = document.getElementById('statPr');
-  if(sp2) sp2.onclick = () => openSheet(revSheet());
   document.querySelectorAll('[data-stg]').forEach(b =>
     b.onclick = () => openSheet(stgSheet(+b.dataset.stg)));
   const sq = document.getElementById('stgQ');
