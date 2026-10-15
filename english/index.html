@@ -75,11 +75,12 @@ h2.sec{font-size:13px;color:var(--soft);font-weight:700;margin:26px 0 10px;lette
 .weekhd .sec{letter-spacing:.06em}
 /* 완료 · 복습 — 한 줄에 둘 다 */
 .stat1{display:flex;background:var(--card);border:1.5px solid var(--line);border-radius:14px;overflow:hidden}
-.stat1>div{flex:1;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 6px;padding:12px 10px;min-width:0}
+.stat1>div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:2px;padding:11px 8px;min-width:0;text-align:center}
 .stat1>div+div{border-left:1px solid var(--line)}
 .stat1 span{font-size:13px;color:var(--soft);flex:none}
 .stat1 b{font-size:19px;font-weight:700}
-.stat1 i{margin-left:auto;font-style:normal;font-size:11px;color:var(--soft);white-space:nowrap;flex:none}
+.stat1 i{font-style:normal;font-size:11px;color:var(--soft);white-space:nowrap;flex:none}
 .stat1>div.tap{cursor:pointer}
 /* 월 고르기 창 */
 .calhd button.calttl{font-size:14px;font-weight:700;color:inherit;padding:4px 8px}
@@ -223,8 +224,8 @@ details.cardbox details{border-top:1px solid var(--line)}
 .hint2{font-size:12.5px;color:var(--soft);margin:6px 0 0;line-height:1.7}
 .heard i{font-style:normal;color:#CFC6B6}
 .heard b{font-weight:700;color:var(--accent)}
-.ok{text-align:center;padding:30px 0}
-.ok .big{font-size:21px;font-weight:700}
+.ok{text-align:center;padding:14px 0 4px}
+.ok .big{font-size:12.5px;font-weight:700;color:var(--soft);line-height:1.7}
 .ok .sub{font-size:14px;color:var(--soft);margin-top:8px}
 
 /* ───── 문장함 ───── */
@@ -351,7 +352,7 @@ select,input[type=text],input[type=time]{
 .swapo .pill.on span{color:rgba(255,255,255,.85)}
 .lrn .nuance{margin-top:18px}
 /* 오늘 탭 맨 아래 — 따뜻한 한 줄 */
-.warm{text-align:center;margin:36px 0 6px;color:var(--soft);line-height:1.7}
+.warm{text-align:center;margin:18px 0 4px;color:var(--soft);line-height:1.7}
 .warm b{display:block;font-size:13.5px;font-weight:700}
 .warm span{display:block;font-size:12.5px;margin-top:3px}
 .warm .rdline{display:none;color:var(--soft);opacity:.85}
@@ -490,6 +491,7 @@ nav button.dim{opacity:.32}
   <div class="wrap tab hide" id="tabBox">
     <div class="hd sticky">
       <span class="date" id="boxDate">문장함</span>
+      <button class="qm" id="boxQ">?</button>
       <span class="hdr">
         <button class="chip on" id="boxEn">뜻만 보기</button>
         <button class="chip" id="boxRd">발음 보기</button>
@@ -1845,6 +1847,9 @@ function renderBox(){
   rd.onclick = () => { document.body.classList.toggle('showrd'); sync(); };
 
   /* 뜻만 보기 ↔ 뜻+영문 보기 */
+  const bq = document.getElementById('boxQ');
+  if(bq) bq.onclick = () => openSheet(stgHelp());
+
   const eb = document.getElementById('boxEn');
   const syncEn = () => {
     const only = document.body.classList.contains('koonly');
@@ -2096,12 +2101,12 @@ function daySheet(date){
     if(g.back.mid) marks.push('△' + g.back.mid);
     if(g.back.no)  marks.push('✕' + g.back.no);
     body = g.made.map(day => { const s = byDay(day);
-      return `<div class="li">
+      /* 문장을 누르면 문장함으로 갑니다. 🔊 는 그 자리에서 들려주기만 합니다 */
+      return `<div class="li" data-day="${day}">
           <span class="mk on" style="font-size:11px;color:var(--soft)">DAY ${day}</span>
           <span class="tx"><b>${s.en}</b></span>
           <button class="mk on" data-speak="${esc(s.en)}">🔊</button>
-        </div>
-        <button class="btn ol" data-day="${day}" style="margin:0 0 14px">문장함에서 보기</button>`;
+        </div>`;
     }).join('') +
     (marks.length ? `<p class="lead" style="margin:0">복습 ${g.back.ok+g.back.mid+g.back.no}장 (${marks.join(' ')})</p>` : '') +
     (g.back.reset ? `<p class="lead" style="margin:6px 0 0">처음부터 다시 돌린 카드 ${g.back.reset}장</p>` : '');
