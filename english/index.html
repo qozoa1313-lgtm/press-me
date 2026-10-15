@@ -1135,8 +1135,8 @@ function viewNew(s, done){
   return `
   <div class="card today">
     <div class="cardtop">
-      <div class="ctrow"><span class="badge">DAY ${s.day}</span>${done ? '<span class="okmark">✓ 완료</span>'
-        : '<button class="later" id="laterBtn">내일 다시 도전!</button>'}</div>
+      <div class="ctrow"><span class="badge">DAY ${s.day}</span>${
+        done ? '' : '<button class="later" id="laterBtn">내일 다시 도전!</button>'}</div>
       <p class="en" id="enLine">${wordSpans(s.en)}</p>
       <p class="rdline">${s.rd}</p>
 
@@ -1151,7 +1151,8 @@ function viewNew(s, done){
         <span class="tryn" id="tryN"></span>
       </div>
     </div>
-    <button class="btn lap${canLearn() ? '' : ' off'}" id="openBtn">학습하기</button>
+    <button class="btn lap${done ? ' ghost' : (canLearn() ? '' : ' off')}" id="openBtn">${
+      done ? '✓ 완료' : '학습하기'}</button>
     <p class="lk" id="lkMsg"></p>
   </div>
   <div id="micOut"></div>`;
@@ -1249,7 +1250,8 @@ function openLearn(){
   const s = learnCard();
   if(!s) return toast('오늘 배울 문장이 없습니다');
   if(DB.days[todayStr()].later) return toast('오늘은 복습만 하기로 했어요');
-  if(!canLearn()) return toast('먼저 듣고 · 말하고 · 써보세요');
+  if(!canLearn() && !(DB.days[todayStr()] || {}).newDone)
+    return toast('먼저 듣고 · 말하고 · 써보세요');
   const d = DB.days[todayStr()] || {};
   document.getElementById('learnBody').innerHTML = learnHTML(s, !!d.newDone);
   document.getElementById('learnModal').classList.remove('hide');
@@ -1557,7 +1559,7 @@ function wireToday(){
 
   const openBtn = document.getElementById('openBtn');
   if(openBtn) openBtn.onclick = () => {
-    if(canLearn()){ openLearn(); return; }
+    if(canLearn() || (DB.days[todayStr()] || {}).newDone){ openLearn(); return; }
     const d = DB.days[todayStr()] || {};
     poke([!d.earOK && earBtn, !d.micOK && micBtn, !d.keyOK && keyBtn],
          '듣고 · 말하고 · 써보세요', document.getElementById('lkMsg'));
