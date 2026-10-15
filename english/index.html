@@ -117,7 +117,8 @@ h2.sec{font-size:13px;color:var(--soft);font-weight:700;margin:26px 0 10px;lette
 .sheet .li .mk{font-size:15px;opacity:.25;flex:0 0 auto}
 .sheet .li .mk.on{opacity:1}
 .sheet .li[data-day]{cursor:pointer}
-.sheet .li .n{font-size:11px;color:var(--soft);flex:0 0 auto}
+.sheet .li .n{font-size:11px;color:var(--soft);flex:0 0 auto;text-align:right}
+.sheet .li .n i{display:block;font-style:normal;font-size:10px;opacity:.75;margin-top:2px}
 .sheet .li.one{gap:6px;align-items:center}
 .sheet .li.one b{font-size:14px;flex:0 0 auto;display:inline-flex;align-items:center;gap:5px}
 .sheet button.li.one{width:100%;text-align:left;font-family:inherit;cursor:pointer}
@@ -188,7 +189,7 @@ details summary{
 details summary::-webkit-details-marker{display:none}
 details summary::after{content:'＋';font-weight:400;font-size:15px}
 details[open] summary::after{content:'－'}
-details .in2{padding-top:12px}
+details .in2{padding-top:8px}
 .line{padding:11px 0;border-bottom:1px dashed var(--line)}
 .line:last-child{border-bottom:none;padding-bottom:0}
 .line b{display:block;font-size:15.5px;font-weight:700}
@@ -345,7 +346,7 @@ select,input[type=text],input[type=time]{
 .lrn .korow,.cardbox .korow{display:flex;align-items:center;gap:8px;margin-top:18px}
 .lrn .korow p,.cardbox .korow p{flex:1 1 auto;margin:0;font-size:18px;font-weight:700}
 .lrn .sec2,.cardbox .sec2{border-top:1px solid var(--line);margin-top:18px;padding-top:16px}
-.lrn details.more,.cardbox details.more{margin-top:18px}
+.lrn details.more,.cardbox details.more{margin-top:10px}
 .cardbox .enrow{margin-top:16px}
 .cardbox .rdline{margin-top:4px}
 .swapen{font-size:18px;font-weight:700;margin:0 0 14px;line-height:1.55}
@@ -1529,7 +1530,7 @@ function icoHelp(){
 /* ─── 다 끝 ─── */
 /* 오늘 걸 다 끝냈을 때 — 칭찬도 숫자도 넣지 않습니다 (기록 탭으로 옮겼습니다) */
 function viewDone(){
-  return '<button class="btn ghost" id="goBox">문장함 열어보기</button>';
+  return '';
 }
 const esc = s => s.replace(/"/g,'&quot;');
 
@@ -1754,8 +1755,6 @@ function wireToday(){
     save(); renderToday();
   };
 
-  const goBox = document.getElementById('goBox');
-  if(goBox) goBox.onclick = () => switchTab('Box');
 }
 
 function finishNew(s){
@@ -1843,7 +1842,9 @@ function renderBox(){
             title="직접 써보기">${ICO.key}</button>
         </div>
         <div class="micout"></div>
-        <p class="nuance">${s.ko2} ${s.when}</p>
+        <details class="more"><summary>이런 뜻이에요</summary>
+          <div class="in2"><p class="nuance" style="margin-top:0">${s.ko2} ${s.when}</p></div>
+        </details>
         ${detailHTML(s)}
         ${c.step >= 2 ? `<button class="mini" data-reset="${c.day}">${grow(0, 15)} 처음부터 다시 외우기</button>` : ''}
       </div>
@@ -1992,7 +1993,7 @@ function doneSheet(){
     const s = byDay(c.day);
     return `<div class="li" data-day="${s.day}"><span class="mk on">${grow(c.step, 20)}</span>
       <span class="tx"><b>${s.en}</b><span>${s.ko}</span></span>
-      <span class="n">DAY ${s.day}</span></div>`;
+      <span class="n">DAY ${s.day}<i>${c.learnedOn.slice(2).replace(/-/g, '.')}</i></span></div>`;
   }).join('') || '<p class="lead">아직 없습니다.</p>';
   return `<h3>완료한 문장</h3><p class="cnt">${cards.length}장</p><div class="list">${rows}</div>`;
 }
