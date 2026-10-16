@@ -722,8 +722,11 @@ function listen(onResult, onFail, onHeard){
   if(!SR){ onFail('이 브라우저는 마이크를 못 씁니다 (no-api)'); return null; }
   const WAIT  = 10000;                      /* 말을 시작할 때까지 10초 기다립니다 */
   const HUSH  = 2500;                       /* 말이 멎고 2.5초가 지나야 끝난 것으로 봅니다 */
-  const until = Date.now() + WAIT;
+  let deadline = Date.now() + WAIT;         /* 말이 들어오면 다시 늘려줍니다 */
   let settled = false, dead = false, cur = null, g = null;
+  /* 여러 번에 걸쳐 들은 조각을 여기 모읍니다 — 다시 들을 때도 안 버립니다 */
+  let got = [];
+  let hushed = false;                       /* 말이 멎어서 우리가 끊었다 */
   const win  = a => { if(!settled){ settled = true; onResult(a); } };
   const lose = m => { if(!settled){ settled = true; onFail(m); } };
 
@@ -744,7 +747,7 @@ function listen(onResult, onFail, onHeard){
     /* 말이 들어올 때마다 「멎음」 시계를 다시 켭니다 */
     const touch = () => {
       clearTimeout(hush);
-      hush = setTimeout(() => { try{ r.stop(); }catch(e){} }, HUSH);
+      hush = setTimeout(() => { hushed = true; try{ r.stop(); }catch(e){} }, HUSH);
     };
     /* 끊겨 들어온 조각들을 하나로 잇습니다.
        뒤 조각이 앞 조각을 통째로 품고 있으면(기기에 따라 그렇게 옵니다) 앞 것은 버립니다 */
@@ -758,11 +761,13 @@ function listen(onResult, onFail, onHeard){
       });
       return out.join(' ').replace(/\s+/g, ' ').trim();
     };
-    const joinedText = () => stitch(parts.map(p => p[0]).concat(interim ? [interim] : []));
+    const allParts = () => got.concat(parts);
+    const joinedText = () => stitch(allParts().map(p => p[0]).concat(interim ? [interim] : []));
     const joined = () => {
       const one = joinedText();
       if(!one) return [];
-      if(parts.length === 1 && !interim) return parts[0];        /* 조각이 하나면 후보도 같이 */
+      const all = allParts();
+      if(all.length === 1 && !interim) return all[0];            /* 조각이 하나면 후보도 같이 */
       return [one];
     };
     const finish = () => {
@@ -784,32 +789,46 @@ function listen(onResult, onFail, onHeard){
           itm = res[0].transcript;
         }
       }
-      parts = fin; interim = itm;                    /* 쌓지 않고 바꿔 끼웁니다 */
+      /* 기기가 번호를 1번부터 다시 매긴 것이면(조각이 줄거나 첫 조각이 바뀜)
+         앞 묶음을 통에 넣어 둡니다. 안 넣으면 「아이 라이크」 가 지워집니다 */
+      const restarted = parts.length && fin.length
+        && (fin.length < parts.length || fin[0][0] !== parts[0][0]);
+      if(restarted) got = got.concat(parts);
+      parts = fin; interim = itm;
+      deadline = Date.now() + WAIT;
       if(onHeard) onHeard(joinedText());
       touch();
     };
+    /* 말이 멎어서 우리가 끊은 게 아니라면, 들은 걸 안고 다시 듣습니다
+       — 기기가 문장 중간에 한 번 끊어버리는 경우가 있습니다 */
+    const again = wait => {
+      ended = true; clearTimeout(hush);
+      got = got.concat(parts); parts = []; interim = '';
+      setTimeout(attempt, wait);
+    };
     r.onerror = e => {
       if(ended) return;
+      if(!hushed && Date.now() < deadline
+         && (e.error === 'no-speech' || e.error === 'aborted')){ again(400); return; }
       /* 뭐라도 들었으면 그걸 쓴다 — 중간에 끊겨도 버리지 않습니다 */
       if(finish()) return;
       ended = true; clearTimeout(g); clearTimeout(hush);
-      /* 아직 10초가 안 지났고 아무 말도 안 들어왔으면 조용히 다시 듣습니다 */
-      if(Date.now() < until && (e.error === 'no-speech' || e.error === 'aborted')){
-        setTimeout(attempt, 400); return;
-      }
       lose(micSay(e.error));
     };
     r.onend = () => {
       if(ended) return;
+      if(!hushed && Date.now() < deadline){ again(150); return; }
       if(finish()) return;
       ended = true; clearTimeout(g); clearTimeout(hush);
-      if(Date.now() < until){ setTimeout(attempt, 400); return; }
       lose(micSay('no-result'));
     };
 
     /* 말을 시작한 뒤 너무 오래 끌면 멈춥니다 */
     g = setTimeout(() => { try{ r.stop(); }catch(e){} }, WAIT + 20000);
-    try{ r.start(); }catch(e){ clearTimeout(g); lose('마이크를 열지 못했습니다 (start-fail)'); }
+    try{
+      r.start();
+      if(got.length) touch();        /* 더 말이 없으면 2.5초 뒤에 끝냅니다 */
+    }catch(e){ clearTimeout(g); lose('마이크를 열지 못했습니다 (start-fail)'); }
   }
   /* 한 번 더 누르면 듣기를 멈춥니다 — 아무 결과도 돌려주지 않습니다 */
   return { cancel(){
