@@ -1384,6 +1384,22 @@ function viewLater(s){
     </button>`;
 }
 
+/* 복습 카드에 "오늘 이걸 했다" 를 적습니다
+     어제 적힌 것은 버리고 오늘 날짜로 새로 씁니다.
+     날짜를 맨 뒤에 두는 게 중요합니다 — 앞에 두면 옛 날짜가 덮어씁니다 */
+function markToday(c, k){
+  const t = todayStr();
+  const old = (c.todayDone && c.todayDone.d === t) ? c.todayDone : {};
+  c.todayDone = Object.assign({}, old, { d:t });
+  c.todayDone[k] = true;
+}
+/* 같은 날 여러 번 해도 기록은 한 줄만 (복습 연습은 하루 각 0.5) */
+function logOnce(c, m){
+  const t = todayStr();
+  if(c.log.some(l => l.m === m && l.d === t)) return;
+  c.log.push({ d:t, m });
+}
+
 /* 돌아온 카드 — 펼친 것 */
 function viewReview(c){
   const s = byDay(c.day);
@@ -1678,8 +1694,8 @@ function wireToday(){
     if(!c) return;
     const s = byDay(c.day);
     openType(s.en, s.ko, 'rev-' + s.day, () => {
-      c.todayDone = Object.assign({ d: todayStr() }, c.todayDone, { key:true });
-      c.log.push({ d: todayStr(), m:'type' });
+      markToday(c, 'key');
+      logOnce(c, 'type');
       save(); renderToday();
     });
   };
@@ -1702,7 +1718,7 @@ function wireToday(){
     const wirePass = () => {
       const pb = document.getElementById('revPass');
       if(pb) pb.onclick = () => {
-        c.todayDone = Object.assign({ d: todayStr() }, c.todayDone, { mic:true });
+        markToday(c, 'mic');
         save(); revMic.classList.add('got');
         revOut.result('<p class="hint2">넘어갔습니다. 아래에서 ✓ △ ✕ 로 표시해주세요.</p>');
       };
@@ -1718,8 +1734,8 @@ function wireToday(){
       if(best.rate >= HEARD_OK){
         revOut.result(heardLine(best, raw) + '<p class="hint2"><b style="color:var(--accent)">'
           + heardMsg(best.rate) + '</b></p>');
-        c.todayDone = Object.assign({ d: todayStr() }, c.todayDone, { mic:true });
-        c.log.push({ d: todayStr(), m:'speak' });
+        markToday(c, 'mic');
+        logOnce(c, 'speak');
         save(); revMic.classList.add('got');
       }else{
         revTries++;
