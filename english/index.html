@@ -669,9 +669,9 @@ function dueToday(){
 /* 오늘 볼 복습 줄 — 「다시」로 돌린 것은 맨 뒤로 가고, ✓ 를 누를 때까지 돌아옵니다 */
 function revQueue(){
   const t = todayStr();
-  return dueToday().sort((a, b) =>
-    ((a.again === t) ? 1 : 0) - ((b.again === t) ? 1 : 0)
-    || shuffleKey(a.day) - shuffleKey(b.day));
+  /* 섞은 뒤 「다시」로 돌린 것만 맨 뒤로 보냅니다 */
+  return shuffle(dueToday())
+    .sort((a, b) => ((a.again === t) ? 1 : 0) - ((b.again === t) ? 1 : 0));
 }
 /* ✓ 를 누르면 며칠 뒤에 나오는지 */
 function okGap(c){
@@ -681,23 +681,24 @@ function okGap(c){
   return (LADDER[n] - (LADDER[n-1] || 0)) + '일 뒤';
 }
 
-/* 문장이 나오는 차례 — 앱을 켤 때 한 번 섞고 그대로 씁니다.
-   볼 때마다 섞으면 목록이 눈앞에서 흔들려 어지럽습니다 */
-let revSeed = {};
-function shuffleKey(day){
-  if(revSeed[day] === undefined) revSeed[day] = Math.random();
-  return revSeed[day];
+/* 차례를 섞습니다 — 볼 때마다 새로 */
+function shuffle(arr){
+  for(let i = arr.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
 }
 
 /* ── 전체 복습 판 ── */
-function freeStart(){ freeQ = { at:{}, out:[] }; revSeed = {}; }
+function freeStart(){ freeQ = { at:{}, out:[] }; }
 /* 아직 안 뺀 문장을 「볼 수 있는 때」 순으로 */
 function freeList(){
   if(!freeQ) freeStart();
-  return Object.values(DB.cards)
-    .filter(c => !freeQ.out.includes(c.day))
-    .map(c => ({ c, at: freeQ.at[c.day] || 0 }))
-    .sort((a, b) => a.at - b.at || shuffleKey(a.c.day) - shuffleKey(b.c.day));
+  return shuffle(Object.values(DB.cards)
+      .filter(c => !freeQ.out.includes(c.day))
+      .map(c => ({ c, at: freeQ.at[c.day] || 0 })))
+    .sort((a, b) => a.at - b.at);
 }
 /* 전체 복습에서 누른 것 — 기록에는 아무것도 안 남깁니다 */
 function markFree(m){
