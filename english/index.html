@@ -2464,11 +2464,12 @@ function report(){
     기간: { 시작: DB.startDate, 오늘: todayStr(), 연_일수: si.total, 최고_연속: DB.bestStreak || si.run },
     약속: DB.pledge,
     문장별: Object.values(DB.cards).sort((a,b)=>a.day-b.day).map(c => {
-      const s = byDay(c.day), rev = c.log.filter(l => l.m !== 'new');
+      const s = byDay(c.day), rev = c.log.filter(l => RVM[l.m]);
       return {
         day: s.day, 영어: s.en,
         배운날: c.learnedOn,
-        복습횟수: rev.length,
+        복습횟수: revCount(c.log),          /* ✓ △ ✕ 를 누른 횟수 */
+        연습횟수: pracCount(c.log),         /* 🎙 0.5 + ⌨ 0.5 */
         바로말함: rev.filter(l=>l.m==='ok').length,
         헷갈림: rev.filter(l=>l.m==='mid').length,
         못말함: rev.filter(l=>l.m==='no').length,
