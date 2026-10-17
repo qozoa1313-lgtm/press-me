@@ -416,6 +416,8 @@ body.showrd .warm .rdline{display:block}
   font-style:normal;font-weight:700;color:var(--soft);
   font-size:12.5px;letter-spacing:.04em;margin-right:7px;
 }
+.rmode{display:flex;gap:8px;margin-bottom:14px}
+.rmode .chip{flex:1;text-align:center}
 .fresh{margin-left:7px;padding:3px 8px;border-radius:9px;background:var(--line);
   color:var(--soft);font-size:10.5px;font-weight:700;vertical-align:middle}
 .revcnt b,.revcnt i{display:inline-block;min-width:20px;padding:2px 6px;border-radius:7px;
@@ -676,6 +678,26 @@ function okGap(c){
   const n = c.step + 1;
   if(n >= LADDER.length) return '다 외움';
   return (LADDER[n] - (LADDER[n-1] || 0)) + '일 뒤';
+}
+
+/* ── 전체 복습 판 ── */
+function freeStart(){ freeQ = { at:{}, out:[] }; }
+/* 아직 안 뺀 문장을 「볼 수 있는 때」 순으로 */
+function freeList(){
+  if(!freeQ) freeStart();
+  return Object.values(DB.cards)
+    .filter(c => !freeQ.out.includes(c.day))
+    .map(c => ({ c, at: freeQ.at[c.day] || 0 }))
+    .sort((a, b) => a.at - b.at || a.c.day - b.c.day);
+}
+/* 전체 복습에서 누른 것 — 기록에는 아무것도 안 남깁니다 */
+function markFree(m){
+  const c = DB.cards['d' + openRev];
+  if(!c || !freeQ) return;
+  if(m === 'ok') freeQ.out.push(c.day);
+  else freeQ.at[c.day] = Date.now() + (FREE_MIN[m] || 3) * 60000;
+  openRev = null;
+  renderRev();
 }
 
 /* 자람 단계의 이름. 그림은 grow(step, 크기) 가 그립니다 */
@@ -1544,10 +1566,13 @@ function viewReview(c, inRev){
     </div>
     <button class="btn ghost" id="ansBtn" style="margin-top:16px">답 보기</button>
     <div id="markBox" class="hide">
-      <div class="row" style="margin-top:10px">
+      <div class="row" style="margin-top:10px">${revMode === 'all' ? `
+        <button class="mk3" data-mark="ok"><b>✓</b><span>기억나요</span><i>안 나와요</i></button>
+        <button class="mk3" data-mark="mid"><b>△</b><span>헷갈려요</span><i>10분 뒤</i></button>
+        <button class="mk3" data-mark="no"><b>✕</b><span>기억 안 나요</span><i>3분 뒤</i></button>` : `
         <button class="mk3" data-mark="ok"><b>✓</b><span>기억나요</span><i>${okGap(c)}</i></button>
         <button class="mk3" data-mark="mid"><b>△</b><span>헷갈려요</span><i>잠시 뒤</i></button>
-        <button class="mk3" data-mark="no"><b>✕</b><span>기억 안 나요</span><i>잠시 뒤</i></button>
+        <button class="mk3" data-mark="no"><b>✕</b><span>기억 안 나요</span><i>잠시 뒤</i></button>`}
       </div>
     </div>
   </div>`;
@@ -1677,6 +1702,11 @@ function viewDone(){
 }
 const esc = s => s.replace(/"/g,'&quot;');
 
+
+let revMode = 'due';  /* 'due' 오늘 복습 · 'all' 전체 복습 */
+let freeQ = null;     /* 전체 복습 판 — 기록에 안 남기고, 앱을 끄면 사라집니다 */
+let freeTimer = null;
+const FREE_MIN = { mid:10, no:3 };   /* △ 10분 뒤 · ✕ 3분 뒤 */
 
 let openRev = null;   /* 지금 펼쳐둔 돌아온 카드의 day */
 let revTries = 0;     /* 복습 카드에서 몇 번 말해봤는지 (카드를 바꾸면 0 으로) */
@@ -1890,7 +1920,7 @@ function wireToday(){
   document.querySelectorAll('[data-rev]').forEach(b => b.onclick = () => {
     openRev = +b.dataset.rev; revTries = 0;
     revLast = null;
-    renderToday();
+    if(curTab === 'Rev') renderRev(); else renderToday();
     setTimeout(() => {
       const el = document.querySelector('#todayBody .card');
       const all = document.querySelectorAll('#todayBody .card');
@@ -1947,6 +1977,7 @@ function finishNew(s){
 }
 
 function mark(m){
+  if(revMode === 'all') return markFree(m);
   const c = DB.cards['d' + openRev], t = todayStr();
   if(!c) return;
   c.log.push({ d:t, m });
@@ -1971,11 +2002,74 @@ function mark(m){
 }
 
 /* ═══════════════ 복습 칸 ═══════════════ */
+/* 모드 고르는 줄 */
+function revTabs(){
+  return `<div class="rmode">
+    <button class="chip${revMode === 'due' ? ' on' : ''}" data-rmode="due">오늘 복습</button>
+    <button class="chip${revMode === 'all' ? ' on' : ''}" data-rmode="all">전체 복습</button>
+  </div>`;
+}
+function wireRevTabs(){
+  document.querySelectorAll('#revBody [data-rmode]').forEach(b => b.onclick = () => {
+    if(micJob){ micJob.cancel(); micJob = null; }
+    revMode = b.dataset.rmode;
+    openRev = null;
+    renderRev();
+  });
+}
+/* 전체 복습 — 배운 문장을 전부, 기록은 안 남기고 */
+function renderFree(body){
+  if(!freeQ) freeStart();
+  clearTimeout(freeTimer);
+  const now = Date.now();
+  const list = freeList();
+  const wait = list.filter(x => x.at > now).length;
+  const cnt = document.getElementById('revCnt');
+  if(cnt) cnt.innerHTML = list.length ? `<b>${list.length - wait}</b><i>${wait}</i>` : '';
+
+  if(!list.length){
+    body.innerHTML = revTabs() + `<p class="lead" style="text-align:center;padding:50px 0 10px">
+      ${grow(5, 44)}<br><br>한 바퀴 다 보셨어요.<br>
+      <span style="font-size:13px">여기서 끝내셔도 괜찮습니다.</span></p>
+      <button class="btn ghost" id="freeAgain">처음부터 다시 보기</button>`;
+    wireRevTabs();
+    const fa = document.getElementById('freeAgain');
+    if(fa) fa.onclick = () => { freeStart(); openRev = null; renderRev(); };
+    return;
+  }
+  const ready = list.filter(x => x.at <= now);
+  if(!ready.length){
+    const sec = Math.max(1, Math.ceil((list[0].at - now) / 1000));
+    const mm = Math.floor(sec / 60), ss = sec % 60;
+    body.innerHTML = revTabs() + `<p class="lead" style="text-align:center;padding:50px 0">
+      쉬었다 가요.<br><b style="font-size:20px">${mm}분 ${ss}초</b> 뒤에
+      ${list.length}장이 돌아옵니다.</p>`;
+    wireRevTabs();
+    freeTimer = setTimeout(() => { if(revMode === 'all') renderRev(); },
+                           Math.min(sec, 20) * 1000 + 300);
+    return;
+  }
+  if(openRev == null || !ready.some(x => x.c.day === openRev)) openRev = ready[0].c.day;
+  const c = (ready.find(x => x.c.day === openRev) || ready[0]).c;
+  const rest = ready.filter(x => x.c.day !== c.day).map(x => x.c);
+  body.innerHTML = revTabs()
+    + `<p class="lead" style="font-size:12.5px;margin:0 0 10px">기록에는 남지 않아요. 편하게 보세요.</p>`
+    + viewReview(c, true)
+    + (rest.length ? `<h2 class="sec" style="margin-top:24px">지금 볼 수 있는 문장 ${rest.length}개</h2>`
+        + rest.map(revRow).join('') : '');
+  wireToday();
+  wireRevTabs();
+  const rq = document.getElementById('revQ');
+  if(rq) rq.onclick = () => openSheet(revHelp());
+}
+
 function renderRev(){
   const body = document.getElementById('revBody');
   if(!body) return;
   const t = todayStr();
   if(!DB.days[t]) DB.days[t] = { opened:true };
+  if(revMode === 'all') return renderFree(body);
+  clearTimeout(freeTimer);
   const q = revQueue();
   const now  = q.filter(c => c.again !== t).length;
   const back = q.filter(c => c.again === t).length;
@@ -1992,18 +2086,20 @@ function renderRev(){
     const when = day
       ? `다음 복습은 <b>${+day.slice(5,7)}월 ${+day.slice(8)}일</b> · ${n}장이에요.`
       : '모든 문장을 다 외웠어요.';
-    body.innerHTML = `<p class="lead" style="text-align:center;padding:60px 0 10px">
+    body.innerHTML = revTabs() + `<p class="lead" style="text-align:center;padding:50px 0 10px">
         ${grow(3, 44)}<br><br>오늘 복습할 문장이 없어요.<br>
         <span style="font-size:13px">${when}</span></p>`;
+    wireRevTabs();
     return;
   }
   if(openRev == null || !q.some(c => c.day === openRev)) openRev = q[0].day;
   const c = q.find(x => x.day === openRev) || q[0];
   const rest = q.filter(x => x.day !== c.day);
-  body.innerHTML = viewReview(c, true)
+  body.innerHTML = revTabs() + viewReview(c, true)
     + (rest.length ? `<h2 class="sec" style="margin-top:24px">남은 문장 ${rest.length}개</h2>`
         + rest.map(revRow).join('') : '');
   wireToday();
+  wireRevTabs();
   const rq = document.getElementById('revQ');
   if(rq) rq.onclick = () => openSheet(revHelp());
   save();
@@ -2016,7 +2112,14 @@ function revHelp(){
     <div class="li one"><b>✕ 기억 안 나요</b><span>같습니다. 자람 단계가 한 칸 뒤로 물러납니다</span></div>
     <p class="lead" style="margin-top:14px">△ 나 ✕ 를 누른 문장은 <b>✓ 를 누를 때까지</b>
       오늘 안에서 계속 돌아옵니다. 그만하고 싶으면 다른 칸으로 가면 됩니다.</p>
-    <p class="lead">위쪽 숫자는 <b>지금 볼 것 · 다시 볼 것</b> 입니다.</p>`;
+    <p class="lead">위쪽 숫자는 <b>지금 볼 것 · 다시 볼 것</b> 입니다.</p>
+    <h3 style="margin-top:22px">전체 복습</h3>
+    <p class="lead">배운 문장을 <b>전부</b> 한 바퀴 봅니다. 오늘 배운 것도 들어갑니다.</p>
+    <div class="li one"><b>✓ 기억나요</b><span>이 판에서 빠집니다</span></div>
+    <div class="li one"><b>△ 헷갈려요</b><span>10분 뒤에 다시 나옵니다</span></div>
+    <div class="li one"><b>✕ 기억 안 나요</b><span>3분 뒤에 다시 나옵니다</span></div>
+    <p class="lead" style="margin-top:14px"><b>기록에는 아무것도 남지 않습니다.</b>
+      복습 횟수도, 다음 복습일도 안 바뀝니다. 앱을 껐다 켜면 판이 처음으로 돌아갑니다.</p>`;
 }
 
 /* ═══════════════ 문장함 ═══════════════ */
