@@ -13,7 +13,7 @@
   --card:#FFFFFF; --band:#F3EADA; --accent:#7A6A4F;
   /* 숲과 하늘 — 씨앗·물·빛을 그릴 때 씁니다 */
   --sun:#D9A441; --sky:#F3EADA; --soil:#CDBBA0; --bark:#7E6B52;
-  --l1:#B6C79B; --l2:#8FA977; --l3:#6B8A58; --drop:#6E9BA8;
+  --l1:#B6C79B; --l2:#8FA977; --l3:#6B8A58; --drop:#6E9BA8; --fruit:#C06B4A;
   /* 맞음·틀림 알림 */
   --wrong:#B4553E; --okbg:#EFF1E0; --okink:#5E7A42; --okline:#C4D0A2;
   --nobg:#F8E7E0; --noink:#A8513C; --noline:#EBC3B4;
@@ -1043,13 +1043,18 @@ function plantSVG(st, size){
      <path d="M20 32 L11 25 M20 28 L29 21 M20 36 L13 32" stroke="var(--bark)" stroke-width="1.7" stroke-linecap="round"/>
      <circle cx="10" cy="24" r="6" fill="var(--l2)"/><circle cx="30" cy="20" r="6.4" fill="var(--l2)"/>
      <circle cx="20" cy="16" r="7.6" fill="var(--l3)"/><circle cx="14" cy="19" r="5" fill="var(--l1)"/></svg>`;
-  return o + dirt +
-    `<path d="M20 43 L20 21" stroke="var(--bark)" stroke-width="3.2" stroke-linecap="round"/>
+  const big = `<path d="M20 43 L20 21" stroke="var(--bark)" stroke-width="3.2" stroke-linecap="round"/>
      <path d="M20 30 L9 21 M20 26 L31 17 M20 35 L11 29 M20 33 L30 27"
            stroke="var(--bark)" stroke-width="2" stroke-linecap="round"/>
      <circle cx="8" cy="19" r="7" fill="var(--l2)"/><circle cx="32" cy="15" r="7.6" fill="var(--l2)"/>
      <circle cx="20" cy="11" r="9.2" fill="var(--l3)"/>
-     <circle cx="12" cy="15" r="6" fill="var(--l1)"/><circle cx="28" cy="23" r="5.4" fill="var(--l1)"/></svg>`;
+     <circle cx="12" cy="15" r="6" fill="var(--l1)"/><circle cx="28" cy="23" r="5.4" fill="var(--l1)"/>`;
+  if(st <= 4) return o + dirt + big + `</svg>`;
+  /* 다 외운 문장 — 열매가 달립니다 */
+  return o + dirt + big +
+    `<circle cx="12" cy="15" r="2.6" fill="var(--fruit)"/>
+     <circle cx="30" cy="16" r="2.6" fill="var(--fruit)"/>
+     <circle cx="21" cy="10" r="2.6" fill="var(--fruit)"/></svg>`;
 }
 /* 자람 그림 · 물방울 · 작은 해 — 화면 어디서나 같은 그림을 씁니다 */
 const grow = (step, size) => `<span class="pic">${plantSVG(step, size)}</span>`;
@@ -1549,11 +1554,9 @@ function viewReview(c, inRev){
 }
 
 /* 돌아온 카드 묶음 */
-/* 복습은 따로 떼어냈습니다 — 오늘 화면에는 한 줄만 둡니다 */
-function viewRevSection(due){
-  if(!due.length) return '';
-  return `<button class="btn ghost" id="goRev" style="margin-top:20px">
-    오늘 복습할 문장 ${due.length}개 보러 가기</button>`;
+/* 복습은 아래 칸의 「복습」에서 합니다 — 오늘 화면에는 아무것도 두지 않습니다 */
+function viewRevSection(){
+  return '';
 }
 
 /* 오늘의 문장을 이미 끝냈을 때 위에 남는 한 줄 */
@@ -1786,9 +1789,6 @@ function wireToday(){
     });
   };
 
-  const goRev = document.getElementById('goRev');
-  if(goRev) goRev.onclick = () => switchTab('Rev');
-
   const revFold = document.getElementById('revFold');
   if(revFold) revFold.onclick = () => { openRev = null; revLast = null; revTries = 0; renderToday(); };
 
@@ -2011,7 +2011,7 @@ function renderRev(){
 function revHelp(){
   return `<h3>복습</h3>
     <div class="li one"><b>✓ 기억나요</b><span>다음에 더 오래 뒤에 나옵니다
-      (1 → 2 → 3 → 7 → 14일)</span></div>
+      (1 → 2 → 3 → 7 → 14 → 30일)</span></div>
     <div class="li one"><b>△ 헷갈려요</b><span>오늘 줄 맨 뒤로 가서 다시 나옵니다</span></div>
     <div class="li one"><b>✕ 기억 안 나요</b><span>같습니다. 자람 단계가 한 칸 뒤로 물러납니다</span></div>
     <p class="lead" style="margin-top:14px">△ 나 ✕ 를 누른 문장은 <b>✓ 를 누를 때까지</b>
@@ -2342,7 +2342,8 @@ const STG = [
   [0,'0번',    c => c.step <= 0,                 '막 배운 문장. 내일 다시 나옵니다'],
   [1,'1번',    c => c.step === 1,                '한 번 맞혔습니다'],
   [2,'2~3번',  c => c.step >= 2 && c.step <= 3,  '자리를 잡아가는 중입니다'],
-  [4,'4번 이상', c => c.step >= 4,                '거의 내 것이 된 문장입니다']
+  [4,'4번',    c => c.step === 4,                '거의 내 것이 된 문장입니다'],
+  [5,'5번',    c => c.step >= 5,                 '다 외웠습니다. 이제 안 나옵니다']
 ];
 function stgHelp(){
   const rows = STG.map(g => `<div class="li">
