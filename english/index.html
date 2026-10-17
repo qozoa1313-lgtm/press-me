@@ -35,8 +35,20 @@ button{font:inherit;color:inherit;border:none;background:none;cursor:pointer}
 .hd .qm,.lrntop .qm{margin-right:auto}
 .hdr{display:flex;align-items:center}
 /* 뜻만 보기 — 네모 크기는 그대로 두고 영어만 가립니다 */
-body.koonly #boxBody .cardbox > summary .tx b{visibility:hidden}
 /* 펼친 카드 안도 똑같이 — 영어만 가리고 뜻 · 발음은 남깁니다 */
+.cardbox.one > summary{display:none}
+/* 목록 줄 — 펼치는 게 아니라 넘어가므로 ＋ 를 숨깁니다 */
+details.cardrow>summary::after{display:none}
+/* 한 장만 보는 화면 — summary 가 없으니 그 자리를 비웁니다 */
+.cardbox.one .in2{border-top:none;margin-top:0}
+details.cardbox.one[open] .boxtop{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  top:var(--hdh,46px);margin-top:-4px;padding-top:0;
+}
+.boxback{display:flex;align-items:center;gap:6px;background:none;border:0;padding:4px 0 10px;
+  font-size:13px;font-weight:700;color:var(--soft);cursor:pointer}
+.cardrow .rp{font-size:17px;color:var(--soft)}
+
 body.koonly #boxBody .cardbox .en,
 body.koonly #boxBody .cardbox .bd b,
 body.koonly #boxBody .cardbox .swapen,
@@ -1922,31 +1934,29 @@ function syncSticky(){
 }
 
 /* 문장함은 늘 「뜻만 보기」로 시작합니다 — 다른 데 갔다 오면 되돌립니다 */
+let boxOpen = null;      /* 지금 한 장만 보고 있는 문장의 day. 없으면 목록입니다 */
+let boxScroll = 0;       /* 목록에서 보던 자리 — 돌아올 때 그대로 되돌립니다 */
 function boxReset(){
+  boxOpen = null;
   document.body.classList.add('koonly');
   const eb = document.getElementById('boxEn');
   if(eb){ eb.textContent = '뜻만 보기'; eb.classList.add('on'); }
 }
-function renderBox(){
-  const cards = Object.values(DB.cards).sort((a,b) => b.day - a.day);
-  const b = document.getElementById('boxBody');
-  if(!cards.length){ b.innerHTML = '<p class="lead" style="text-align:center;padding:50px 0">아직 비어 있어요.<br>오늘 카드를 열면 여기에 쌓입니다.</p>'; return; }
-  const t = todayStr();
-  b.innerHTML = cards.map(c => {
-    const s = byDay(c.day);
-    const rv = revCount(c.log);
-    const cnt = ['ok','mid','no'].map(k => c.log.filter(l => l.m === k).length);
-    const [ly, lm, ld] = c.learnedOn.split('-');
-    const meta = `${+lm}월 ${+ld}일에 배움`
-      + (rv ? ` · 복습 ${rv}회 (✓${cnt[0]} △${cnt[1]} ✕${cnt[2]})` : '');
-    return `<details class="cardbox" data-day="${c.day}"><summary>
-      <span class="item" style="border:none;padding:0;flex:1;min-width:0">
-        <span class="gr" title="복습 ${rv}회">${grow(c.step, 22)}</span>
-        <span class="tx"><b>${s.en}</b><span>${s.ko}</span></span>
-        <span class="dy">DAY ${s.day}</span>
-      </span></summary>
+/* 한 문장만 크게 보는 화면 — 머리줄 아래 자리만 씁니다 */
+function boxOneHTML(c){
+  const s = byDay(c.day);
+  const rv = revCount(c.log);
+  const cnt = ['ok','mid','no'].map(k => c.log.filter(l => l.m === k).length);
+  const [ly, lm, ld] = c.learnedOn.split('-');
+  const meta = `${+lm}월 ${+ld}일에 배움`
+    + (rv ? ` · 복습 ${rv}회 (✓${cnt[0]} △${cnt[1]} ✕${cnt[2]})` : '');
+  return `<button class="boxback" id="boxBack">← 문장함</button>
+    <details class="cardbox one" data-day="${c.day}" open><summary></summary>
       <div class="in2">
-        <div class="boxtop"><p class="learned" style="margin:0">${meta}</p></div>
+        <div class="boxtop">
+          <p class="learned" style="margin:0">${meta}</p>
+          <span class="gr" title="복습 ${rv}회">${grow(c.step, 22)}</span>
+        </div>
         <div class="enrow">
           <p class="en">${wordSpans(s.en)}</p>
           <button class="rnd" data-speak="${esc(s.en)}" title="들어보기">${ICO.ear}</button>
@@ -1964,9 +1974,24 @@ function renderBox(){
         ${c.step >= 2 ? `<button class="mini" data-reset="${c.day}">${grow(0, 15)} 처음부터 다시 외우기</button>` : ''}
       </div>
     </details>`;
+}
+function renderBox(){
+  const cards = Object.values(DB.cards).sort((a,b) => b.day - a.day);
+  const b = document.getElementById('boxBody');
+  if(!cards.length){ b.innerHTML = '<p class="lead" style="text-align:center;padding:50px 0">아직 비어 있어요.<br>오늘 카드를 열면 여기에 쌓입니다.</p>'; return; }
+  const one = (boxOpen != null) && DB.cards['d' + boxOpen];
+  b.innerHTML = one ? boxOneHTML(one) : cards.map(c => {
+    const s = byDay(c.day);
+    return `<details class="cardbox cardrow" data-day="${c.day}"><summary>
+      <span class="item" style="border:none;padding:0;flex:1;min-width:0">
+        <span class="gr" title="복습 ${revCount(c.log)}회">${grow(c.step, 22)}</span>
+        <span class="tx"><b>${s.ko}</b></span>
+        <span class="dy">DAY ${s.day}</span>
+        <span class="rp">›</span>
+      </span></summary></details>`;
   }).join('') +
   `<p class="lead" style="margin-top:22px;font-size:13px;text-align:center">
-     카드를 누르면 다시 열어볼 수 있습니다.
+     문장을 누르면 다시 열어볼 수 있습니다.
    </p>`;
 
   const rd = document.getElementById('boxRd');
@@ -2021,8 +2046,21 @@ function renderBox(){
     openType(x.dataset.key, x.dataset.ko, 'box-' + x.dataset.dk, null);
   });
   b.querySelectorAll('[data-yg]').forEach(x => x.onclick = () => openYgFor(byDay(+x.dataset.yg)));
-  b.querySelectorAll('details.cardbox').forEach(dt =>
-    dt.addEventListener('toggle', () => setTimeout(syncSticky, 0)));
+  /* 목록 줄 — 펼치지 않고 그 문장만 보는 화면으로 넘어갑니다 */
+  b.querySelectorAll('details.cardrow > summary').forEach(sm => sm.onclick = e => {
+    e.preventDefault();
+    boxScroll = window.scrollY;
+    boxOpen = +sm.closest('details').dataset.day;
+    renderBox();
+    window.scrollTo({ top:0 });
+  });
+  const bk = document.getElementById('boxBack');
+  if(bk) bk.onclick = () => {
+    if(micJob){ micJob.cancel(); micJob = null; }
+    boxOpen = null;
+    renderBox();
+    window.scrollTo({ top:boxScroll });
+  };
   syncSticky();
 
   b.querySelectorAll('[data-reset]').forEach(x => x.onclick = () => {
@@ -2032,6 +2070,7 @@ function renderBox(){
     c.step = 0;
     c.due = addDays(todayStr(), 1);
     c.log.push({ d: todayStr(), m: 'reset' });
+    boxOpen = null;
     save(); renderBox(); stage = null;
     toast('내일 다시 올라옵니다');
   });
@@ -2268,13 +2307,11 @@ function wireCal(){
 
 /* 달력 → 문장함으로 넘어가며 그 카드를 펼친다 */
 function openInBox(day){
-  switchTab('Box');
-  setTimeout(() => {
-    const el = document.querySelector(`#boxBody details.cardbox[data-day="${day}"]`);
-    if(!el) return;
-    el.open = true;
-    el.scrollIntoView({ behavior:'smooth', block:'center' });
-  }, 60);
+  switchTab('Box');        /* 여기서 목록으로 한 번 돌아갑니다 */
+  boxScroll = 0;
+  boxOpen = day;
+  renderBox();
+  window.scrollTo({ top:0 });
 }
 
 /* 해 — 빛을 준 날을 나타냅니다 */
