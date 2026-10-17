@@ -31,6 +31,7 @@ button{font:inherit;color:inherit;border:none;background:none;cursor:pointer}
 /* ───── 공통 ───── */
 .hd{display:flex;align-items:center;justify-content:space-between;margin:6px 0 18px}
 .hd .date{font-size:12px;letter-spacing:.14em;color:var(--soft);font-weight:700}
+#boxDate.back{cursor:pointer;color:var(--accent)}
 /* 물음표는 날짜 · DAY 바로 옆에 붙입니다 */
 .hd .qm,.lrntop .qm{margin-right:auto}
 .hdr{display:flex;align-items:center}
@@ -45,8 +46,6 @@ details.cardbox.one[open] .boxtop{
   display:flex;align-items:center;justify-content:space-between;gap:10px;
   top:var(--hdh,46px);margin-top:-4px;padding-top:0;
 }
-.boxback{display:flex;align-items:center;gap:6px;background:none;border:0;padding:4px 0 10px;
-  font-size:13px;font-weight:700;color:var(--soft);cursor:pointer}
 .cardrow .rp{font-size:17px;color:var(--soft)}
 
 body.koonly #boxBody .cardbox .en,
@@ -1950,8 +1949,7 @@ function boxOneHTML(c){
   const [ly, lm, ld] = c.learnedOn.split('-');
   const meta = `${+lm}월 ${+ld}일에 배움`
     + (rv ? ` · 복습 ${rv}회 (✓${cnt[0]} △${cnt[1]} ✕${cnt[2]})` : '');
-  return `<button class="boxback" id="boxBack">← 문장함</button>
-    <details class="cardbox one" data-day="${c.day}" open><summary></summary>
+  return `<details class="cardbox one" data-day="${c.day}" open><summary></summary>
       <div class="in2">
         <div class="boxtop">
           <p class="learned" style="margin:0">${meta}</p>
@@ -2054,13 +2052,18 @@ function renderBox(){
     renderBox();
     window.scrollTo({ top:0 });
   });
-  const bk = document.getElementById('boxBack');
-  if(bk) bk.onclick = () => {
-    if(micJob){ micJob.cancel(); micJob = null; }
-    boxOpen = null;
-    renderBox();
-    window.scrollTo({ top:boxScroll });
-  };
+  /* 머리줄의 「문장함」 — 한 장을 보는 중이면 목록으로 돌아갑니다 */
+  const bd = document.getElementById('boxDate');
+  if(bd){
+    bd.classList.toggle('back', boxOpen != null);
+    bd.onclick = () => {
+      if(boxOpen == null) return;
+      if(micJob){ micJob.cancel(); micJob = null; }
+      boxOpen = null;
+      renderBox();
+      window.scrollTo({ top:boxScroll });
+    };
+  }
   syncSticky();
 
   b.querySelectorAll('[data-reset]').forEach(x => x.onclick = () => {
