@@ -416,6 +416,8 @@ body.showrd .warm .rdline{display:block}
   font-style:normal;font-weight:700;color:var(--soft);
   font-size:12.5px;letter-spacing:.04em;margin-right:7px;
 }
+.fresh{margin-left:7px;padding:3px 8px;border-radius:9px;background:var(--line);
+  color:var(--soft);font-size:10.5px;font-weight:700;vertical-align:middle}
 .revcnt b,.revcnt i{display:inline-block;min-width:20px;padding:2px 6px;border-radius:7px;
   font-size:12px;font-weight:700;font-style:normal;text-align:center}
 .revcnt b{background:var(--accent);color:#fff}
@@ -655,8 +657,10 @@ function nextNew(){
 function dueToday(){
   const t = todayStr();
   return Object.values(DB.cards)
-    .filter(c => (c.revive || c.step < LADDER.length) && c.due <= t)
-    .filter(c => c.learnedOn !== t)   /* 오늘 배운 카드는 오늘 복습에 뜨지 않습니다 */
+    .filter(c => c.revive || c.step < LADDER.length)
+    /* 오늘 배운 문장도 넣습니다 — 오늘의 문장도, 미리 배운 것도 */
+    .filter(c => c.due <= t || c.learnedOn === t)
+    .filter(c => !(c.learnedOn === t && c.freshOK === t))   /* ✓ 를 누르면 오늘 줄에서 빠집니다 */
     .filter(c => !(DB.days[t] && DB.days[t].relearn || []).includes('d' + c.day))
     .sort((a,b) => a.day - b.day);
 }
@@ -668,6 +672,7 @@ function revQueue(){
 }
 /* ✓ 를 누르면 며칠 뒤에 나오는지 */
 function okGap(c){
+  if(c.learnedOn === todayStr()) return '내일';   /* 오늘 배운 문장은 간격을 안 건드립니다 */
   const n = c.step + 1;
   if(n >= LADDER.length) return '다 외움';
   return (LADDER[n] - (LADDER[n-1] || 0)) + '일 뒤';
@@ -1515,7 +1520,8 @@ function viewReview(c, inRev){
   return `
   <div class="card">
     ${inRev ? '' : '<button class="fold corner" id="revFold">－</button>'}
-    <span class="grl">${grow(c.step, 20)}</span><span class="badge">DAY ${s.day}</span>
+    <span class="grl">${grow(c.step, 20)}</span><span class="badge">DAY ${s.day}</span>${
+      c.learnedOn === todayStr() ? '<span class="fresh">오늘 배운 문장</span>' : ''}
     <div class="qline">
       <p class="en" style="font-size:21px;margin:0;flex:1 1 auto">${s.ko}</p>
       <button class="rnd mic${done.mic ? ' got' : ''}" id="revMic" title="말해보기">${ICO.mic}</button>
@@ -1945,7 +1951,11 @@ function mark(m){
   if(!c) return;
   c.log.push({ d:t, m });
   delete c.revive;
-  if(m === 'ok'){
+  if(c.learnedOn === t){
+    /* 오늘 배운 문장 — 간격은 그대로 둡니다. 내일 제 차례에 또 나와야 하니까요 */
+    if(m === 'ok'){ delete c.again; c.freshOK = t; }
+    else c.again = t;
+  }else if(m === 'ok'){
     delete c.again;
     c.step++;
     c.due = c.step < LADDER.length ? addDays(t, LADDER[c.step] - (LADDER[c.step-1]||0)) : addDays(t, 365);
