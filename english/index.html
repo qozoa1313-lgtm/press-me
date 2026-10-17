@@ -1332,6 +1332,7 @@ function closeLearn(){
   if(micJob){ micJob.cancel(); micJob = null; }   /* 듣던 마이크는 끄고 닫습니다 */
   document.getElementById('learnModal').classList.add('hide');
   navOn(curTab);                                  /* 하단 표시를 원래 칸으로 되돌립니다 */
+  if(curTab === 'Box') boxReset();
 }
 function openLearn(){
   const s = learnCard();
@@ -1920,6 +1921,12 @@ function syncSticky(){
   });
 }
 
+/* 문장함은 늘 「뜻만 보기」로 시작합니다 — 다른 데 갔다 오면 되돌립니다 */
+function boxReset(){
+  document.body.classList.add('koonly');
+  const eb = document.getElementById('boxEn');
+  if(eb){ eb.textContent = '뜻만 보기'; eb.classList.add('on'); }
+}
 function renderBox(){
   const cards = Object.values(DB.cards).sort((a,b) => b.day - a.day);
   const b = document.getElementById('boxBody');
@@ -2492,7 +2499,7 @@ function switchTab(name){
     document.getElementById('tab'+n).classList.toggle('hide', n !== name));
   navOn(name);
   if(name === 'Today') renderToday();
-  if(name === 'Box')   renderBox();
+  if(name === 'Box'){  boxReset(); renderBox(); }
   if(name === 'Log')   renderLog();
   if(name === 'Set')   renderSet();
 }
