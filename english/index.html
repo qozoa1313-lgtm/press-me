@@ -1973,9 +1973,18 @@ function renderRev(){
   if(cnt) cnt.innerHTML = q.length ? `<b>${now}</b><i>${back}</i>` : '';
 
   if(!q.length){
+    /* 언제 다시 나오는지 적어줍니다 — 「왜 없지?」 하고 헤매지 않게 */
+    const next = Object.values(DB.cards)
+      .filter(c => c.revive || c.step < LADDER.length)
+      .map(c => c.due).filter(x => x > t).sort();
+    const day = next[0];
+    const n = day ? next.filter(x => x === day).length : 0;
+    const when = day
+      ? `다음 복습은 <b>${+day.slice(5,7)}월 ${+day.slice(8)}일</b> · ${n}장이에요.`
+      : '모든 문장을 다 외웠어요.';
     body.innerHTML = `<p class="lead" style="text-align:center;padding:60px 0 10px">
         ${grow(3, 44)}<br><br>오늘 복습할 문장이 없어요.<br>
-        <span style="font-size:13px">내일 또 돌아옵니다.</span></p>`;
+        <span style="font-size:13px">${when}</span></p>`;
     return;
   }
   if(openRev == null || !q.some(c => c.day === openRev)) openRev = q[0].day;
