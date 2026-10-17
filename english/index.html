@@ -416,6 +416,11 @@ body.showrd .warm .rdline{display:block}
   font-style:normal;font-weight:700;color:var(--soft);
   font-size:12.5px;letter-spacing:.04em;margin-right:7px;
 }
+.revcnt b,.revcnt i{display:inline-block;min-width:20px;padding:2px 6px;border-radius:7px;
+  font-size:12px;font-weight:700;font-style:normal;text-align:center}
+.revcnt b{background:var(--accent);color:#fff}
+.revcnt i{background:var(--line);color:var(--soft);margin-left:4px}
+.mk3 i{display:block;font-style:normal;font-size:10px;opacity:.7;margin-top:3px}
 .qm{
   width:18px;height:18px;border-radius:50%;border:1.5px solid var(--line);
   display:inline-flex;align-items:center;justify-content:center;padding:0;
@@ -513,6 +518,16 @@ nav button.dim{opacity:.32}
     <div id="todayBody"></div>
   </div>
 
+  <!-- ─── 복습 ─── -->
+  <div class="wrap tab hide" id="tabRev">
+    <div class="hd sticky">
+      <span class="date">복습</span>
+      <button class="qm" id="revQ">?</button>
+      <span class="hdr"><span class="revcnt" id="revCnt"></span></span>
+    </div>
+    <div id="revBody"></div>
+  </div>
+
   <!-- ─── 문장함 ─── -->
   <div class="wrap tab hide" id="tabBox">
     <div class="hd sticky">
@@ -546,7 +561,7 @@ nav button.dim{opacity:.32}
 
   <nav><div class="in">
     <button class="on" data-tab="Today"><span class="ic">◉</span>오늘의 문장</button>
-    <button data-tab="Learn"><span class="ic">✎</span>학습하기</button>
+    <button data-tab="Rev"><span class="ic">↻</span>복습</button>
     <button data-tab="Box"><span class="ic">♡</span>문장함</button>
     <button data-tab="Log"><span class="ic">▦</span>기록</button>
   </div></nav>
@@ -645,6 +660,19 @@ function dueToday(){
     .filter(c => !(DB.days[t] && DB.days[t].relearn || []).includes('d' + c.day))
     .sort((a,b) => a.day - b.day);
 }
+/* 오늘 볼 복습 줄 — 「다시」로 돌린 것은 맨 뒤로 가고, ✓ 를 누를 때까지 돌아옵니다 */
+function revQueue(){
+  const t = todayStr();
+  return dueToday().sort((a, b) =>
+    ((a.again === t) ? 1 : 0) - ((b.again === t) ? 1 : 0) || a.day - b.day);
+}
+/* ✓ 를 누르면 며칠 뒤에 나오는지 */
+function okGap(c){
+  const n = c.step + 1;
+  if(n >= LADDER.length) return '다 외움';
+  return (LADDER[n] - (LADDER[n-1] || 0)) + '일 뒤';
+}
+
 /* 자람 단계의 이름. 그림은 grow(step, 크기) 가 그립니다 */
 function maturity(step){
   if(step <= 0) return ['', '갓 심은 것'];
@@ -1132,6 +1160,17 @@ function renderToday(){
   save();
 }
 
+/* 뜻 칸 — 설명과 단어 쪼개기를 한 칸에. 문장함 · 학습하기 · 복습이 같이 씁니다 */
+function meanHTML(s){
+  return `<details class="more" open><summary>이런 뜻이에요</summary>
+      <div class="in2">
+        <p class="nuance" style="margin:0">${s.ko2} ${s.when}</p>
+        <div class="sec2" style="margin-top:12px"><div class="bd">${
+          s.bd.map(p=>`<b>${p[0]}</b><span>${p[1]}</span>`).join('')}</div></div>
+      </div>
+    </details>`;
+}
+
 /* 카드 속 내용 — 오늘 화면과 문장함이 같이 씁니다 */
 function detailHTML(s){
   const lines = arr => arr.map(e => `
@@ -1141,13 +1180,7 @@ function detailHTML(s){
       <span class="rdline">${e[2]}</span>
     </div>`).join('');
   return `
-    <details class="more" open><summary>이런 뜻이에요</summary>
-      <div class="in2">
-        <p class="nuance" style="margin:0">${s.ko2} ${s.when}</p>
-        <div class="sec2" style="margin-top:12px"><div class="bd">${
-          s.bd.map(p=>`<b>${p[0]}</b><span>${p[1]}</span>`).join('')}</div></div>
-      </div>
-    </details>
+    ${meanHTML(s)}
     ${swapHTML(s)}
     <details class="more"><summary>더 알고 싶어요</summary>
       <div class="in2">
@@ -1354,7 +1387,6 @@ function openLearn(){
   const fin = doneNow();
   document.getElementById('learnBody').innerHTML = learnHTML(s, fin);
   document.getElementById('learnModal').classList.remove('hide');
-  navOn('Learn');                                 /* 하단 표시를 「학습하기」로 옮깁니다 */
   wireLearn(s, fin);
 }
 function wireLearn(s, done){
@@ -1476,13 +1508,13 @@ function logOnce(c, m){
 }
 
 /* 돌아온 카드 — 펼친 것 */
-function viewReview(c){
+function viewReview(c, inRev){
   const s = byDay(c.day);
   /* 어제 한 표시는 오늘 쓰지 않습니다 — 날마다 다시 시작합니다 */
   const done = (c.todayDone && c.todayDone.d === todayStr()) ? c.todayDone : {};
   return `
   <div class="card">
-    <button class="fold corner" id="revFold">－</button>
+    ${inRev ? '' : '<button class="fold corner" id="revFold">－</button>'}
     <span class="grl">${grow(c.step, 20)}</span><span class="badge">DAY ${s.day}</span>
     <div class="qline">
       <p class="en" style="font-size:21px;margin:0;flex:1 1 auto">${s.ko}</p>
@@ -1497,24 +1529,25 @@ function viewReview(c){
         <button class="rnd" id="revYg" title="영상에서 보기">${ICO.tv}</button>
       </div>
       <p class="rdline">${s.rd}</p>
+      ${meanHTML(s)}
     </div>
     <button class="btn ghost" id="ansBtn" style="margin-top:16px">답 보기</button>
     <div id="markBox" class="hide">
       <div class="row" style="margin-top:10px">
-        <button class="mk3" data-mark="ok"><b>✓</b><span>기억나요</span></button>
-        <button class="mk3" data-mark="mid"><b>△</b><span>헷갈려요</span></button>
-        <button class="mk3" data-mark="no"><b>✕</b><span>기억 안 나요</span></button>
+        <button class="mk3" data-mark="ok"><b>✓</b><span>기억나요</span><i>${okGap(c)}</i></button>
+        <button class="mk3" data-mark="mid"><b>△</b><span>헷갈려요</span><i>잠시 뒤</i></button>
+        <button class="mk3" data-mark="no"><b>✕</b><span>기억 안 나요</span><i>잠시 뒤</i></button>
       </div>
     </div>
   </div>`;
 }
 
 /* 돌아온 카드 묶음 */
+/* 복습은 따로 떼어냈습니다 — 오늘 화면에는 한 줄만 둡니다 */
 function viewRevSection(due){
   if(!due.length) return '';
-  return `
-  <h2 class="sec" style="margin-top:30px">오늘 복습할 문장 ${due.length}개</h2>
-  ${due.map(c => c.day === openRev ? viewReview(c) : revRow(c)).join('')}`;
+  return `<button class="btn ghost" id="goRev" style="margin-top:20px">
+    오늘 복습할 문장 ${due.length}개 보러 가기</button>`;
 }
 
 /* 오늘의 문장을 이미 끝냈을 때 위에 남는 한 줄 */
@@ -1747,6 +1780,9 @@ function wireToday(){
     });
   };
 
+  const goRev = document.getElementById('goRev');
+  if(goRev) goRev.onclick = () => switchTab('Rev');
+
   const revFold = document.getElementById('revFold');
   if(revFold) revFold.onclick = () => { openRev = null; revLast = null; revTries = 0; renderToday(); };
 
@@ -1910,15 +1946,58 @@ function mark(m){
   c.log.push({ d:t, m });
   delete c.revive;
   if(m === 'ok'){
+    delete c.again;
     c.step++;
     c.due = c.step < LADDER.length ? addDays(t, LADDER[c.step] - (LADDER[c.step-1]||0)) : addDays(t, 365);
   }else{
-    c.due = addDays(t, 1);
+    /* 오늘 줄 맨 뒤로 — ✓ 를 누를 때까지 돌아옵니다 */
     if(m === 'no' && c.step > 0) c.step--;
+    c.again = t;
+    c.due = t;
   }
   DB.days[t] = Object.assign(DB.days[t]||{}, { done:true });
   openRev = null;
-  save(); renderToday();
+  save(); renderRev(); renderToday();
+}
+
+/* ═══════════════ 복습 칸 ═══════════════ */
+function renderRev(){
+  const body = document.getElementById('revBody');
+  if(!body) return;
+  const t = todayStr();
+  if(!DB.days[t]) DB.days[t] = { opened:true };
+  const q = revQueue();
+  const now  = q.filter(c => c.again !== t).length;
+  const back = q.filter(c => c.again === t).length;
+  const cnt = document.getElementById('revCnt');
+  if(cnt) cnt.innerHTML = q.length ? `<b>${now}</b><i>${back}</i>` : '';
+
+  if(!q.length){
+    body.innerHTML = `<p class="lead" style="text-align:center;padding:60px 0 10px">
+        ${grow(3, 44)}<br><br>오늘 복습할 문장이 없어요.<br>
+        <span style="font-size:13px">내일 또 돌아옵니다.</span></p>`;
+    return;
+  }
+  if(openRev == null || !q.some(c => c.day === openRev)) openRev = q[0].day;
+  const c = q.find(x => x.day === openRev) || q[0];
+  const rest = q.filter(x => x.day !== c.day);
+  body.innerHTML = viewReview(c, true)
+    + (rest.length ? `<h2 class="sec" style="margin-top:24px">남은 문장 ${rest.length}개</h2>`
+        + rest.map(revRow).join('') : '');
+  wireToday();
+  const rq = document.getElementById('revQ');
+  if(rq) rq.onclick = () => openSheet(revHelp());
+  save();
+}
+function revHelp(){
+  return `<h3>복습</h3>
+    <div class="li one"><b>✓ 기억나요</b><span>다음에 더 오래 뒤에 나옵니다
+      (1 → 2 → 3 → 7 → 14일)</span></div>
+    <div class="li one"><b>△ 헷갈려요</b><span>오늘 줄 맨 뒤로 가서 다시 나옵니다</span></div>
+    <div class="li one"><b>✕ 기억 안 나요</b><span>같습니다. 자람 단계가 한 칸 뒤로 물러납니다</span></div>
+    <p class="lead" style="margin-top:14px">△ 나 ✕ 를 누른 문장은 <b>✓ 를 누를 때까지</b>
+      오늘 안에서 계속 돌아옵니다. 그만하고 싶으면 다른 칸으로 가면 됩니다.</p>
+    <p class="lead">위쪽 숫자는 <b>지금 볼 것 · 다시 볼 것</b> 입니다.</p>`;
 }
 
 /* ═══════════════ 문장함 ═══════════════ */
@@ -2535,15 +2614,16 @@ const navOn = name => document.querySelectorAll('nav button').forEach(b =>
 function switchTab(name){
   if(micJob){ micJob.cancel(); micJob = null; }   /* 듣던 마이크는 끄고 넘어갑니다 */
   if(name !== 'Set') curTab = name;
-  ['Today','Box','Log','Set'].forEach(n =>
+  ['Today','Rev','Box','Log','Set'].forEach(n =>
     document.getElementById('tab'+n).classList.toggle('hide', n !== name));
   navOn(name);
   if(name === 'Today') renderToday();
+  if(name === 'Rev')   renderRev();
   if(name === 'Box'){  boxReset(); renderBox(); }
   if(name === 'Log')   renderLog();
   if(name === 'Set')   renderSet();
 }
-function renderAll(){ renderToday(); renderBox(); renderLog(); }
+function renderAll(){ renderToday(); renderRev(); renderBox(); renderLog(); }
 
 /* ═══════════════ 시작 ═══════════════ */
 document.getElementById('sheetClose').onclick = closeSheet;
