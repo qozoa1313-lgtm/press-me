@@ -681,6 +681,19 @@ function okGap(c){
   return (LADDER[n] - (LADDER[n-1] || 0)) + '일 뒤';
 }
 
+/* 줄에서 다음 한 장 — 이번 바퀴에 아직 안 본 것 중에서 고릅니다.
+   그래서 세 장이 남아도 같은 장이 연달아 두 번 나오지 않습니다 */
+function pickNext(days){
+  const last = revSeen.length ? revSeen[revSeen.length - 1] : null;
+  let fresh = days.filter(d => !revSeen.includes(d));
+  if(!fresh.length){                       /* 한 바퀴 다 돌면 처음부터 */
+    revSeen = [];
+    fresh = days.filter(d => d !== last);  /* 바로 앞에서 본 장은 건너뜁니다 */
+    if(!fresh.length) fresh = days;        /* 한 장만 남았으면 어쩔 수 없습니다 */
+  }
+  return fresh[0];
+}
+
 /* 차례를 섞습니다 — 볼 때마다 새로 */
 function shuffle(arr){
   for(let i = arr.length - 1; i > 0; i--){
@@ -706,6 +719,7 @@ function markFree(m){
   if(!c || !freeQ) return;
   if(m === 'ok') freeQ.out.push(c.day);
   else freeQ.at[c.day] = Date.now() + (FREE_MIN[m] || 3) * 60000;
+  revSeen.push(c.day);
   openRev = null;
   renderRev();
 }
@@ -1718,6 +1732,8 @@ let freeQ = null;     /* 전체 복습 판 — 기록에 안 남기고, 앱을 �
 let freeTimer = null;
 const FREE_MIN = { mid:10, no:3 };   /* △ 10분 뒤 · ✕ 3분 뒤 */
 
+let revSeen = [];     /* 이번 바퀴에 이미 본 day — 한 바퀴 다 돌기 전엔 다시 안 나옵니다 */
+
 let openRev = null;   /* 지금 펼쳐둔 돌아온 카드의 day */
 let revTries = 0;     /* 복습 카드에서 몇 번 말해봤는지 (카드를 바꾸면 0 으로) */
 const PASSN = 5;      /* 다섯 번 못 알아들으면 넘어갈 수 있게 합니다 */
@@ -2007,6 +2023,7 @@ function mark(m){
     c.due = t;
   }
   DB.days[t] = Object.assign(DB.days[t]||{}, { done:true });
+  revSeen.push(c.day);
   openRev = null;
   save(); renderRev(); renderToday();
 }
@@ -2023,6 +2040,7 @@ function wireRevTabs(){
   document.querySelectorAll('#revBody [data-rmode]').forEach(b => b.onclick = () => {
     if(micJob){ micJob.cancel(); micJob = null; }
     revMode = b.dataset.rmode;
+    revSeen = [];
     openRev = null;
     renderRev();
   });
@@ -2044,7 +2062,7 @@ function renderFree(body){
       <button class="btn ghost" id="freeAgain">처음부터 다시 보기</button>`;
     wireRevTabs();
     const fa = document.getElementById('freeAgain');
-    if(fa) fa.onclick = () => { freeStart(); openRev = null; renderRev(); };
+    if(fa) fa.onclick = () => { freeStart(); revSeen = []; openRev = null; renderRev(); };
     return;
   }
   const ready = list.filter(x => x.at <= now);
@@ -2059,7 +2077,8 @@ function renderFree(body){
                            Math.min(sec, 20) * 1000 + 300);
     return;
   }
-  if(openRev == null || !ready.some(x => x.c.day === openRev)) openRev = ready[0].c.day;
+  if(openRev == null || !ready.some(x => x.c.day === openRev))
+    openRev = pickNext(ready.map(x => x.c.day));
   const c = (ready.find(x => x.c.day === openRev) || ready[0]).c;
   const rest = ready.filter(x => x.c.day !== c.day).map(x => x.c);
   body.innerHTML = revTabs()
@@ -2102,7 +2121,8 @@ function renderRev(){
     wireRevTabs();
     return;
   }
-  if(openRev == null || !q.some(c => c.day === openRev)) openRev = q[0].day;
+  if(openRev == null || !q.some(c => c.day === openRev))
+    openRev = pickNext(q.map(c => c.day));
   const c = q.find(x => x.day === openRev) || q[0];
   const rest = q.filter(x => x.day !== c.day);
   body.innerHTML = revTabs() + viewReview(c, true)
