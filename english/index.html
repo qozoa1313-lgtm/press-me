@@ -536,7 +536,10 @@ nav button.dim{opacity:.32}
     <div class="hd sticky">
       <span class="date">복습</span>
       <button class="qm" id="revQ">?</button>
-      <span class="hdr"><span class="revcnt" id="revCnt"></span></span>
+      <span class="hdr">
+        <button class="chip on" id="revLangBtn">한국어 모드</button>
+        <span class="revcnt" id="revCnt"></span>
+      </span>
     </div>
     <div id="revBody"></div>
   </div>
@@ -1583,14 +1586,18 @@ function viewReview(c, inRev){
     <span class="grl">${grow(c.step, 20)}</span><span class="badge">DAY ${s.day}</span>${
       c.learnedOn === todayStr() ? '<span class="fresh">오늘 배운 문장</span>' : ''}
     <div class="qline">
-      <p class="en" style="font-size:21px;margin:0;flex:1 1 auto">${s.ko}</p>
+      ${revLang === 'en'
+        ? `<p class="en" id="revEn" style="font-size:21px;margin:0;flex:1 1 auto">${wordSpans(s.en)}</p>`
+        : `<p class="en" style="font-size:21px;margin:0;flex:1 1 auto">${s.ko}</p>`}
       <button class="rnd mic${done.mic ? ' got' : ''}" id="revMic" title="말해보기">${ICO.mic}</button>
       <button class="rnd key${done.key ? ' got' : ''}" id="rvKey" title="직접 써보기">${ICO.key}</button>
     </div>
     <p class="tryn" id="revTry"></p>
     <div id="ansBox" class="open hide">
       <div class="qline" style="margin-top:0">
-        <p class="en" id="revEn" style="margin:0;flex:1 1 auto">${wordSpans(s.en)}</p>
+        ${revLang === 'en'
+          ? `<p class="en" style="margin:0;flex:1 1 auto">${s.ko}</p>`
+          : `<p class="en" id="revEn" style="margin:0;flex:1 1 auto">${wordSpans(s.en)}</p>`}
         <button class="rnd" data-speak="${esc(s.en)}" title="들어보기">${ICO.ear}</button>
         <button class="rnd" id="revYg" title="영상에서 보기">${ICO.tv}</button>
       </div>
@@ -1737,6 +1744,7 @@ const esc = s => s.replace(/"/g,'&quot;');
 
 
 let revMode = 'due';  /* 'due' 오늘 복습 · 'all' 전체 복습 */
+let revLang = 'ko';   /* 'ko' 뜻 보고 영어 떠올리기 · 'en' 영문 보고 뜻 떠올리기 */
 let freeQ = null;     /* 전체 복습 판 — 기록에 안 남기고, 앱을 끄면 사라집니다 */
 let freeTimer = null;
 const FREE_MIN = { mid:10, no:3 };   /* △ 10분 뒤 · ✕ 3분 뒤 */
@@ -2046,6 +2054,19 @@ function revTabs(){
   </div>`;
 }
 function wireRevTabs(){
+  /* 한국어 ↔ 영어 — 보던 카드와 차례는 그대로, 보는 쪽만 뒤집습니다 */
+  const lb = document.getElementById('revLangBtn');
+  if(lb){
+    lb.textContent = revLang === 'en' ? '영어 모드' : '한국어 모드';
+    lb.onclick = () => {
+      const ab = document.getElementById('ansBox');
+      const was = ab && !ab.classList.contains('hide');   /* 답을 보고 있었나 */
+      if(micJob){ micJob.cancel(); micJob = null; }
+      revLang = revLang === 'en' ? 'ko' : 'en';
+      renderRev();
+      if(was){ const b = document.getElementById('ansBtn'); if(b) b.click(); }
+    };
+  }
   document.querySelectorAll('#revBody [data-rmode]').forEach(b => b.onclick = () => {
     if(micJob){ micJob.cancel(); micJob = null; }
     revMode = b.dataset.rmode;
@@ -2152,6 +2173,11 @@ function revHelp(){
     <p class="lead" style="margin-top:14px">△ 나 ✕ 를 누른 문장은 <b>✓ 를 누를 때까지</b>
       오늘 안에서 계속 돌아옵니다. 그만하고 싶으면 다른 칸으로 가면 됩니다.</p>
     <p class="lead">위쪽 숫자는 <b>지금 볼 것 · 다시 볼 것</b> 입니다.</p>
+    <h3 style="margin-top:22px">한국어 모드 · 영어 모드</h3>
+    <div class="li one"><b>한국어 모드</b><span>뜻을 보고 영어를 떠올립니다</span></div>
+    <div class="li one"><b>영어 모드</b><span>영문을 보고 뜻을 떠올립니다</span></div>
+    <p class="lead" style="margin-top:14px">머리줄 단추로 언제든 바꿀 수 있습니다.
+      <b>바꿔도 기록은 안 바뀝니다.</b> 보던 문장과 차례도 그대로입니다.</p>
     <h3 style="margin-top:22px">전체 복습</h3>
     <p class="lead">배운 문장을 <b>전부</b> 한 바퀴 봅니다. 오늘 배운 것도 들어갑니다.</p>
     <div class="li one"><b>✓ 기억나요</b><span>이 판에서 빠집니다</span></div>
