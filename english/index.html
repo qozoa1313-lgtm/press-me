@@ -1545,7 +1545,7 @@ function revRow(c){
   const n = revCount(c.log);
   return `<button class="revrow" data-rev="${c.day}">
       <span class="rg">${grow(c.step, 24)}</span>
-      <span class="rt"><b>${s.ko}</b><span>DAY ${s.day}${n ? ' · ' + n + '번 복습' : ''} · ${Math.max(0, LADDER.length - c.step)}번 남음</span></span>
+      <span class="rt"><b>${revLang === 'en' ? s.en : s.ko}</b><span>DAY ${s.day}${n ? ' · ' + n + '번 복습' : ''} · ${Math.max(0, LADDER.length - c.step)}번 남음</span></span>
       <span class="rp">＋</span>
     </button>`;
 }
