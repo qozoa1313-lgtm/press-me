@@ -55,6 +55,15 @@ body.koonly #boxBody .cardbox .swapo .pill b,
 body.koonly #boxBody .cardbox .line b{visibility:hidden}
 body.koonly #boxBody .cardbox .line b{position:relative}
 body.koonly #boxBody .cardbox .line b button{visibility:visible;position:absolute;left:0;top:0}
+/* 영문만 보기 — 뜻을 감춥니다. 목록 줄은 뜻 대신 영문을 보여줍니다 */
+#boxBody .cardbox .enx{display:none;font-style:normal;font-size:15.5px;font-weight:700}
+body.enonly #boxBody .cardbox .tx b{display:none}
+body.enonly #boxBody .cardbox .enx{display:block}
+body.enonly #boxBody .cardbox .korow p,
+body.enonly #boxBody .cardbox .nuance,
+body.enonly #boxBody .cardbox .bd span,
+body.enonly #boxBody .cardbox .swapo .pill span,
+body.enonly #boxBody .cardbox .line .k{display:none}
 .pic{display:inline-flex;align-items:flex-end;vertical-align:-3px;line-height:0}
 .stat1 .pic,.tdrec .pic,.sheet .li b .pic{vertical-align:-4px}
 .pic svg{display:block}
@@ -2169,6 +2178,7 @@ let boxScroll = 0;       /* 목록에서 보던 자리 — 돌아올 때 그대�
 function boxReset(){
   boxOpen = null;
   document.body.classList.add('koonly');
+  document.body.classList.remove('enonly');
   const eb = document.getElementById('boxEn');
   if(eb){ eb.textContent = '뜻만 보기'; eb.classList.add('on'); }
 }
@@ -2214,7 +2224,7 @@ function renderBox(){
     return `<details class="cardbox cardrow" data-day="${c.day}"><summary>
       <span class="item" style="border:none;padding:0;flex:1;min-width:0">
         <span class="gr" title="복습 ${revCount(c.log)}회">${grow(c.step, 22)}</span>
-        <span class="tx"><b>${s.ko}</b></span>
+        <span class="tx"><b>${s.ko}</b><em class="enx">${s.en}</em></span>
         <span class="dy">DAY ${s.day}</span>
         <span class="rp">›</span>
       </span></summary></details>`;
@@ -2234,12 +2244,15 @@ function renderBox(){
 
   const eb = document.getElementById('boxEn');
   const syncEn = () => {
-    const only = document.body.classList.contains('koonly');
-    eb.textContent = only ? '뜻만 보기' : '뜻+영문 보기';
-    eb.classList.toggle('on', only);
+    eb.textContent = document.body.classList.contains('koonly') ? '뜻만 보기' : '영문 보기';
   };
   syncEn();
-  eb.onclick = () => { document.body.classList.toggle('koonly'); syncEn(); };
+  eb.onclick = () => {
+    const ko = document.body.classList.contains('koonly');
+    document.body.classList.toggle('koonly', !ko);
+    document.body.classList.toggle('enonly', ko);
+    syncEn();
+  };
   b.querySelectorAll('[data-speak]').forEach(x => x.onclick = e => { e.preventDefault(); speak(x.dataset.speak); });
   b.querySelectorAll('[data-mic]').forEach(x => x.onclick = e => {
     e.preventDefault();
