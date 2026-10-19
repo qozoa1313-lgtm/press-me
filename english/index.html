@@ -60,10 +60,11 @@ body.koonly #boxBody .cardbox .line b button{visibility:visible;position:absolut
 body.enonly #boxBody .cardbox .tx b{display:none}
 body.enonly #boxBody .cardbox .enx{display:block}
 body.enonly #boxBody .cardbox .korow p,
-body.enonly #boxBody .cardbox .nuance,
 body.enonly #boxBody .cardbox .bd span,
 body.enonly #boxBody .cardbox .swapo .pill span,
-body.enonly #boxBody .cardbox .line .k{display:none}
+body.enonly #boxBody .cardbox .line .k{visibility:hidden}
+/* 설명 문단은 대응하는 영문이 없어서 자리까지 없앱니다 — 빈칸이 크게 남습니다 */
+body.enonly #boxBody .cardbox .nuance{display:none}
 .pic{display:inline-flex;align-items:flex-end;vertical-align:-3px;line-height:0}
 .stat1 .pic,.tdrec .pic,.sheet .li b .pic{vertical-align:-4px}
 .pic svg{display:block}
@@ -1229,8 +1230,8 @@ function renderToday(){
 }
 
 /* 뜻 칸 — 설명과 단어 쪼개기를 한 칸에. 문장함 · 학습하기 · 복습이 같이 씁니다 */
-function meanHTML(s){
-  return `<details class="more" open><summary>이런 뜻이에요</summary>
+function meanHTML(s, open){
+  return `<details class="more"${open ? ' open' : ''}><summary>이런 뜻이에요</summary>
       <div class="in2">
         <p class="nuance" style="margin:0">${s.ko2} ${s.when}</p>
         <div class="sec2" style="margin-top:12px"><div class="bd">${
@@ -1602,7 +1603,7 @@ function viewReview(c, inRev){
         <button class="rnd" id="revYg" title="영상에서 보기">${ICO.tv}</button>
       </div>
       <p class="rdline">${s.rd}</p>
-      ${meanHTML(s)}
+      ${meanHTML(s, true)}
     </div>
     <button class="btn ghost" id="ansBtn" style="margin-top:16px">답 보기</button>
     <div id="markBox" class="hide">
