@@ -780,12 +780,7 @@ function dirToday(c){
 }
 
 /* 영상 문장은 한꺼번에 넣어도 하루에 이만큼씩만 나옵니다 */
-const VNEW = 10;                 /* 유진님이 안 정했을 때의 값 */
-/* 영상 문장을 하루에 몇 개씩 꺼낼지. 설정 칸에서 바꿉니다 */
-function vnew(){
-  const n = DB && Math.round(+DB.vnew);
-  return (n >= 1 && n <= 50) ? n : VNEW;
-}
+const VNEW = 1;   /* 하루 한 장. 더 하고 싶은 날은 「한 개 더」 단추 */
 /* 오늘 꺼냈지만 아직 ✓ 를 한 번도 안 누른 문장 */
 function vidFresh(){
   const t = todayStr();
@@ -820,7 +815,7 @@ function vidRelease(){
   const t = todayStr();
   const all = Object.values(DB.cards).filter(c => c.vid);
   const today = all.filter(c => c.learnedOn === t).length;
-  let take = Math.max(0, vnew() - today);
+  let take = Math.max(0, VNEW - today);
   if(!take) return;
   let moved = false;
   for(const c of all.sort((a, b) => a.day - b.day)){
@@ -3119,6 +3114,7 @@ function vidHTML(){
   const all = Object.values(DB.cards).filter(c => c.vid);
   const open = all.filter(c => c.learnedOn).length;
   const left = all.length - open;
+  const back = vidFresh().length;   /* 도로 넣을 수 있는 것 */
   return `
   <div class="vtop">
     <span class="vthumb">▶</span>
@@ -3136,13 +3132,16 @@ function vidHTML(){
     자막(⚙)을 켜고 보세요.</p>
 
   <h2 class="sec" style="margin-top:26px">오늘</h2>
-  <p class="lead" style="font-size:12.5px;margin:0">하루에 <b>${vnew()}개</b>씩 나옵니다.
-    꺼낸 문장은 <b>복습</b> 칸에서 돌립니다.</p>
+  <p class="lead" style="font-size:12.5px;margin:0">하루에 <b>${VNEW}개</b>씩 나옵니다.
+    더 하고 싶은 날은 <b>한 개 더</b>를 누르세요.</p>
   <div class="row2" style="margin-top:12px">
     <button class="btn ghost" id="vidGoRev">복습하러 가기</button>
     <button class="btn ghost" id="vidMore">한 개 더</button>
   </div>
-  <button class="btn ghost" id="vidNum" style="margin-top:10px">하루 몇 개</button>
+  ${back > 1 ? `<button class="btn ghost" id="vidBack" style="margin-top:10px">
+      ${back}개 도로 넣기</button>
+    <p class="lead" style="font-size:12px;margin-top:6px">
+      오늘 꺼냈지만 아직 ✓ 를 안 누른 문장입니다. 너무 많이 나왔을 때만 보입니다.</p>` : ''}
 
   <h2 class="sec" style="margin-top:26px">문장</h2>
   <div class="row2">
@@ -3157,8 +3156,12 @@ function renderVid(){
   const go = id => document.getElementById(id);
   if(go('vidSet'))   go('vidSet').onclick = vidSetSheet;
   if(go('vidAdd'))   go('vidAdd').onclick = vidAddSheet;
-  if(go('vidNum'))   go('vidNum').onclick = vidNumSheet;
   if(go('vidMore'))  go('vidMore').onclick = vidMore;
+  if(go('vidBack'))  go('vidBack').onclick = () => {
+    const n = vidPutBack();
+    renderVid(); renderRev();
+    toast(n + '개를 도로 넣었습니다');
+  };
   if(go('vidGoRev')) go('vidGoRev').onclick = () => switchTab('Rev');
   if(go('vidPlay'))  go('vidPlay').onclick = () => {
     const v = DB.video;
@@ -3176,37 +3179,11 @@ function vidHelp(){
       다 외우면 자막 없이 들리는 게 목표예요.</p>
     <div class="li one"><b>영상 보기</b><span>유튜브에서 열립니다</span></div>
     <div class="li one"><b>문장 넣기</b><span>한 줄에 하나씩 붙여넣습니다</span></div>
-    <div class="li one"><b>복습</b><span>하루 ${vnew()}개씩 나옵니다. 외우는 방식은 하루 한 문장과 같아요</span></div>
+    <div class="li one"><b>복습</b><span>하루 ${VNEW}개씩 나옵니다. 더 하고 싶은 날은 「한 개 더」를 누르세요</span></div>
     <p class="lead" style="margin-top:12px"><b>넣은 문장은 이 기기에만 있습니다.</b>
       인터넷에 올라가지 않습니다.</p>`;
 }
 /* 하루에 몇 개씩 꺼낼지 — 유진님이 정합니다 */
-function vidNumSheet(){
-  const back = vidFresh().length;
-  openSheet(`<h3>하루 몇 개</h3>
-    <p class="lead">영상 문장을 하루에 몇 개씩 새로 꺼낼지 정합니다.
-      이미 꺼낸 문장은 그대로 있고, <b>다음에 꺼낼 때부터</b> 바뀝니다.</p>
-    <input id="vN" class="inp" type="number" min="1" max="50" value="${vnew()}">
-    <button class="btn" id="vNOK" style="margin-top:16px">저장</button>`
-    + (back ? `<p class="lead" style="margin-top:26px;font-size:12.5px">
-        오늘 꺼낸 문장 가운데 <b>아직 ✓ 를 안 누른 ${back}개</b>가 있습니다.
-        너무 많이 나왔으면 도로 넣어두세요.
-        <b>하루 개수만큼만</b> 다시 나옵니다.</p>
-      <button class="btn ghost" id="vNBack">${back}개 도로 넣기</button>` : ''));
-  const bk = document.getElementById('vNBack');
-  if(bk) bk.onclick = () => {
-    const n = vidPutBack();
-    closeSheet(); renderVid(); renderRev();
-    toast(n + '개를 도로 넣었습니다');
-  };
-  const ok = document.getElementById('vNOK');
-  if(ok) ok.onclick = () => {
-    const n = Math.round(+document.getElementById('vN').value);
-    if(!(n >= 1 && n <= 50)) return toast('1에서 50 사이로 적어주세요');
-    DB.vnew = n;
-    save(); closeSheet(); renderVid(); toast('하루 ' + n + '개로 바꿨습니다');
-  };
-}
 function vidSetSheet(){
   const v = DB.video || {};
   openSheet(`<h3>영상 넣기</h3>
