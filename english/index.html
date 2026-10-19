@@ -2221,29 +2221,20 @@ function renderRev(){
 }
 function revHelp(){
   return `<h3>복습</h3>
-    <div class="li one"><b>✓ 기억나요</b><span>다음에 더 오래 뒤에 나옵니다
-      (1 → 2 → 3 → 7 → 14 → 30일)</span></div>
-    <div class="li one"><b>△ 헷갈려요</b><span>오늘 줄 맨 뒤로 가서 다시 나옵니다</span></div>
-    <div class="li one"><b>✕ 기억 안 나요</b><span>같습니다. 자람 단계가 한 칸 뒤로 물러납니다</span></div>
-    <p class="lead" style="margin-top:14px">△ 나 ✕ 를 누른 문장은 <b>✓ 를 누를 때까지</b>
-      오늘 안에서 계속 돌아옵니다. 그만하고 싶으면 다른 칸으로 가면 됩니다.</p>
-    <p class="lead">위쪽 숫자는 <b>지금 볼 것 · 다시 볼 것</b> 입니다.</p>
-    <h3 style="margin-top:22px">한국어 모드 · 영어 모드</h3>
-    <div class="li one"><b>한국어 모드</b><span>뜻을 보고 영어를 떠올립니다</span></div>
-    <div class="li one"><b>영어 모드</b><span>영문을 보고 뜻을 떠올립니다</span></div>
-    <p class="lead" style="margin-top:14px">머리줄 단추로 언제든 바꿀 수 있습니다.
-      보던 문장과 차례도 그대로입니다.</p>
-    <p class="lead"><b>한 문장을 하루에 두 번 봅니다</b> — 쪽마다 한 번씩.
-      한쪽을 끝내도 다른 쪽에는 그대로 남아 있습니다.</p>
-    <p class="lead">복습 횟수와 다음 복습일은 <b>한국어 모드에서만</b> 올라갑니다.
-      영어 모드는 덤으로 더 보는 것이라 기록에 안 남습니다.</p>
-    <h3 style="margin-top:22px">전체 복습</h3>
-    <p class="lead">배운 문장을 <b>전부</b> 한 바퀴 봅니다. 오늘 배운 것도 들어갑니다.</p>
-    <div class="li one"><b>✓ 기억나요</b><span>이 판에서 빠집니다</span></div>
-    <div class="li one"><b>△ 헷갈려요</b><span>10분 뒤에 다시 나옵니다</span></div>
-    <div class="li one"><b>✕ 기억 안 나요</b><span>3분 뒤에 다시 나옵니다</span></div>
-    <p class="lead" style="margin-top:14px"><b>기록에는 아무것도 남지 않습니다.</b>
-      복습 횟수도, 다음 복습일도 안 바뀝니다. 앱을 껐다 켜면 판이 처음으로 돌아갑니다.</p>`;
+    <div class="li one"><b>✓</b><span>다음에 더 오래 뒤에 — 1 · 2 · 3 · 7 · 14 · 30일</span></div>
+    <div class="li one"><b>△ ✕</b><span>오늘 안에 다시 나옵니다. ✕ 는 단계도 한 칸 뒤로</span></div>
+    <p class="lead" style="margin-top:10px">위쪽 숫자는 <b>지금 볼 것 · 다시 볼 것</b>.
+      △ ✕ 를 누른 문장은 ✓ 할 때까지 돌아옵니다.</p>
+
+    <h3 style="margin-top:18px">한국어 · 영어</h3>
+    <div class="li one"><b>한국어</b><span>뜻을 보고 영어를 떠올립니다</span></div>
+    <div class="li one"><b>영어</b><span>영문을 보고 뜻을 떠올립니다</span></div>
+    <p class="lead" style="margin-top:10px">한 문장을 <b>하루에 두 번</b> 봅니다.
+      복습 횟수와 다음 복습일은 <b>한국어 쪽만</b> 올라갑니다.</p>
+
+    <h3 style="margin-top:18px">전체 복습</h3>
+    <p class="lead">배운 문장을 전부 한 바퀴. <b>기록에 안 남습니다.</b><br>
+      ✓ 이 판에서 빠짐 · △ 10분 뒤 · ✕ 3분 뒤</p>`;
 }
 
 /* ═══════════════ 문장함 ═══════════════ */
@@ -2337,7 +2328,7 @@ function renderBox(){
 
   /* 뜻만 보기 ↔ 뜻+영문 보기 */
   const bq = document.getElementById('boxQ');
-  if(bq) bq.onclick = () => openSheet(icoHelp() + stgHelp());
+  if(bq) bq.onclick = () => openSheet(icoHelp());
 
   boxApply();
   const eb = document.getElementById('boxEn');
