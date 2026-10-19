@@ -761,12 +761,15 @@ function nextNew(){
 /* 오늘 돌아올 카드 */
 function dueToday(lang){
   const t = todayStr(), L = lang || revLang;
-  if(appMode === 'video') vidRelease();      /* 영상 문장을 하루치만 풉니다 */
+  const vid = appMode === 'video';
   return myCards()
+    .filter(c => !vid || c.learnedOn)          /* 영상은 ✓ 누른 것만 복습합니다 */
     .filter(c => c.revive || c.step < LADDER.length)
     /* 오늘 배운 문장도 넣습니다 — 오늘의 문장도, 미리 배운 것도
-       dueWas : 오늘 돌아왔던 것. 한쪽에서 ✓ 로 미뤄도 다른 쪽에서는 오늘 안에 또 봅니다 */
-    .filter(c => c.due <= t || c.learnedOn === t || c.dueWas === t)
+       dueWas : 오늘 돌아왔던 것. 한쪽에서 ✓ 로 미뤄도 다른 쪽에서는 오늘 안에 또 봅니다
+       영상은 오늘 외운 것을 빼고 내일부터 봅니다 */
+    .filter(c => vid ? (c.due <= t || c.dueWas === t)
+                     : (c.due <= t || c.learnedOn === t || c.dueWas === t))
     .filter(c => !(c.dirOK && c.dirOK.d === t && c.dirOK[L]))   /* 그 쪽을 끝냈으면 빠집니다 */
     .filter(c => !(DB.days[t] && DB.days[t].relearn || []).includes('d' + c.day))
     .sort((a,b) => a.day - b.day);
@@ -780,53 +783,61 @@ function dirToday(c){
 }
 
 /* 영상 문장은 한꺼번에 넣어도 하루에 이만큼씩만 나옵니다 */
-const VNEW = 1;   /* 하루 한 장. 더 하고 싶은 날은 「한 개 더」 단추 */
-/* 오늘 꺼냈지만 아직 ✓ 를 한 번도 안 누른 문장 */
-function vidFresh(){
+/* 「한 개 더」 — 아직 안 본 문장에서 새로 한 장 뽑습니다 */
+function vidMore(){
   const t = todayStr();
-  return Object.values(DB.cards).filter(c =>
-    c.vid && c.learnedOn === t && !(c.log || []).some(l => l.m === 'ok'));
+  if(!Object.values(DB.cards).some(c => c.vid && !c.learnedOn))
+    return toast('넣은 문장을 다 외웠어요');
+  if(DB.days[t]) delete DB.days[t].vpick;
+  vidOpen = true;
+  save(); renderVid();
 }
-/* 도로 집어넣습니다 — 안 배운 상태로 되돌립니다 */
-function vidPutBack(){
-  const list = vidFresh();
-  if(!list.length) return 0;
-  list.forEach(c => {
+
+/* 오늘 보여줄 영상 문장 — 아직 안 배운 것 중에서 아무거나 한 장.
+   한 번 고르면 ✓ 를 누르거나 「한 개 더」를 누를 때까지 그대로입니다 */
+function vidPick(){
+  const t = todayStr();
+  const day = DB.days[t] || (DB.days[t] = { opened:true });
+  const rest = Object.values(DB.cards).filter(c => c.vid && !c.learnedOn);
+  if(!rest.length) return null;
+  let c = day.vpick && rest.find(x => x.id === day.vpick);
+  if(!c){
+    c = rest[Math.floor(Math.random() * rest.length)];
+    day.vpick = c.id;
+    save();
+  }
+  return c;
+}
+/* ✓ — 이때 비로소 배운 문장이 됩니다. 다음 복습은 내일입니다 */
+function vidLearn(){
+  const t = todayStr();
+  const c = vidPick();
+  if(!c) return;
+  c.learnedOn = t; c.step = 0;
+  c.due = addDays(t, LADDER[0]);
+  c.log = [{ d:t, m:'new' }];
+  delete DB.days[t].vpick;
+  DB.days[t].opened = true;
+  vidOpen = false;
+  save(); renderVid(); renderRev();
+  toast('외웠어요');
+}
+/* 옛 방식으로 미리 풀려 있던 문장을 한 번만 정리합니다 */
+function vidFixOld(){
+  if(DB.vfix) return;
+  const t = todayStr();
+  /* 오늘 풀려 있는 것만 봅니다. 어제까지 외운 것은 그대로 둡니다 */
+  Object.values(DB.cards).filter(c => c.vid && c.learnedOn === t).forEach(c => {
+    if((c.log || []).some(l => l.m === 'ok')){
+      c.due = addDays(t, LADDER[0]);   /* ✓ 를 눌러본 것은 내일로 밀어 둡니다 */
+      return;
+    }
     delete c.learnedOn; delete c.due; delete c.dirOK; delete c.again;
     delete c.dueWas; delete c.freshOK; delete c.todayDone;
     c.step = 0; c.log = [];
   });
+  DB.vfix = 1;
   save();
-  return list.length;
-}
-/* 오늘 한 개만 더 꺼냅니다 */
-function vidMore(){
-  const t = todayStr();
-  const rest = Object.values(DB.cards)
-    .filter(c => c.vid && !c.learnedOn).sort((a, b) => a.day - b.day);
-  if(!rest.length) return toast('더 꺼낼 문장이 없어요');
-  const c = rest[0];
-  c.learnedOn = t; c.step = 0; c.due = t; c.log = [{ d:t, m:'new' }];
-  DB.days[t] = Object.assign(DB.days[t] || {}, { opened:true });
-  save(); renderVid(); renderRev();
-  toast('한 개 더 꺼냈습니다');
-}
-function vidRelease(){
-  const t = todayStr();
-  const all = Object.values(DB.cards).filter(c => c.vid);
-  const today = all.filter(c => c.learnedOn === t).length;
-  let take = Math.max(0, VNEW - today);
-  if(!take) return;
-  let moved = false;
-  for(const c of all.sort((a, b) => a.day - b.day)){
-    if(c.learnedOn || take <= 0) continue;
-    c.learnedOn = t; c.step = 0; c.due = t; c.log = [{ d:t, m:'new' }];
-    take--; moved = true;
-  }
-  if(moved){
-    DB.days[t] = Object.assign(DB.days[t] || {}, { opened:true });
-    save();
-  }
 }
 
 /* 오늘 볼 복습 줄 — 「다시」로 돌린 것은 맨 뒤로 가고, ✓ 를 누를 때까지 돌아옵니다 */
@@ -3082,6 +3093,7 @@ function wireNav(){
 
 /* ═══════════════ 영상 칸 ═══════════════ */
 let vidSeek = -1;   /* 영상 칸에서 틀 자리(초). -1 이면 처음부터 */
+let vidOpen = false;   /* 「한 개 더」를 눌러 문장을 한 장 펴 놓은 상태 */
 
 /* 0:42 → 42초 */
 function atSec(at){
@@ -3112,36 +3124,56 @@ function vidHTML(){
       <button class="btn" id="vidSet">영상 넣기</button>`;
   const t = todayStr();
   const all = Object.values(DB.cards).filter(c => c.vid);
-  const open = all.filter(c => c.learnedOn).length;
-  const left = all.length - open;
-  const back = vidFresh().length;   /* 도로 넣을 수 있는 것 */
-  return `
+  const learned = all.filter(c => c.learnedOn).length;
+  const today = all.filter(c => c.learnedOn === t).length;
+  const card = (today === 0 || vidOpen) ? vidPick() : null;
+  const s0 = card && vidText(card);
+
+  const head = `
   <div class="vtop">
     <span class="vthumb">▶</span>
     <span class="vtx"><b>${esc(v.title || '영상')}</b>
-      <span>${all.length}문장 · ${open}개 꺼냄${left ? ` · ${left}개 남음` : ''}</span></span>
+      <span>${all.length}문장 · ${learned}개 외움</span></span>
   </div>
-  ${ytId(v.url)
-    ? `<div class="ytbox"><iframe src="https://www.youtube-nocookie.com/embed/${ytId(v.url)}?rel=0${
-           vidSeek >= 0 ? `&start=${vidSeek}&autoplay=1` : ''}"
-         title="영상" frameborder="0" allowfullscreen
-         allow="accelerometer; clipboard-write; encrypted-media; picture-in-picture"></iframe></div>
-       <button class="btn ghost" id="vidPlay" style="margin-top:10px">유튜브에서 열기</button>`
-    : `<button class="btn" id="vidPlay">영상 보기</button>`}
-  <p class="lead" style="text-align:center;font-size:12.5px;margin-top:8px">
-    자막(⚙)을 켜고 보세요.</p>
+  <button class="btn ghost" id="vidPlay">유튜브에서 열기</button>`;
 
-  <h2 class="sec" style="margin-top:26px">오늘</h2>
-  <p class="lead" style="font-size:12.5px;margin:0">하루에 <b>${VNEW}개</b>씩 나옵니다.
-    더 하고 싶은 날은 <b>한 개 더</b>를 누르세요.</p>
+  if(s0) return head + `
+  <h2 class="sec" style="margin-top:26px">오늘의 문장</h2>
+  <div class="card today">
+    <div class="cardtop">
+      <p class="en" style="margin:0">${wordSpans(s0.en)}</p>
+      <p class="rdline always">${s0.rd}</p>
+      <p class="lead" style="margin:10px 0 0;font-size:15px">${s0.ko}</p>
+      <div class="acts" style="margin-top:14px">
+        <button class="rnd" data-speak="${esc(s0.en)}" title="들어보기">${ICO.ear}</button>
+        ${atSec(s0.at) >= 0
+          ? `<button class="mini" style="display:inline-block;width:auto;padding:10px 12px"
+               data-at="${atSec(s0.at)}">▶ ${s0.at} 그 자리 듣기</button>` : ''}
+      </div>
+    </div>
+    <button class="btn" id="vidOK" style="margin-top:16px">외웠어요</button>
+  </div>
+  <p class="lead" style="font-size:12px;text-align:center;margin-top:10px">
+    ✓ 를 누르면 내일부터 <b>복습</b> 칸에 나옵니다.</p>
+
+  <h2 class="sec" style="margin-top:26px">문장</h2>
+  <div class="row2">
+    <button class="btn ghost" id="vidAdd">문장 넣기</button>
+    <button class="btn ghost" id="vidSet">영상 바꾸기</button>
+  </div>`;
+
+  const left = all.length - learned;
+  return head + `
+  <h2 class="sec" style="margin-top:26px">오늘의 문장</h2>
+  <p class="lead" style="margin:0 0 4px">
+    <b style="font-size:21px;color:var(--accent)">${today}</b>문장 외웠어요</p>
+  <p class="lead" style="font-size:12.5px">${left
+    ? `아직 안 본 문장이 ${left}개 남았습니다.`
+    : '넣은 문장을 다 외웠어요. 이제 복습만 하면 됩니다.'}</p>
   <div class="row2" style="margin-top:12px">
     <button class="btn ghost" id="vidGoRev">복습하러 가기</button>
-    <button class="btn ghost" id="vidMore">한 개 더</button>
+    ${left ? `<button class="btn ghost" id="vidMore">한 개 더</button>` : ''}
   </div>
-  ${back > 1 ? `<button class="btn ghost" id="vidBack" style="margin-top:10px">
-      ${back}개 도로 넣기</button>
-    <p class="lead" style="font-size:12px;margin-top:6px">
-      오늘 꺼냈지만 아직 ✓ 를 안 누른 문장입니다. 너무 많이 나왔을 때만 보입니다.</p>` : ''}
 
   <h2 class="sec" style="margin-top:26px">문장</h2>
   <div class="row2">
@@ -3152,16 +3184,17 @@ function vidHTML(){
 function renderVid(){
   const body = document.getElementById('vidBody');
   if(!body) return;
+  vidFixOld();           /* 옛 방식으로 풀려 있던 것 정리 (한 번만) */
   body.innerHTML = vidHTML();
   const go = id => document.getElementById(id);
   if(go('vidSet'))   go('vidSet').onclick = vidSetSheet;
   if(go('vidAdd'))   go('vidAdd').onclick = vidAddSheet;
+  if(go('vidOK'))    go('vidOK').onclick = vidLearn;
   if(go('vidMore'))  go('vidMore').onclick = vidMore;
-  if(go('vidBack'))  go('vidBack').onclick = () => {
-    const n = vidPutBack();
-    renderVid(); renderRev();
-    toast(n + '개를 도로 넣었습니다');
-  };
+  body.querySelectorAll('[data-speak]').forEach(x =>
+    x.onclick = e => { e.preventDefault(); speak(x.dataset.speak); });
+  body.querySelectorAll('[data-at]').forEach(x =>
+    x.onclick = e => { e.preventDefault(); playAt(+x.dataset.at); });
   if(go('vidGoRev')) go('vidGoRev').onclick = () => switchTab('Rev');
   if(go('vidPlay'))  go('vidPlay').onclick = () => {
     const v = DB.video;
@@ -3179,7 +3212,7 @@ function vidHelp(){
       다 외우면 자막 없이 들리는 게 목표예요.</p>
     <div class="li one"><b>영상 보기</b><span>유튜브에서 열립니다</span></div>
     <div class="li one"><b>문장 넣기</b><span>한 줄에 하나씩 붙여넣습니다</span></div>
-    <div class="li one"><b>복습</b><span>하루 ${VNEW}개씩 나옵니다. 더 하고 싶은 날은 「한 개 더」를 누르세요</span></div>
+    <div class="li one"><b>복습</b><span>✓ 를 누른 문장만 다음 날부터 나옵니다</span></div>
     <p class="lead" style="margin-top:12px"><b>넣은 문장은 이 기기에만 있습니다.</b>
       인터넷에 올라가지 않습니다.</p>`;
 }
@@ -3270,7 +3303,7 @@ function switchTab(name){
     document.getElementById('tab'+n).classList.toggle('hide', n !== name));
   navOn(name);
   if(name === 'Today') renderToday();
-  if(name === 'Vid')   renderVid();
+  if(name === 'Vid'){  vidOpen = false; renderVid(); }
   if(name === 'Rev'){  restOpen = false;   /* 다른 칸 갔다 오면 목록은 다시 접힙니다 */
                        renderRev(); }
   if(name === 'Box'){  boxReset(); renderBox(); }
