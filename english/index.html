@@ -68,6 +68,13 @@ body.enonly #boxBody .cardbox .swapo .pill span,
 body.enonly #boxBody .cardbox .line .k{visibility:hidden}
 /* 설명 문단은 대응하는 영문이 없어서 자리까지 없앱니다 — 빈칸이 크게 남습니다 */
 body.enonly #boxBody .cardbox .nuance{display:none}
+/* 발음 보기 — 목록 줄에서 영문이 있던 자리를 발음이 대신합니다 */
+#boxBody .cardbox .rdx{display:none;font-style:normal;font-size:13px;font-weight:600;
+  color:var(--accent);margin-top:2px}
+body.showrd #boxBody .cardbox .enx{display:none}
+body.showrd:not(.koonly):not(.enonly) #boxBody .cardbox .enx{display:none}
+body.showrd #boxBody .cardbox .rdx{display:block}
+body.showrd.enonly #boxBody .cardbox .rdx{font-size:15.5px;font-weight:700;margin-top:0}
 .pic{display:inline-flex;align-items:flex-end;vertical-align:-3px;line-height:0}
 .stat1 .pic,.tdrec .pic,.sheet .li b .pic{vertical-align:-4px}
 .pic svg{display:block}
@@ -2422,7 +2429,8 @@ function renderBox(){
     return `<details class="cardbox cardrow" data-day="${c.day}"><summary>
       <span class="item" style="border:none;padding:0;flex:1;min-width:0">
         <span class="gr" title="복습 ${revCount(c.log)}회">${grow(c.step, 22)}</span>
-        <span class="tx"><b>${s.ko}</b><em class="enx">${s.en}</em></span>
+        <span class="tx"><b>${s.ko}</b><em class="enx">${s.en}</em>${
+          s.rd ? `<em class="rdx">${s.rd}</em>` : ''}</span>
         <span class="dy">DAY ${s.day}</span>
         <span class="rp">›</span>
       </span></summary></details>`;
