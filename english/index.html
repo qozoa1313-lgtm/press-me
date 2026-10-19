@@ -19,7 +19,7 @@
   --nobg:#F8E7E0; --noink:#A8513C; --noline:#EBC3B4;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;padding:0}
+html,body{margin:0;padding:0;overscroll-behavior-y:contain}
 body{
   background:var(--paper); color:var(--ink); font-size:16px; line-height:1.6;
   font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
@@ -31,7 +31,7 @@ button{font:inherit;color:inherit;border:none;background:none;cursor:pointer}
 /* ───── 공통 ───── */
 .hd{display:flex;align-items:center;justify-content:space-between;margin:6px 0 18px}
 .hd .date{font-size:12px;letter-spacing:.14em;color:var(--soft);font-weight:700}
-#boxDate.back{cursor:pointer;color:var(--accent)}
+#boxDate.back,.date.back{cursor:pointer;color:var(--accent)}
 /* 물음표는 날짜 · DAY 바로 옆에 붙입니다 */
 .hd .qm,.lrntop .qm{margin-right:auto}
 .hdr{display:flex;align-items:center}
@@ -419,10 +419,6 @@ body.showrd .warm .rdline{display:block}
 .sunbar .tx b{display:block;font-size:17px;font-weight:700}
 .sunbar .tx i{font-style:normal;font-size:11px;color:var(--soft);display:block;margin-top:1px}
 .sunbar .tx span{display:block;font-size:12.5px;color:var(--soft);margin-top:3px}
-.vgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(46px,1fr));gap:7px;margin-top:12px}
-.vg{display:flex;flex-direction:column;align-items:center;gap:1px;padding:7px 0;
-  background:var(--card);border:1px solid var(--line);border-radius:12px}
-.vg i{font-size:11px;color:var(--soft);font-style:normal}
 .stg{display:flex;gap:6px}
 .stgb.empty{opacity:.75}
 .stgb{flex:1;border:1.5px solid var(--line);border-radius:14px;background:var(--card);padding:10px 0 9px;text-align:center}
@@ -560,7 +556,7 @@ nav button.dim{opacity:.32}
   <!-- ─── 오늘 ─── -->
   <div class="wrap tab" id="tabToday">
     <div class="hd sticky">
-      <span class="date" id="hdDate">OCT 06</span>
+      <span class="date back" id="hdDate">OCT 06</span>
       <button class="qm" id="hdQ">?</button>
       <button class="chip" id="rdBtn">발음 보기</button>
     </div>
@@ -777,12 +773,17 @@ function dirToday(c){
 }
 
 /* 영상 문장은 한꺼번에 넣어도 하루에 이만큼씩만 나옵니다 */
-const VNEW = 10;
+const VNEW = 10;                 /* 유진님이 안 정했을 때의 값 */
+/* 영상 문장을 하루에 몇 개씩 꺼낼지. 설정 칸에서 바꿉니다 */
+function vnew(){
+  const n = DB && Math.round(+DB.vnew);
+  return (n >= 1 && n <= 50) ? n : VNEW;
+}
 function vidRelease(){
   const t = todayStr();
   const all = Object.values(DB.cards).filter(c => c.vid);
   const today = all.filter(c => c.learnedOn === t).length;
-  let take = Math.max(0, VNEW - today);
+  let take = Math.max(0, vnew() - today);
   if(!take) return;
   let moved = false;
   for(const c of all.sort((a, b) => a.day - b.day)){
@@ -2239,33 +2240,29 @@ function renderFree(body){
   clearTimeout(freeTimer);
   const now = Date.now();
   const list = freeList();
-  const wait = list.filter(x => x.at > now).length;
   const cnt = document.getElementById('revCnt');
-  if(cnt) cnt.innerHTML = list.length ? `<b>${list.length - wait}</b><i>${wait}</i>` : '';
+  if(cnt) cnt.innerHTML = list.length ? `<b>${list.length}</b>` : '';
 
   if(!list.length){
     body.innerHTML = revTabs() + `<p class="lead" style="text-align:center;padding:50px 0 10px">
       ${grow(5, 44)}<br><br>한 바퀴 다 보셨어요.<br>
       <span style="font-size:13px">여기서 끝내셔도 괜찮습니다.</span></p>
-      <button class="btn ghost" id="freeAgain">처음부터 다시 보기</button>`;
+      <button class="btn ghost" id="freeKo">한국어 모드 처음부터</button>
+      <button class="btn ghost" id="freeEn" style="margin-top:10px">영어 모드 처음부터</button>`;
     wireRevTabs();
-    const fa = document.getElementById('freeAgain');
-    if(fa) fa.onclick = () => { freeStart(); revSeen = []; openRev = null; renderRev(); };
-    /* freeStart() 는 지금 보고 있는 쪽만 되돌립니다 */
+    /* 쪽마다 따로 되돌립니다 — 한쪽을 비워도 다른 쪽은 그대로입니다 */
+    const again = L => () => {
+      freeQ[L] = { at:{}, out:[] };
+      revLang = L; revSeen = []; openRev = null;
+      renderRev();
+    };
+    const fk = document.getElementById('freeKo'); if(fk) fk.onclick = again('ko');
+    const fe = document.getElementById('freeEn'); if(fe) fe.onclick = again('en');
     return;
   }
-  const ready = list.filter(x => x.at <= now);
-  if(!ready.length){
-    const sec = Math.max(1, Math.ceil((list[0].at - now) / 1000));
-    const mm = Math.floor(sec / 60), ss = sec % 60;
-    body.innerHTML = revTabs() + `<p class="lead" style="text-align:center;padding:50px 0">
-      쉬었다 가요.<br><b style="font-size:20px">${mm}분 ${ss}초</b> 뒤에
-      ${list.length}장이 돌아옵니다.</p>`;
-    wireRevTabs();
-    freeTimer = setTimeout(() => { if(revMode === 'all') renderRev(); },
-                           Math.min(sec, 20) * 1000 + 300);
-    return;
-  }
+  /* 기다리게 하지 않습니다 — 미뤄 둔 문장도 차례가 오면 그냥 나옵니다 */
+  const soon = list.filter(x => x.at <= now);
+  const ready = soon.length ? soon : list;
   if(openRev == null || !ready.some(x => x.c.day === openRev))
     openRev = pickNext(ready.map(x => x.c.day));
   const c = (ready.find(x => x.c.day === openRev) || ready[0]).c;
@@ -2284,6 +2281,7 @@ function renderFree(body){
 function renderRev(){
   const body = document.getElementById('revBody');
   if(!body) return;
+  sessSave();
   const t = todayStr();
   if(!DB.days[t]) DB.days[t] = { opened:true };
   if(revMode === 'all') return renderFree(body);
@@ -2697,9 +2695,11 @@ function stgHelp(){
       <span class="tx"><b>${g[1]} 맞힘</b><span>${g[3]}</span></span></div>`).join('');
   return `<h3>복습 현황</h3><div class="list">${rows}</div>`;
 }
-function stgSheet(i){
+function stgSheet(i, vid){
   const g = STG[i];
-  const list = Object.values(DB.cards).filter(g[2]).sort((a,b) => a.day - b.day);
+  const list = Object.values(DB.cards)
+    .filter(c => !!c.vid === !!vid)
+    .filter(g[2]).sort((a,b) => a.day - b.day);
   const rows = list.map(c => { const x = sOf(c);
     if(!x) return '';
     return `<div class="li"${c.vid ? '' : ` data-day="${c.day}"`}>
@@ -2707,7 +2707,7 @@ function stgSheet(i){
       <span class="tx"><b>${x.en}</b><span>${x.ko}</span></span>
       <button class="mk on" data-speak="${esc(x.en)}">🔊</button></div>`;
   }).join('') || '<p class="lead">아직 없습니다.</p>';
-  return `<h3>${g[1]} 맞힌 카드</h3><p class="cnt">${list.length}장</p>
+  return `<h3>${vid ? '영상 — ' : ''}${g[1]} 맞힌 카드</h3><p class="cnt">${list.length}장</p>
     <div class="list">${rows}</div>`;
 }
 
@@ -2820,10 +2820,12 @@ function renderLog(){
     <p class="ol1"><em>진도 :</em>30장 중 <b>${cards.length}장</b>을 모았습니다</p>
     <div class="ok"><p class="big">${praise(0)}</p></div>`
     + (vcards.length ? `
-    <h2 class="sec" style="margin-top:30px">영상</h2>
-    <p class="ol1"><em>복습 :</em>지금까지 <b>${vrev}번</b> 돌렸어요</p>
-    <div class="vgrid">${vcards.map(c =>
-      `<span class="vg">${grow(c.step, 20)}<i>${c.day}</i></span>`).join('')}</div>` : '');
+    <h2 class="sec" style="margin-top:30px">영상 복습 현황</h2>
+    <div class="stg">
+      ${STG.map((g,i) => `<button class="stgb" data-vstg="${i}">
+        <b>${grow(g[0], 24)}</b><span>${vcards.filter(g[2]).length}</span></button>`).join('')}
+    </div>
+    <p class="ol1"><em>복습 :</em>지금까지 <b>${vrev}번</b> 돌렸어요</p>` : '');
   wireCal();
   const sd = document.getElementById('statDone');
   if(sd) sd.onclick = () => openSheet(doneSheet());
@@ -2831,6 +2833,8 @@ function renderLog(){
   if(sr) sr.onclick = () => openSheet(revSheet());
   document.querySelectorAll('[data-stg]').forEach(b =>
     b.onclick = () => openSheet(stgSheet(+b.dataset.stg)));
+  document.querySelectorAll('[data-vstg]').forEach(b =>
+    b.onclick = () => openSheet(stgSheet(+b.dataset.vstg, true)));
   const sq = document.getElementById('stgQ');
   if(sq) sq.onclick = () => openSheet(stgHelp());
 }
@@ -2995,7 +2999,21 @@ const NAV = {
     <button data-tab="Box"><span class="ic">♡</span>문장함</button>
     <button data-tab="Log"><span class="ic">▦</span>기록</button>`
 };
+/* 하던 자리 — 새로고침돼도 돌아옵니다. 앱을 완전히 닫으면 사라집니다 */
+const SESS = 'oneline.sess';
+function sessSave(){
+  try{
+    sessionStorage.setItem(SESS, JSON.stringify(
+      { mode:appMode, tab:curTab, revMode, revLang, freeQ }));
+  }catch(e){}
+}
+function sessWipe(){ try{ sessionStorage.removeItem(SESS); }catch(e){} }
+function sessLoad(){
+  try{ return JSON.parse(sessionStorage.getItem(SESS) || 'null'); }catch(e){ return null; }
+}
+
 function showGate(){
+  sessWipe();                    /* 갈래 화면에서는 하던 자리를 지웁니다 */
   if(micJob){ micJob.cancel(); micJob = null; }
   const t = todayStr();
   const ds = Object.values(DB.cards).filter(c => !c.vid);
@@ -3082,9 +3100,12 @@ function vidHTML(){
   <h2 class="sec" style="margin-top:26px">오늘</h2>
   <p class="lead" style="margin:0 0 4px">
     <b style="font-size:21px;color:var(--accent)">${today}</b>문장을 새로 꺼냈어요</p>
-  <p class="lead" style="font-size:12.5px">하루에 ${VNEW}개씩 나옵니다.
+  <p class="lead" style="font-size:12.5px">하루에 <b>${vnew()}개</b>씩 나옵니다.
     꺼낸 문장은 <b>복습</b> 칸에서 돌립니다.</p>
-  <button class="btn ghost" id="vidGoRev" style="margin-top:12px">복습하러 가기</button>
+  <div class="row2" style="margin-top:12px">
+    <button class="btn ghost" id="vidGoRev">복습하러 가기</button>
+    <button class="btn ghost" id="vidNum">하루 몇 개</button>
+  </div>
 
   <h2 class="sec" style="margin-top:26px">문장</h2>
   <div class="row2">
@@ -3099,6 +3120,7 @@ function renderVid(){
   const go = id => document.getElementById(id);
   if(go('vidSet'))   go('vidSet').onclick = vidSetSheet;
   if(go('vidAdd'))   go('vidAdd').onclick = vidAddSheet;
+  if(go('vidNum'))   go('vidNum').onclick = vidNumSheet;
   if(go('vidGoRev')) go('vidGoRev').onclick = () => switchTab('Rev');
   if(go('vidPlay'))  go('vidPlay').onclick = () => {
     const v = DB.video;
@@ -3116,9 +3138,24 @@ function vidHelp(){
       다 외우면 자막 없이 들리는 게 목표예요.</p>
     <div class="li one"><b>영상 보기</b><span>유튜브에서 열립니다</span></div>
     <div class="li one"><b>문장 넣기</b><span>한 줄에 하나씩 붙여넣습니다</span></div>
-    <div class="li one"><b>복습</b><span>하루 ${VNEW}개씩 나옵니다. 외우는 방식은 하루 한 문장과 같아요</span></div>
+    <div class="li one"><b>복습</b><span>하루 ${vnew()}개씩 나옵니다. 외우는 방식은 하루 한 문장과 같아요</span></div>
     <p class="lead" style="margin-top:12px"><b>넣은 문장은 이 기기에만 있습니다.</b>
       인터넷에 올라가지 않습니다.</p>`;
+}
+/* 하루에 몇 개씩 꺼낼지 — 유진님이 정합니다 */
+function vidNumSheet(){
+  openSheet(`<h3>하루 몇 개</h3>
+    <p class="lead">영상 문장을 하루에 몇 개씩 새로 꺼낼지 정합니다.
+      이미 꺼낸 문장은 그대로 있고, <b>다음에 꺼낼 때부터</b> 바뀝니다.</p>
+    <input id="vN" class="inp" type="number" min="1" max="50" value="${vnew()}">
+    <button class="btn" id="vNOK" style="margin-top:16px">저장</button>`);
+  const ok = document.getElementById('vNOK');
+  if(ok) ok.onclick = () => {
+    const n = Math.round(+document.getElementById('vN').value);
+    if(!(n >= 1 && n <= 50)) return toast('1에서 50 사이로 적어주세요');
+    DB.vnew = n;
+    save(); closeSheet(); renderVid(); toast('하루 ' + n + '개로 바꿨습니다');
+  };
 }
 function vidSetSheet(){
   const v = DB.video || {};
@@ -3212,6 +3249,7 @@ function switchTab(name){
   if(name === 'Box'){  boxReset(); renderBox(); }
   if(name === 'Log')   renderLog();
   if(name === 'Set')   renderSet();
+  sessSave();
 }
 function renderAll(){ renderToday(); renderRev(); renderBox(); renderLog(); }
 
@@ -3287,6 +3325,7 @@ document.addEventListener('click', e => {
 });
 
 document.body.classList.add('koonly');   /* 문장함은 뜻만 보기로 시작합니다 */
+document.getElementById('hdDate').onclick = showGate;   /* 날짜를 누르면 갈래 화면 */
 document.getElementById('gearBtn').onclick = () => switchTab('Set');
 document.getElementById('setClose').onclick = () => switchTab('Log');
 
@@ -3295,8 +3334,18 @@ paintAccent();
 if(!DB){ DB = fresh('07:00', '이불에서 나오기 전'); save(); }
 tidy();
 document.getElementById('app').classList.remove('hide');
+const sess = sessLoad();     /* 깔기 전에 먼저 꺼냅니다 — switchTab 이 덮어씁니다 */
 switchTab('Today');          /* 뒤에 깔아둡니다 */
-showGate();                  /* 켜면 어느 쪽으로 갈지 먼저 고릅니다 */
+if(sess && sess.mode){
+  /* 새로고침된 것입니다 — 하던 자리로 돌려놓습니다 */
+  goMode(sess.mode);
+  revMode = sess.revMode || 'due';
+  revLang = sess.revLang || 'ko';
+  freeQ   = sess.freeQ || null;
+  switchTab(sess.tab || (sess.mode === 'video' ? 'Vid' : 'Today'));
+}else{
+  showGate();                /* 켜면 어느 쪽으로 갈지 먼저 고릅니다 */
+}
 
 if('serviceWorker' in navigator && location.protocol !== 'file:'){
   navigator.serviceWorker.register('sw.js').catch(()=>{});
