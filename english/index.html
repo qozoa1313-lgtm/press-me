@@ -229,6 +229,7 @@ details .in2{padding-top:8px}
     border-radius:10px;padding:10px 12px;margin:8px 0 0}
 /* 한글 발음 — 기본 숨김, 버튼으로 전체 켜기 */
 .rdline{display:none;font-size:13.5px;color:var(--accent);margin:5px 0 0;letter-spacing:.01em}
+.rdline.always{display:block}
 body.showrd .rdline{display:block}
 .nuance{font-size:14.5px;color:var(--soft);background:var(--band);
   border-radius:12px;padding:12px 14px;margin:10px 0 0;line-height:1.6}
@@ -418,6 +419,10 @@ body.showrd .warm .rdline{display:block}
 .sunbar .tx b{display:block;font-size:17px;font-weight:700}
 .sunbar .tx i{font-style:normal;font-size:11px;color:var(--soft);display:block;margin-top:1px}
 .sunbar .tx span{display:block;font-size:12.5px;color:var(--soft);margin-top:3px}
+.vgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(46px,1fr));gap:7px;margin-top:12px}
+.vg{display:flex;flex-direction:column;align-items:center;gap:1px;padding:7px 0;
+  background:var(--card);border:1px solid var(--line);border-radius:12px}
+.vg i{font-size:11px;color:var(--soft);font-style:normal}
 .stg{display:flex;gap:6px}
 .stgb.empty{opacity:.75}
 .stgb{flex:1;border:1.5px solid var(--line);border-radius:14px;background:var(--card);padding:10px 0 9px;text-align:center}
@@ -448,6 +453,8 @@ body.showrd .warm .rdline{display:block}
 .ytbox{position:relative;width:100%;aspect-ratio:16/9;border-radius:14px;
   overflow:hidden;background:#000}
 .ytbox iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.row2{display:flex;gap:8px}
+.row2 .btn{flex:1 1 0;min-width:0;margin-top:0}
 .vtop{display:flex;align-items:center;gap:10px;margin-bottom:14px}
 .vtop .vthumb{width:54px;height:40px;border-radius:9px;background:var(--line);
   display:flex;align-items:center;justify-content:center;font-size:17px;color:var(--soft)}
@@ -1719,11 +1726,11 @@ function viewReview(c, inRev){
         <button class="rnd" data-speak="${esc(s.en)}" title="들어보기">${ICO.ear}</button>
         <button class="rnd" id="revYg" title="영상에서 보기">${ICO.tv}</button>
       </div>
-      <p class="rdline">${s.rd}</p>
+      <p class="rdline${c.vid ? ' always' : ''}">${s.rd}</p>
       ${(c.vid && atSec(s.at) >= 0)
         ? `<button class="mini" data-at="${atSec(s.at)}">▶ ${s.at} 그 자리 듣기</button>`
         : ''}
-      ${meanHTML(s, true)}
+      ${c.vid ? '' : meanHTML(s, true)}
     </div>
     <button class="btn ghost" id="ansBtn" style="margin-top:16px">답 보기</button>
     <div id="markBox" class="hide">
@@ -2391,7 +2398,7 @@ function boxOneHTML(c){
           <button class="rnd" data-speak="${esc(s.en)}" title="들어보기">${ICO.ear}</button>
           <button class="rnd" data-yg="${s.day}" title="영상에서 보기">${ICO.tv}</button>
         </div>
-        <p class="rdline">${s.rd}</p>
+        <p class="rdline${c.vid ? ' always' : ''}">${s.rd}</p>
         ${(c.vid && atSec(s.at) >= 0)
           ? `<button class="mini" data-at="${atSec(s.at)}">▶ ${s.at} 그 자리 듣기</button>`
           : ''}
@@ -2402,7 +2409,7 @@ function boxOneHTML(c){
             title="직접 써보기">${ICO.key}</button>
         </div>
         <div class="micout"></div>
-        ${detailHTML(s)}
+        ${c.vid ? '' : detailHTML(s)}
         ${c.step >= 2 ? `<button class="mini" data-reset="${c.day}">${grow(0, 15)} 처음부터 다시 외우기</button>` : ''}
       </div>
     </details>`;
@@ -2774,7 +2781,9 @@ function sunSVG(){
 function renderLog(){
   const t = todayStr(), d = new Date();
   const mon = addDays(t, -((d.getDay()+6)%7));
-  const cards = Object.values(DB.cards);
+  const cards = Object.values(DB.cards).filter(c => !c.vid);
+  const vcards = Object.values(DB.cards).filter(c => c.vid).sort((a, b) => a.day - b.day);
+  const vrev = vcards.reduce((n, c) => n + revCount(c.log), 0);
   const si = streakInfo();
 
   /* 큰 숫자 = 전체 / 작은 글씨 = 이번 주 */
@@ -2809,7 +2818,12 @@ function renderLog(){
         <b>${grow(g[0], 24)}</b><span>${cards.filter(g[2]).length}</span></button>`).join('')}
     </div>
     <p class="ol1"><em>진도 :</em>30장 중 <b>${cards.length}장</b>을 모았습니다</p>
-    <div class="ok"><p class="big">${praise(0)}</p></div>`;
+    <div class="ok"><p class="big">${praise(0)}</p></div>`
+    + (vcards.length ? `
+    <h2 class="sec" style="margin-top:30px">영상</h2>
+    <p class="ol1"><em>복습 :</em>지금까지 <b>${vrev}번</b> 돌렸어요</p>
+    <div class="vgrid">${vcards.map(c =>
+      `<span class="vg">${grow(c.step, 20)}<i>${c.day}</i></span>`).join('')}</div>` : '');
   wireCal();
   const sd = document.getElementById('statDone');
   if(sd) sd.onclick = () => openSheet(doneSheet());
@@ -3022,12 +3036,13 @@ function atSec(at){
   const m = String(at || '').match(/(\d+):(\d+)/);
   return m ? (+m[1]) * 60 + (+m[2]) : -1;
 }
-/* 그 자리부터 보여줍니다 */
+/* 유튜브에서 그 대목부터 틀어 줍니다 */
 function playAt(sec){
-  vidSeek = sec;
-  switchTab('Vid');
-  const box = document.querySelector('#vidBody .ytbox');
-  if(box) box.scrollIntoView({ block:'center' });
+  const v = DB.video || {};
+  const id = ytId(v.url);
+  if(!id) return toast('먼저 영상 주소를 넣어주세요');
+  window.open('https://www.youtube.com/watch?v=' + id + '&t=' + Math.max(0, sec) + 's',
+              '_blank', 'noopener');
 }
 
 /* 유튜브 주소에서 영상 번호만 꺼냅니다 */
@@ -3072,8 +3087,10 @@ function vidHTML(){
   <button class="btn ghost" id="vidGoRev" style="margin-top:12px">복습하러 가기</button>
 
   <h2 class="sec" style="margin-top:26px">문장</h2>
-  <button class="btn ghost" id="vidAdd">문장 넣기</button>
-  <button class="btn ghost" id="vidSet" style="margin-top:10px">영상 바꾸기</button>`;
+  <div class="row2">
+    <button class="btn ghost" id="vidAdd">문장 넣기</button>
+    <button class="btn ghost" id="vidSet">영상 바꾸기</button>
+  </div>`;
 }
 function renderVid(){
   const body = document.getElementById('vidBody');
