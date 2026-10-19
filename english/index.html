@@ -725,6 +725,10 @@ function sOf(c){
   if(!c) return null;
   return c.vid ? vidText(c) : SENTENCES.find(x => x.day === c.day);
 }
+/* 지금 모드에서 day 번호로 카드를 찾습니다 (d = 하루 한 문장 · x = 영상) */
+function cardOf(day){
+  return DB.cards[(appMode === 'video' ? 'x' : 'd') + day];
+}
 /* 지금 모드의 카드만 */
 function myCards(){
   const vid = appMode === 'video';
@@ -840,7 +844,7 @@ function freeList(){
 }
 /* 전체 복습에서 누른 것 — 기록에는 아무것도 안 남깁니다 */
 function markFree(m){
-  const c = DB.cards['d' + openRev];
+  const c = cardOf(openRev);
   if(!c || !freeQ) return;
   const q = freeNow();
   if(m === 'ok') q.out.push(c.day);
@@ -1716,6 +1720,9 @@ function viewReview(c, inRev){
         <button class="rnd" id="revYg" title="영상에서 보기">${ICO.tv}</button>
       </div>
       <p class="rdline">${s.rd}</p>
+      ${(c.vid && atSec(s.at) >= 0)
+        ? `<button class="mini" data-at="${atSec(s.at)}">▶ ${s.at} 그 자리 듣기</button>`
+        : ''}
       ${meanHTML(s, true)}
     </div>
     <button class="btn ghost" id="ansBtn" style="margin-top:16px">답 보기</button>
@@ -2002,10 +2009,14 @@ function wireToday(){
   const ansBtn = document.getElementById('ansBtn');
   if(ansBtn) ansBtn.onclick = showAns;
 
+  /* 영상 문장 — 그 대목만 바로 듣기 */
+  document.querySelectorAll('[data-at]').forEach(b =>
+    b.onclick = e => { e.preventDefault(); playAt(+b.dataset.at); });
+
   /* 복습 카드 영상 — 누를 때마다 다른 검색어라 다른 영상이 나옵니다 */
   const revYg = document.getElementById('revYg');
   if(revYg) revYg.onclick = () => {
-    const c = DB.cards['d' + openRev];
+    const c = cardOf(openRev);
     if(!c) return;
     openYgFor(byDay(c.day));
   };
@@ -2013,7 +2024,7 @@ function wireToday(){
   /* 복습 카드 — 직접 써보기 (창으로 띄웁니다) */
   const rvKey = document.getElementById('rvKey');
   if(rvKey) rvKey.onclick = () => {
-    const c = DB.cards['d' + openRev];
+    const c = cardOf(openRev);
     if(!c) return;
     const s = byDay(c.day);
     openType(s.en, s.ko, 'rev-' + s.day, () => {
@@ -2026,7 +2037,7 @@ function wireToday(){
   /* 복습 카드 — 말해보고 답 확인하기 */
   const revMic = document.getElementById('revMic');
   if(revMic) revMic.onclick = () => {
-    const c = DB.cards['d' + openRev];
+    const c = cardOf(openRev);
     if(!c) return;
     const en = byDay(c.day).en;
     const tr = document.getElementById('revTry');
@@ -2136,7 +2147,7 @@ function finishNew(s){
 
 function mark(m){
   if(revMode === 'all') return markFree(m);
-  const c = DB.cards['d' + openRev], t = todayStr();
+  const c = cardOf(openRev), t = todayStr();
   if(!c) return;
   /* 영어 모드는 덤입니다 — 복습 횟수도, 다음 복습일도 안 건드립니다 */
   if(revLang === 'en'){
@@ -2381,6 +2392,9 @@ function boxOneHTML(c){
           <button class="rnd" data-yg="${s.day}" title="영상에서 보기">${ICO.tv}</button>
         </div>
         <p class="rdline">${s.rd}</p>
+        ${(c.vid && atSec(s.at) >= 0)
+          ? `<button class="mini" data-at="${atSec(s.at)}">▶ ${s.at} 그 자리 듣기</button>`
+          : ''}
         <div class="korow">
           <p>${s.ko}</p>
           <button class="rnd mic" data-mic="${esc(s.en)}" title="따라 말해보기">${ICO.mic}</button>
@@ -2397,7 +2411,7 @@ function renderBox(){
   const cards = myCards().sort((a,b) => b.day - a.day);
   const b = document.getElementById('boxBody');
   if(!cards.length){ b.innerHTML = '<p class="lead" style="text-align:center;padding:50px 0">아직 비어 있어요.<br>오늘 카드를 열면 여기에 쌓입니다.</p>'; return; }
-  const one = (boxOpen != null) && DB.cards['d' + boxOpen];
+  const one = (boxOpen != null) && cardOf(boxOpen);
   b.innerHTML = one ? boxOneHTML(one) : cards.map(c => {
     const s = byDay(c.day);
     return `<details class="cardbox cardrow" data-day="${c.day}"><summary>
@@ -2427,6 +2441,8 @@ function renderBox(){
   eb.onclick = () => { boxView = (boxView === 'ko') ? 'en' : 'ko'; boxApply(); };
   const bb = document.getElementById('boxBoth');
   if(bb) bb.onclick = () => { boxView = (boxView === 'both') ? 'ko' : 'both'; boxApply(); };
+  b.querySelectorAll('[data-at]').forEach(x =>
+    x.onclick = e => { e.preventDefault(); playAt(+x.dataset.at); });
   b.querySelectorAll('[data-speak]').forEach(x => x.onclick = e => { e.preventDefault(); speak(x.dataset.speak); });
   b.querySelectorAll('[data-mic]').forEach(x => x.onclick = e => {
     e.preventDefault();
@@ -2485,7 +2501,7 @@ function renderBox(){
   syncSticky();
 
   b.querySelectorAll('[data-reset]').forEach(x => x.onclick = () => {
-    const c = DB.cards['d' + x.dataset.reset];
+    const c = cardOf(+x.dataset.reset);
     if(!c) return;
     if(!confirm('이 카드를 씨앗으로 되돌려서 내일부터 다시 돌릴까요?')) return;
     c.step = 0;
@@ -2999,6 +3015,21 @@ function wireNav(){
 }
 
 /* ═══════════════ 영상 칸 ═══════════════ */
+let vidSeek = -1;   /* 영상 칸에서 틀 자리(초). -1 이면 처음부터 */
+
+/* 0:42 → 42초 */
+function atSec(at){
+  const m = String(at || '').match(/(\d+):(\d+)/);
+  return m ? (+m[1]) * 60 + (+m[2]) : -1;
+}
+/* 그 자리부터 보여줍니다 */
+function playAt(sec){
+  vidSeek = sec;
+  switchTab('Vid');
+  const box = document.querySelector('#vidBody .ytbox');
+  if(box) box.scrollIntoView({ block:'center' });
+}
+
 /* 유튜브 주소에서 영상 번호만 꺼냅니다 */
 function ytId(u){
   if(!u) return '';
@@ -3024,7 +3055,8 @@ function vidHTML(){
       <span>${all.length}문장 · ${open}개 꺼냄${left ? ` · ${left}개 남음` : ''}</span></span>
   </div>
   ${ytId(v.url)
-    ? `<div class="ytbox"><iframe src="https://www.youtube-nocookie.com/embed/${ytId(v.url)}?rel=0"
+    ? `<div class="ytbox"><iframe src="https://www.youtube-nocookie.com/embed/${ytId(v.url)}?rel=0${
+           vidSeek >= 0 ? `&start=${vidSeek}&autoplay=1` : ''}"
          title="영상" frameborder="0" allowfullscreen
          allow="accelerometer; clipboard-write; encrypted-media; picture-in-picture"></iframe></div>
        <button class="btn ghost" id="vidPlay" style="margin-top:10px">유튜브에서 열기</button>`
@@ -3059,6 +3091,7 @@ function renderVid(){
   if(q) q.onclick = () => openSheet(vidHelp());
   const h = go('vidHome');
   if(h) h.onclick = showGate;
+  vidSeek = -1;          /* 다음에 들어올 때는 처음부터 */
 }
 function vidHelp(){
   return `<h3>영상 공부</h3>
