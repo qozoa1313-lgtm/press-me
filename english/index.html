@@ -431,6 +431,26 @@ body.showrd .warm .rdline{display:block}
 }
 .restbox > .in2{padding-top:4px}
 .restbox .revrow{margin-top:8px}
+/* ── 갈래 화면 ── */
+.gate{position:fixed;inset:0;z-index:80;background:var(--paper);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:16px;padding:24px 20px calc(24px + env(safe-area-inset-bottom,0px))}
+.gate.hide{display:none}
+.gttl{font-size:15px;color:var(--soft);letter-spacing:.04em;margin:0 0 10px}
+.gcard{width:100%;max-width:330px;border:none;border-radius:20px;
+  background:var(--card);box-shadow:0 2px 14px rgba(0,0,0,.06);
+  padding:26px 20px;text-align:left;cursor:pointer;
+  display:flex;flex-direction:column;gap:5px}
+.gcard:active{transform:scale(.985)}
+.gcard .gic{font-size:22px;color:var(--accent);line-height:1}
+.gcard b{font-size:19px;font-weight:700}
+.gcard .gsub{font-size:13px;color:var(--soft)}
+.vtop{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.vtop .vthumb{width:54px;height:40px;border-radius:9px;background:var(--line);
+  display:flex;align-items:center;justify-content:center;font-size:17px;color:var(--soft)}
+.vtop .vtx{flex:1;min-width:0}
+.vtop .vtx b{display:block;font-size:14px}
+.vtop .vtx span{display:block;font-size:12px;color:var(--soft);margin-top:2px}
 .rmode{display:flex;gap:8px;margin-bottom:14px}
 .rmode .chip{flex:1;text-align:center}
 .fresh{margin-left:7px;padding:3px 8px;border-radius:9px;background:var(--line);
@@ -537,6 +557,15 @@ nav button.dim{opacity:.32}
     <div id="todayBody"></div>
   </div>
 
+  <!-- ─── 영상 ─── -->
+  <div class="wrap tab hide" id="tabVid">
+    <div class="hd sticky">
+      <span class="date back" id="vidHome">영상 공부</span>
+      <button class="qm" id="vidQ">?</button>
+    </div>
+    <div id="vidBody"></div>
+  </div>
+
   <!-- ─── 복습 ─── -->
   <div class="wrap tab hide" id="tabRev">
     <div class="hd sticky">
@@ -582,12 +611,27 @@ nav button.dim{opacity:.32}
     <div id="setBody"></div>
   </div>
 
-  <nav><div class="in">
+  <nav><div class="in" id="navIn">
     <button class="on" data-tab="Today"><span class="ic">◉</span>오늘의 문장</button>
     <button data-tab="Rev"><span class="ic">↻</span>복습</button>
     <button data-tab="Box"><span class="ic">♡</span>문장함</button>
     <button data-tab="Log"><span class="ic">▦</span>기록</button>
   </div></nav>
+</div>
+
+<!-- ══════════ 갈래 화면 ══════════ -->
+<div id="gate" class="gate hide">
+  <p class="gttl">오늘 딱 한 문장</p>
+  <button class="gcard" data-go="daily">
+    <span class="gic">◉</span>
+    <b>하루 한 문장</b>
+    <span class="gsub" id="gsub1"></span>
+  </button>
+  <button class="gcard" data-go="video">
+    <span class="gic">▶</span>
+    <b>영상 공부</b>
+    <span class="gsub" id="gsub2"></span>
+  </button>
 </div>
 
 <!-- ══════════ 학습하기 창 ══════════ -->
@@ -659,7 +703,30 @@ function toast(m){
 function paintAccent(){
   document.documentElement.style.setProperty('--accent', DAYCOLOR[new Date().getDay()]);
 }
-const byDay = d => SENTENCES.find(s => s.day === d);
+let appMode = 'daily';   /* 'daily' 하루 한 문장 · 'video' 영상 공부 */
+
+/* 영상 문장은 코드가 아니라 기기에 저장된 카드 안에 글이 들어 있습니다 */
+function vidText(c){
+  if(!c) return null;
+  return { id:c.id, day:c.day, en:c.en || '', ko:c.ko || '', ko2:c.ko2 || '',
+           rd:c.rd || '', bd:c.bd || [], when:c.when || '',
+           ex:c.ex || [], sim:c.sim || [], at:c.at };
+}
+/* 하루 한 문장은 SENTENCES 에서, 영상 문장은 카드에서 꺼냅니다 */
+function byDay(d){
+  if(appMode === 'video') return vidText(DB.cards['x' + d]);
+  return SENTENCES.find(s => s.day === d);
+}
+/* 카드 하나의 글. 기록처럼 두 갈래를 섞어 보는 곳에서 씁니다 */
+function sOf(c){
+  if(!c) return null;
+  return c.vid ? vidText(c) : SENTENCES.find(x => x.day === c.day);
+}
+/* 지금 모드의 카드만 */
+function myCards(){
+  const vid = appMode === 'video';
+  return Object.values(DB.cards).filter(c => !!c.vid === vid);
+}
 
 /* 오늘 배울 새 문장 (아직 안 배운 가장 빠른 Day) */
 function newToday(){
@@ -677,7 +744,8 @@ function nextNew(){
 /* 오늘 돌아올 카드 */
 function dueToday(lang){
   const t = todayStr(), L = lang || revLang;
-  return Object.values(DB.cards)
+  if(appMode === 'video') vidRelease();      /* 영상 문장을 하루치만 풉니다 */
+  return myCards()
     .filter(c => c.revive || c.step < LADDER.length)
     /* 오늘 배운 문장도 넣습니다 — 오늘의 문장도, 미리 배운 것도
        dueWas : 오늘 돌아왔던 것. 한쪽에서 ✓ 로 미뤄도 다른 쪽에서는 오늘 안에 또 봅니다 */
@@ -692,6 +760,26 @@ function dirToday(c){
   const old = (c.dirOK && c.dirOK.d === t) ? c.dirOK : {};
   c.dirOK = Object.assign({}, old, { d:t });
   return c.dirOK;
+}
+
+/* 영상 문장은 한꺼번에 넣어도 하루에 이만큼씩만 나옵니다 */
+const VNEW = 10;
+function vidRelease(){
+  const t = todayStr();
+  const all = Object.values(DB.cards).filter(c => c.vid);
+  const today = all.filter(c => c.learnedOn === t).length;
+  let take = Math.max(0, VNEW - today);
+  if(!take) return;
+  let moved = false;
+  for(const c of all.sort((a, b) => a.day - b.day)){
+    if(c.learnedOn || take <= 0) continue;
+    c.learnedOn = t; c.step = 0; c.due = t; c.log = [{ d:t, m:'new' }];
+    take--; moved = true;
+  }
+  if(moved){
+    DB.days[t] = Object.assign(DB.days[t] || {}, { opened:true });
+    save();
+  }
 }
 
 /* 오늘 볼 복습 줄 — 「다시」로 돌린 것은 맨 뒤로 가고, ✓ 를 누를 때까지 돌아옵니다 */
@@ -742,7 +830,7 @@ function freeNow(){ if(!freeQ) freeStart(true); return freeQ[revLang]; }
 /* 아직 안 뺀 문장을 「볼 수 있는 때」 순으로 */
 function freeList(){
   const q = freeNow();
-  return shuffle(Object.values(DB.cards)
+  return shuffle(myCards()
       .filter(c => !q.out.includes(c.day))
       .map(c => ({ c, at: q.at[c.day] || 0 })))
     .sort((a, b) => a.at - b.at);
@@ -2303,7 +2391,7 @@ function boxOneHTML(c){
     </details>`;
 }
 function renderBox(){
-  const cards = Object.values(DB.cards).sort((a,b) => b.day - a.day);
+  const cards = myCards().sort((a,b) => b.day - a.day);
   const b = document.getElementById('boxBody');
   if(!cards.length){ b.innerHTML = '<p class="lead" style="text-align:center;padding:50px 0">아직 비어 있어요.<br>오늘 카드를 열면 여기에 쌓입니다.</p>'; return; }
   const one = (boxOpen != null) && DB.cards['d' + boxOpen];
@@ -2431,9 +2519,9 @@ function ymSheet(){
 /* 하루치 기록을 모은다 */
 function dayLog(date){
   const made = [], back = { ok:0, mid:0, no:0, reset:0 };
-  Object.values(DB.cards).forEach(c => c.log.forEach(l => {
+  Object.entries(DB.cards).forEach(([k, c]) => c.log.forEach(l => {
     if(l.d !== date) return;
-    if(l.m === 'new') made.push(c.day);
+    if(l.m === 'new') made.push(k);
     else if(back[l.m] !== undefined) back[l.m]++;
   }));
   const any = made.length || back.ok || back.mid || back.no || back.reset;
@@ -2493,10 +2581,12 @@ function closeSheet(){ document.getElementById('sheetWrap').classList.add('hide'
 function doneSheet(){
   const cards = Object.values(DB.cards).sort((a,b) => b.day - a.day);
   const rows = cards.map(c => {
-    const s = byDay(c.day);
-    return `<div class="li" data-day="${s.day}"><span class="mk on">${grow(c.step, 20)}</span>
+    const s = sOf(c);
+    if(!s) return '';
+    return `<div class="li"${c.vid ? '' : ` data-day="${c.day}"`}><span class="mk on">${grow(c.step, 20)}</span>
       <span class="tx"><b>${s.en}</b><span>${s.ko}</span></span>
-      <span class="n">DAY ${s.day}<i>${c.learnedOn.slice(2).replace(/-/g, '.')}</i></span></div>`;
+      <span class="n">${c.vid ? '영상' : 'DAY ' + c.day}<i>${
+        (c.learnedOn || '').slice(2).replace(/-/g, '.')}</i></span></div>`;
   }).join('') || '<p class="lead">아직 없습니다.</p>';
   return `<h3>완료한 문장</h3><p class="cnt">${cards.length}장</p><div class="list">${rows}</div>`;
 }
@@ -2512,8 +2602,9 @@ function revSheet(from){
     revT += rv; prT += pr;
     const mic = c.log.some(l => l.m === 'speak' && l.d >= f);
     const key = c.log.some(l => l.m === 'type'  && l.d >= f);
-    const s = byDay(c.day);
-    rows.push(`<div class="li" data-day="${s.day}">
+    const s = sOf(c);
+    if(!s) return;
+    rows.push(`<div class="li"${c.vid ? '' : ` data-day="${c.day}"`}>
       <span class="tx"><b>${s.en}</b><span>${s.ko}</span></span>
       <span class="n">복습 ${rv}<i>연습 ${half2(pr)}</i></span>
       <span class="mk${mic ? ' on' : ''}">🎙</span>
@@ -2540,7 +2631,7 @@ function renderCal(){
   for(let d = 1; d <= days; d++){
     const ds = y + '-' + String(m+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
     const g = dayLog(ds);
-    const mk = g.made[0] && DB.cards['d' + g.made[0]];
+    const mk = g.made[0] && DB.cards[g.made[0]];
     const rev = g.back.ok + g.back.mid + g.back.no + g.back.reset;
     const ico = mk ? grow(mk.step, 14) : (rev ? dropSVG(12) : '');
     cells += `<button class="cell${g.any?' did':''}${ds===t?' today':''}${ds===calSel?' sel':''}${(start+d-1)%7===0?' sun':''}${ds>t?' future':''}" data-d="${ds}">
@@ -2583,9 +2674,10 @@ function stgHelp(){
 function stgSheet(i){
   const g = STG[i];
   const list = Object.values(DB.cards).filter(g[2]).sort((a,b) => a.day - b.day);
-  const rows = list.map(c => { const x = byDay(c.day);
-    return `<div class="li" data-day="${x.day}">
-      <span class="n">DAY ${x.day}</span>
+  const rows = list.map(c => { const x = sOf(c);
+    if(!x) return '';
+    return `<div class="li"${c.vid ? '' : ` data-day="${c.day}"`}>
+      <span class="n">${c.vid ? '영상' : 'DAY ' + c.day}</span>
       <span class="tx"><b>${x.en}</b><span>${x.ko}</span></span>
       <button class="mk on" data-speak="${esc(x.en)}">🔊</button></div>`;
   }).join('') || '<p class="lead">아직 없습니다.</p>';
@@ -2605,10 +2697,12 @@ function daySheet(date){
     if(g.back.ok)  marks.push('✓' + g.back.ok);
     if(g.back.mid) marks.push('△' + g.back.mid);
     if(g.back.no)  marks.push('✕' + g.back.no);
-    body = g.made.map(day => { const s = byDay(day);
+    body = g.made.map(k => { const c = DB.cards[k], s = sOf(c);
+      if(!s) return '';
       /* 문장을 누르면 문장함으로 갑니다. 🔊 는 그 자리에서 들려주기만 합니다 */
-      return `<div class="li" data-day="${day}">
-          <span class="mk on" style="font-size:11px;color:var(--soft)">DAY ${day}</span>
+      return `<div class="li"${c.vid ? '' : ` data-day="${c.day}"`}>
+          <span class="mk on" style="font-size:11px;color:var(--soft)">${
+            c.vid ? '영상' : 'DAY ' + c.day}</span>
           <span class="tx"><b>${s.en}</b></span>
           <button class="mk on" data-speak="${esc(s.en)}">🔊</button>
         </div>`;
@@ -2839,9 +2933,10 @@ function report(){
     기간: { 시작: DB.startDate, 오늘: todayStr(), 연_일수: si.total, 최고_연속: DB.bestStreak || si.run },
     약속: DB.pledge,
     문장별: Object.values(DB.cards).sort((a,b)=>a.day-b.day).map(c => {
-      const s = byDay(c.day), rev = c.log.filter(l => RVM[l.m]);
+      const s = sOf(c) || { day:c.day, en:'' }, rev = c.log.filter(l => RVM[l.m]);
       return {
-        day: s.day, 영어: s.en,
+        갈래: c.vid ? '영상' : '하루 한 문장',
+        day: c.day, 영어: s.en,
         배운날: c.learnedOn,
         복습횟수: revCount(c.log),          /* ✓ △ ✕ 를 누른 횟수 */
         연습횟수: pracCount(c.log),         /* 🎙 0.5 + ⌨ 0.5 */
@@ -2856,6 +2951,164 @@ function report(){
   };
 }
 
+/* ═══════════════ 갈래 화면 ═══════════════ */
+const NAV = {
+  daily: `<button data-tab="Today"><span class="ic">◉</span>오늘의 문장</button>
+    <button data-tab="Rev"><span class="ic">↻</span>복습</button>
+    <button data-tab="Box"><span class="ic">♡</span>문장함</button>
+    <button data-tab="Log"><span class="ic">▦</span>기록</button>`,
+  video: `<button data-tab="Vid"><span class="ic">▶</span>영상</button>
+    <button data-tab="Rev"><span class="ic">↻</span>복습</button>
+    <button data-tab="Box"><span class="ic">♡</span>문장함</button>
+    <button data-tab="Log"><span class="ic">▦</span>기록</button>`
+};
+function showGate(){
+  if(micJob){ micJob.cancel(); micJob = null; }
+  const t = todayStr();
+  const ds = Object.values(DB.cards).filter(c => !c.vid);
+  const vs = Object.values(DB.cards).filter(c => c.vid);
+  const dDue = ds.filter(c => c.due <= t || c.learnedOn === t).length;
+  const vOpen = vs.filter(c => c.learnedOn).length;
+  const g1 = document.getElementById('gsub1');
+  const g2 = document.getElementById('gsub2');
+  if(g1) g1.textContent = ds.length
+    ? `${ds.length}문장 배웠어요` + (dDue ? ` · 오늘 복습 ${dDue}개` : '')
+    : '오늘부터 시작해요';
+  if(g2) g2.textContent = vs.length
+    ? `${vs.length}문장 · ${vOpen}개 꺼냈어요`
+    : '영상을 넣고 시작해요';
+  document.getElementById('gate').classList.remove('hide');
+}
+function goMode(m){
+  appMode = m;
+  document.getElementById('navIn').innerHTML = NAV[m];
+  wireNav();
+  document.getElementById('gate').classList.add('hide');
+  revMode = 'due'; revLang = 'ko'; freeQ = null; revSeen = []; openRev = null;
+  switchTab(m === 'video' ? 'Vid' : 'Today');
+}
+function wireNav(){
+  document.querySelectorAll('nav button').forEach(b => b.onclick = () => {
+    if(b.dataset.tab === 'Learn'){ openLearn(); return; }
+    closeLearn();
+    switchTab(b.dataset.tab);
+  });
+}
+
+/* ═══════════════ 영상 칸 ═══════════════ */
+function vidHTML(){
+  const v = DB.video;
+  if(!v || !v.url) return `<p class="lead" style="text-align:center;padding:40px 0 16px">
+      아직 영상이 없어요.<br><span style="font-size:13px">주소를 넣고 시작합니다.</span></p>
+      <button class="btn" id="vidSet">영상 넣기</button>`;
+  const t = todayStr();
+  const all = Object.values(DB.cards).filter(c => c.vid);
+  const open = all.filter(c => c.learnedOn).length;
+  const today = all.filter(c => c.learnedOn === t).length;
+  const left = all.length - open;
+  return `
+  <div class="vtop">
+    <span class="vthumb">▶</span>
+    <span class="vtx"><b>${esc(v.title || '영상')}</b>
+      <span>${all.length}문장 · ${open}개 꺼냄${left ? ` · ${left}개 남음` : ''}</span></span>
+  </div>
+  <button class="btn" id="vidPlay">영상 보기</button>
+  <p class="lead" style="text-align:center;font-size:12.5px;margin-top:8px">
+    유튜브에서 열립니다. 자막을 켜고 보세요.</p>
+
+  <h2 class="sec" style="margin-top:26px">오늘</h2>
+  <p class="lead" style="margin:0 0 4px">
+    <b style="font-size:21px;color:var(--accent)">${today}</b>문장을 새로 꺼냈어요</p>
+  <p class="lead" style="font-size:12.5px">하루에 ${VNEW}개씩 나옵니다.
+    꺼낸 문장은 <b>복습</b> 칸에서 돌립니다.</p>
+  <button class="btn ghost" id="vidGoRev" style="margin-top:12px">복습하러 가기</button>
+
+  <h2 class="sec" style="margin-top:26px">문장</h2>
+  <button class="btn ghost" id="vidAdd">문장 넣기</button>
+  <button class="btn ghost" id="vidSet" style="margin-top:10px">영상 바꾸기</button>`;
+}
+function renderVid(){
+  const body = document.getElementById('vidBody');
+  if(!body) return;
+  body.innerHTML = vidHTML();
+  const go = id => document.getElementById(id);
+  if(go('vidSet'))   go('vidSet').onclick = vidSetSheet;
+  if(go('vidAdd'))   go('vidAdd').onclick = vidAddSheet;
+  if(go('vidGoRev')) go('vidGoRev').onclick = () => switchTab('Rev');
+  if(go('vidPlay'))  go('vidPlay').onclick = () => {
+    const v = DB.video;
+    if(v && v.url) window.open(v.url, '_blank', 'noopener');
+  };
+  const q = go('vidQ');
+  if(q) q.onclick = () => openSheet(vidHelp());
+  const h = go('vidHome');
+  if(h) h.onclick = showGate;
+}
+function vidHelp(){
+  return `<h3>영상 공부</h3>
+    <p class="lead">영상 하나를 정해 두고, 그 안에 나오는 문장을 외웁니다.
+      다 외우면 자막 없이 들리는 게 목표예요.</p>
+    <div class="li one"><b>영상 보기</b><span>유튜브에서 열립니다</span></div>
+    <div class="li one"><b>문장 넣기</b><span>한 줄에 하나씩 붙여넣습니다</span></div>
+    <div class="li one"><b>복습</b><span>하루 ${VNEW}개씩 나옵니다. 외우는 방식은 하루 한 문장과 같아요</span></div>
+    <p class="lead" style="margin-top:12px"><b>넣은 문장은 이 기기에만 있습니다.</b>
+      인터넷에 올라가지 않습니다.</p>`;
+}
+function vidSetSheet(){
+  const v = DB.video || {};
+  openSheet(`<h3>영상 넣기</h3>
+    <p class="lead">유튜브 주소와 이름을 적습니다.</p>
+    <input id="vU" class="inp" placeholder="https://youtu.be/..." value="${esc(v.url || '')}">
+    <input id="vT" class="inp" style="margin-top:10px" placeholder="영상 이름" value="${esc(v.title || '')}">
+    <button class="btn" id="vOK" style="margin-top:16px">저장</button>`);
+  const ok = document.getElementById('vOK');
+  if(ok) ok.onclick = () => {
+    const u = (document.getElementById('vU').value || '').trim();
+    const ti = (document.getElementById('vT').value || '').trim();
+    if(!u) return toast('주소를 넣어주세요');
+    DB.video = { url:u, title:ti || '영상' };
+    save(); closeSheet(); renderVid(); toast('저장했습니다');
+  };
+}
+function vidAddSheet(){
+  openSheet(`<h3>문장 넣기</h3>
+    <p class="lead">한 줄에 하나씩. 칸은 <b>|</b> 로 나눕니다.<br>
+      <b>영어 | 뜻 | 발음 | 시간</b> — 뒤 세 칸은 비워도 됩니다.</p>
+    <textarea id="vP" class="inp" rows="9" style="font-size:13px;line-height:1.5"
+      placeholder="Nice to meet you. | 만나서 반가워요 | 나이스 투 미트 유 | 0:12"></textarea>
+    <button class="btn" id="vAdd" style="margin-top:14px">넣기</button>
+    <p class="lead" style="font-size:12px;margin-top:10px">
+      이미 있는 문장과 겹치면 건너뜁니다.</p>`);
+  const b = document.getElementById('vAdd');
+  if(b) b.onclick = () => {
+    const txt = (document.getElementById('vP').value || '').trim();
+    if(!txt) return toast('붙여넣어 주세요');
+    const have = {};
+    let max = 0;
+    Object.values(DB.cards).filter(c => c.vid).forEach(c => {
+      have[(c.en || '').toLowerCase()] = 1;
+      if(c.day > max) max = c.day;
+    });
+    let add = 0, skip = 0;
+    txt.split('\n').forEach(ln => {
+      ln = ln.trim();
+      if(!ln || ln.startsWith('#')) return;
+      const p = ln.split('|').map(x => x.trim());
+      const en = p[0];
+      if(!en) return;
+      if(have[en.toLowerCase()]){ skip++; return; }
+      have[en.toLowerCase()] = 1;
+      max++;
+      DB.cards['x' + max] = { id:'x' + max, day:max, vid:true,
+        en, ko:p[1] || '', rd:p[2] || '', at:p[3] || '',
+        step:0, log:[], fav:false };
+      add++;
+    });
+    save(); closeSheet(); renderVid();
+    toast(add ? `${add}문장 넣었습니다` + (skip ? ` (${skip}개는 이미 있어요)` : '') : '넣을 게 없었어요');
+  };
+}
+
 /* ═══════════════ 탭 ═══════════════ */
 let curTab = 'Today';                  /* 지금 보고 있는 칸 */
 const navOn = name => document.querySelectorAll('nav button').forEach(b =>
@@ -2863,10 +3116,11 @@ const navOn = name => document.querySelectorAll('nav button').forEach(b =>
 function switchTab(name){
   if(micJob){ micJob.cancel(); micJob = null; }   /* 듣던 마이크는 끄고 넘어갑니다 */
   if(name !== 'Set') curTab = name;
-  ['Today','Rev','Box','Log','Set'].forEach(n =>
+  ['Today','Vid','Rev','Box','Log','Set'].forEach(n =>
     document.getElementById('tab'+n).classList.toggle('hide', n !== name));
   navOn(name);
   if(name === 'Today') renderToday();
+  if(name === 'Vid')   renderVid();
   if(name === 'Rev'){  restOpen = false;   /* 다른 칸 갔다 오면 목록은 다시 접힙니다 */
                        renderRev(); }
   if(name === 'Box'){  boxReset(); renderBox(); }
@@ -2898,11 +3152,9 @@ document.getElementById('mGo').onclick = () => {
 document.getElementById('mIn').onkeydown = e => { if(e.key === 'Enter') document.getElementById('mGo').onclick(); };
 document.getElementById('typeModal').onclick = e => { if(e.target.id === 'typeModal') closeType(); };
 
-document.querySelectorAll('nav button').forEach(b => b.onclick = () => {
-  if(b.dataset.tab === 'Learn'){ openLearn(); return; }
-  closeLearn();
-  switchTab(b.dataset.tab);
-});
+wireNav();
+document.querySelectorAll('#gate [data-go]').forEach(b =>
+  b.onclick = () => goMode(b.dataset.go));
 /* ? 버튼 — 어느 창에 있든 그 줄의 설명만 폈다 접었다 합니다 */
 /* 내 문장으로 바꿔보기 — 학습 창과 문장함 어디서든 같게 (기록에는 남지 않습니다) */
 /* 고르는 창에서 누른 곳으로 엽니다 */
@@ -2957,7 +3209,8 @@ paintAccent();
 if(!DB){ DB = fresh('07:00', '이불에서 나오기 전'); save(); }
 tidy();
 document.getElementById('app').classList.remove('hide');
-switchTab('Today');
+switchTab('Today');          /* 뒤에 깔아둡니다 */
+showGate();                  /* 켜면 어느 쪽으로 갈지 먼저 고릅니다 */
 
 if('serviceWorker' in navigator && location.protocol !== 'file:'){
   navigator.serviceWorker.register('sw.js').catch(()=>{});
