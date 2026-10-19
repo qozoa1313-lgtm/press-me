@@ -669,16 +669,25 @@ function nextNew(){
   return null;
 }
 /* 오늘 돌아올 카드 */
-function dueToday(){
-  const t = todayStr();
+function dueToday(lang){
+  const t = todayStr(), L = lang || revLang;
   return Object.values(DB.cards)
     .filter(c => c.revive || c.step < LADDER.length)
-    /* 오늘 배운 문장도 넣습니다 — 오늘의 문장도, 미리 배운 것도 */
-    .filter(c => c.due <= t || c.learnedOn === t)
-    .filter(c => !(c.learnedOn === t && c.freshOK === t))   /* ✓ 를 누르면 오늘 줄에서 빠집니다 */
+    /* 오늘 배운 문장도 넣습니다 — 오늘의 문장도, 미리 배운 것도
+       dueWas : 오늘 돌아왔던 것. 한쪽에서 ✓ 로 미뤄도 다른 쪽에서는 오늘 안에 또 봅니다 */
+    .filter(c => c.due <= t || c.learnedOn === t || c.dueWas === t)
+    .filter(c => !(c.dirOK && c.dirOK.d === t && c.dirOK[L]))   /* 그 쪽을 끝냈으면 빠집니다 */
     .filter(c => !(DB.days[t] && DB.days[t].relearn || []).includes('d' + c.day))
     .sort((a,b) => a.day - b.day);
 }
+/* 오늘 이 문장을 어느 쪽(뜻→영어 · 영문→뜻)으로 끝냈는지 — 날짜는 맨 뒤에 씁니다 */
+function dirToday(c){
+  const t = todayStr();
+  const old = (c.dirOK && c.dirOK.d === t) ? c.dirOK : {};
+  c.dirOK = Object.assign({}, old, { d:t });
+  return c.dirOK;
+}
+
 /* 오늘 볼 복습 줄 — 「다시」로 돌린 것은 맨 뒤로 가고, ✓ 를 누를 때까지 돌아옵니다 */
 function revQueue(){
   const t = todayStr();
@@ -2024,6 +2033,15 @@ function mark(m){
   if(revMode === 'all') return markFree(m);
   const c = DB.cards['d' + openRev], t = todayStr();
   if(!c) return;
+  /* 영어 모드는 덤입니다 — 복습 횟수도, 다음 복습일도 안 건드립니다 */
+  if(revLang === 'en'){
+    const dir = dirToday(c);
+    if(m === 'ok') dir.en = true; else delete dir.en;
+    revSeen.push(c.day);
+    openRev = null;
+    save(); renderRev();
+    return;
+  }
   c.log.push({ d:t, m });
   delete c.revive;
   if(c.learnedOn === t){
@@ -2040,6 +2058,9 @@ function mark(m){
     c.again = t;
     c.due = t;
   }
+  const dir = dirToday(c);
+  if(m === 'ok') dir.ko = true; else delete dir.ko;
+  c.dueWas = t;                /* 오늘 돌아왔던 문장 — 영어 모드에서는 아직 볼 수 있습니다 */
   DB.days[t] = Object.assign(DB.days[t]||{}, { done:true });
   revSeen.push(c.day);
   openRev = null;
@@ -2143,9 +2164,14 @@ function renderRev(){
       .map(c => c.due).filter(x => x > t).sort();
     const day = next[0];
     const n = day ? next.filter(x => x === day).length : 0;
-    const when = day
-      ? `다음 복습은 <b>${+day.slice(5,7)}월 ${+day.slice(8)}일</b> · ${n}장이에요.`
-      : '모든 문장을 다 외웠어요.';
+    /* 다른 쪽(한국어 ↔ 영어)에 아직 남아 있으면 그쪽을 먼저 알려줍니다 */
+    const other = revLang === 'en' ? 'ko' : 'en';
+    const left = dueToday(other).length;
+    const when = left
+      ? `<b>${other === 'ko' ? '한국어' : '영어'} 모드</b>에 ${left}장 남아 있어요.`
+      : day
+        ? `다음 복습은 <b>${+day.slice(5,7)}월 ${+day.slice(8)}일</b> · ${n}장이에요.`
+        : '모든 문장을 다 외웠어요.';
     body.innerHTML = revTabs() + `<p class="lead" style="text-align:center;padding:50px 0 10px">
         ${grow(3, 44)}<br><br>오늘 복습할 문장이 없어요.<br>
         <span style="font-size:13px">${when}</span></p>`;
@@ -2178,7 +2204,11 @@ function revHelp(){
     <div class="li one"><b>한국어 모드</b><span>뜻을 보고 영어를 떠올립니다</span></div>
     <div class="li one"><b>영어 모드</b><span>영문을 보고 뜻을 떠올립니다</span></div>
     <p class="lead" style="margin-top:14px">머리줄 단추로 언제든 바꿀 수 있습니다.
-      <b>바꿔도 기록은 안 바뀝니다.</b> 보던 문장과 차례도 그대로입니다.</p>
+      보던 문장과 차례도 그대로입니다.</p>
+    <p class="lead"><b>한 문장을 하루에 두 번 봅니다</b> — 쪽마다 한 번씩.
+      한쪽을 끝내도 다른 쪽에는 그대로 남아 있습니다.</p>
+    <p class="lead">복습 횟수와 다음 복습일은 <b>한국어 모드에서만</b> 올라갑니다.
+      영어 모드는 덤으로 더 보는 것이라 기록에 안 남습니다.</p>
     <h3 style="margin-top:22px">전체 복습</h3>
     <p class="lead">배운 문장을 <b>전부</b> 한 바퀴 봅니다. 오늘 배운 것도 들어갑니다.</p>
     <div class="li one"><b>✓ 기억나요</b><span>이 판에서 빠집니다</span></div>
