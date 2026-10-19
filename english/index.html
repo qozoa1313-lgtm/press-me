@@ -3070,10 +3070,31 @@ function vidSetSheet(){
     save(); closeSheet(); renderVid(); toast('저장했습니다');
   };
 }
+/* 붙여넣은 한 줄에서 영어·뜻·발음·시간을 꺼냅니다.
+   두 가지 모양을 다 알아듣습니다.
+     영어 | 뜻 | 발음 | 시간
+     | 번호 | 시간 | 영어 | 뜻 | 발음 |   ← 표를 그대로 복사한 것 */
+function vidParse(ln){
+  if(!ln || /^\s*#/.test(ln)) return null;
+  let p = ln.split('|').map(x => x.trim());
+  if(p.length && p[0] === '') p.shift();                  /* 표는 앞뒤가 비어 있습니다 */
+  if(p.length && p[p.length - 1] === '') p.pop();
+  if(!p.length) return null;
+  if(p.every(x => /^:?-{2,}:?$/.test(x))) return null;     /* 표의 구분선 */
+  /* 표 모양 — 첫 칸이 번호, 둘째 칸이 시간 */
+  if(p.length >= 4 && /^\d+$/.test(p[0]) && /^\d+:\d+/.test(p[1] || '')){
+    return { en:p[2] || '', ko:p[3] || '', rd:p[4] || '',
+             at:(p[1].match(/\d+:\d+/) || [''])[0] };
+  }
+  if(/^(번호|영어|english)$/i.test(p[0])) return null;      /* 표의 머리줄 */
+  return { en:p[0], ko:p[1] || '', rd:p[2] || '', at:p[3] || '' };
+}
+
 function vidAddSheet(){
   openSheet(`<h3>문장 넣기</h3>
     <p class="lead">한 줄에 하나씩. 칸은 <b>|</b> 로 나눕니다.<br>
-      <b>영어 | 뜻 | 발음 | 시간</b> — 뒤 세 칸은 비워도 됩니다.</p>
+      <b>영어 | 뜻 | 발음 | 시간</b> — 뒤 세 칸은 비워도 됩니다.<br>
+      <span style="font-size:12px">표를 통째로 복사해 붙여넣어도 알아듣습니다.</span></p>
     <textarea id="vP" class="inp" rows="9" style="font-size:13px;line-height:1.5"
       placeholder="Nice to meet you. | 만나서 반가워요 | 나이스 투 미트 유 | 0:12"></textarea>
     <button class="btn" id="vAdd" style="margin-top:14px">넣기</button>
@@ -3091,16 +3112,15 @@ function vidAddSheet(){
     });
     let add = 0, skip = 0;
     txt.split('\n').forEach(ln => {
-      ln = ln.trim();
-      if(!ln || ln.startsWith('#')) return;
-      const p = ln.split('|').map(x => x.trim());
-      const en = p[0];
-      if(!en) return;
-      if(have[en.toLowerCase()]){ skip++; return; }
-      have[en.toLowerCase()] = 1;
+      const r = vidParse(ln.trim());
+      if(!r || !r.en) return;
+      if(!/[A-Za-z]/.test(r.en)) return;              /* 영어가 없는 줄은 건너뜁니다 */
+      const key = r.en.toLowerCase();
+      if(have[key]){ skip++; return; }
+      have[key] = 1;
       max++;
       DB.cards['x' + max] = { id:'x' + max, day:max, vid:true,
-        en, ko:p[1] || '', rd:p[2] || '', at:p[3] || '',
+        en:r.en, ko:r.ko, rd:r.rd, at:r.at,
         step:0, log:[], fav:false };
       add++;
     });
