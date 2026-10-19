@@ -429,6 +429,8 @@ body.showrd .warm .rdline{display:block}
   font-style:normal;font-weight:700;color:var(--soft);
   font-size:12.5px;letter-spacing:.04em;margin-right:7px;
 }
+.restbox > .in2{padding-top:4px}
+.restbox .revrow{margin-top:8px}
 .rmode{display:flex;gap:8px;margin-bottom:14px}
 .rmode .chip{flex:1;text-align:center}
 .fresh{margin-left:7px;padding:3px 8px;border-radius:9px;background:var(--line);
@@ -1771,6 +1773,7 @@ let freeTimer = null;
 const FREE_MIN = { mid:10, no:3 };   /* △ 10분 뒤 · ✕ 3분 뒤 */
 
 let revSeen = [];     /* 이번 바퀴에 이미 본 day — 한 바퀴 다 돌기 전엔 다시 안 나옵니다 */
+let restOpen = false; /* 「남은 문장」 목록을 펼쳐뒀는지 — 넘겨도 그대로 둡니다 */
 
 let openRev = null;   /* 지금 펼쳐둔 돌아온 카드의 day */
 let revTries = 0;     /* 복습 카드에서 몇 번 말해봤는지 (카드를 바꾸면 0 으로) */
@@ -2079,6 +2082,19 @@ function mark(m){
 }
 
 /* ═══════════════ 복습 칸 ═══════════════ */
+/* 남은 문장 목록 — 접어둡니다. 누르면 펼쳐지고, 그 상태가 유지됩니다 */
+function restHTML(rest, label){
+  if(!rest.length) return '';
+  return `<details class="more restbox"${restOpen ? ' open' : ''} style="margin-top:22px">
+      <summary>${label} ${rest.length}개</summary>
+      <div class="in2">${rest.map(revRow).join('')}</div>
+    </details>`;
+}
+function wireRest(){
+  const r = document.querySelector('#revBody .restbox');
+  if(r) r.ontoggle = () => { restOpen = r.open; };
+}
+
 /* 모드 고르는 줄 */
 function revTabs(){
   return `<div class="rmode">
@@ -2148,9 +2164,9 @@ function renderFree(body){
   body.innerHTML = revTabs()
     + `<p class="lead" style="font-size:12.5px;margin:0 0 10px">기록에는 남지 않아요. 편하게 보세요.</p>`
     + viewReview(c, true)
-    + (rest.length ? `<h2 class="sec" style="margin-top:24px">지금 볼 수 있는 문장 ${rest.length}개</h2>`
-        + rest.map(revRow).join('') : '');
+    + restHTML(rest, '지금 볼 수 있는 문장');
   wireToday();
+  wireRest();
   wireRevTabs();
   const rq = document.getElementById('revQ');
   if(rq) rq.onclick = () => openSheet(revHelp());
@@ -2195,9 +2211,9 @@ function renderRev(){
   const c = q.find(x => x.day === openRev) || q[0];
   const rest = q.filter(x => x.day !== c.day);
   body.innerHTML = revTabs() + viewReview(c, true)
-    + (rest.length ? `<h2 class="sec" style="margin-top:24px">남은 문장 ${rest.length}개</h2>`
-        + rest.map(revRow).join('') : '');
+    + restHTML(rest, '남은 문장');
   wireToday();
+  wireRest();
   wireRevTabs();
   const rq = document.getElementById('revQ');
   if(rq) rq.onclick = () => openSheet(revHelp());
@@ -2860,7 +2876,8 @@ function switchTab(name){
     document.getElementById('tab'+n).classList.toggle('hide', n !== name));
   navOn(name);
   if(name === 'Today') renderToday();
-  if(name === 'Rev')   renderRev();
+  if(name === 'Rev'){  restOpen = false;   /* 다른 칸 갔다 오면 목록은 다시 접힙니다 */
+                       renderRev(); }
   if(name === 'Box'){  boxReset(); renderBox(); }
   if(name === 'Log')   renderLog();
   if(name === 'Set')   renderSet();
