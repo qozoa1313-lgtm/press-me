@@ -57,6 +57,9 @@ body.koonly #boxBody .cardbox .line b{position:relative}
 body.koonly #boxBody .cardbox .line b button{visibility:visible;position:absolute;left:0;top:0}
 /* 영문만 보기 — 뜻을 감춥니다. 목록 줄은 뜻 대신 영문을 보여줍니다 */
 #boxBody .cardbox .enx{display:none;font-style:normal;font-size:15.5px;font-weight:700}
+/* 뜻+영어 보기 — 목록 줄에 뜻 아래로 영문을 작게 붙입니다 */
+body:not(.koonly):not(.enonly) #boxBody .cardbox .enx{
+  display:block;font-size:13px;font-weight:600;color:var(--soft);margin-top:2px}
 body.enonly #boxBody .cardbox .tx b{display:none}
 body.enonly #boxBody .cardbox .enx{display:block}
 body.enonly #boxBody .cardbox .korow p,
@@ -552,7 +555,8 @@ nav button.dim{opacity:.32}
       <button class="qm" id="boxQ">?</button>
       <span class="hdr">
         <button class="chip on" id="boxEn">뜻만 보기</button>
-        <button class="chip" id="boxRd">발음 보기</button>
+        <button class="chip" id="boxBoth">뜻+영어</button>
+        <button class="chip" id="boxRd">발음</button>
       </span>
     </div>
     <div id="boxBody"></div>
@@ -726,21 +730,28 @@ function shuffle(arr){
 }
 
 /* ── 전체 복습 판 ── */
-function freeStart(){ freeQ = { at:{}, out:[] }; }
+function freeStart(all){
+  /* 쪽마다 판을 따로 둡니다 — 영어 쪽에서 뺀 문장이 한국어 쪽에는 남습니다 */
+  if(all || !freeQ) freeQ = { ko:{ at:{}, out:[] }, en:{ at:{}, out:[] } };
+  else freeQ[revLang] = { at:{}, out:[] };
+}
+/* 지금 보고 있는 쪽의 판 */
+function freeNow(){ if(!freeQ) freeStart(true); return freeQ[revLang]; }
 /* 아직 안 뺀 문장을 「볼 수 있는 때」 순으로 */
 function freeList(){
-  if(!freeQ) freeStart();
+  const q = freeNow();
   return shuffle(Object.values(DB.cards)
-      .filter(c => !freeQ.out.includes(c.day))
-      .map(c => ({ c, at: freeQ.at[c.day] || 0 })))
+      .filter(c => !q.out.includes(c.day))
+      .map(c => ({ c, at: q.at[c.day] || 0 })))
     .sort((a, b) => a.at - b.at);
 }
 /* 전체 복습에서 누른 것 — 기록에는 아무것도 안 남깁니다 */
 function markFree(m){
   const c = DB.cards['d' + openRev];
   if(!c || !freeQ) return;
-  if(m === 'ok') freeQ.out.push(c.day);
-  else freeQ.at[c.day] = Date.now() + (FREE_MIN[m] || 3) * 60000;
+  const q = freeNow();
+  if(m === 'ok') q.out.push(c.day);
+  else q.at[c.day] = Date.now() + (FREE_MIN[m] || 3) * 60000;
   revSeen.push(c.day);
   openRev = null;
   renderRev();
@@ -2099,7 +2110,7 @@ function wireRevTabs(){
 }
 /* 전체 복습 — 배운 문장을 전부, 기록은 안 남기고 */
 function renderFree(body){
-  if(!freeQ) freeStart();
+  if(!freeQ) freeStart(true);
   clearTimeout(freeTimer);
   const now = Date.now();
   const list = freeList();
@@ -2115,6 +2126,7 @@ function renderFree(body){
     wireRevTabs();
     const fa = document.getElementById('freeAgain');
     if(fa) fa.onclick = () => { freeStart(); revSeen = []; openRev = null; renderRev(); };
+    /* freeStart() 는 지금 보고 있는 쪽만 되돌립니다 */
     return;
   }
   const ready = list.filter(x => x.at <= now);
@@ -2230,14 +2242,26 @@ function syncSticky(){
 }
 
 /* 문장함은 늘 「뜻만 보기」로 시작합니다 — 다른 데 갔다 오면 되돌립니다 */
+let boxView = 'ko';      /* 'ko' 뜻만 · 'en' 영어만 · 'both' 뜻+영어 */
+/* 고른 모드를 화면에 입힙니다 */
+function boxApply(){
+  document.body.classList.toggle('koonly', boxView === 'ko');
+  document.body.classList.toggle('enonly', boxView === 'en');
+  const eb = document.getElementById('boxEn');
+  const bb = document.getElementById('boxBoth');
+  if(eb){
+    eb.textContent = boxView === 'en' ? '영어 보기' : '뜻만 보기';
+    eb.classList.toggle('on', boxView !== 'both');
+  }
+  if(bb) bb.classList.toggle('on', boxView === 'both');
+}
+
 let boxOpen = null;      /* 지금 한 장만 보고 있는 문장의 day. 없으면 목록입니다 */
 let boxScroll = 0;       /* 목록에서 보던 자리 — 돌아올 때 그대로 되돌립니다 */
 function boxReset(){
   boxOpen = null;
-  document.body.classList.add('koonly');
-  document.body.classList.remove('enonly');
-  const eb = document.getElementById('boxEn');
-  if(eb){ eb.textContent = '뜻만 보기'; eb.classList.add('on'); }
+  boxView = 'ko';
+  boxApply();
 }
 /* 한 문장만 크게 보는 화면 — 머리줄 아래 자리만 씁니다 */
 function boxOneHTML(c){
@@ -2299,17 +2323,12 @@ function renderBox(){
   const bq = document.getElementById('boxQ');
   if(bq) bq.onclick = () => openSheet(icoHelp() + stgHelp());
 
+  boxApply();
   const eb = document.getElementById('boxEn');
-  const syncEn = () => {
-    eb.textContent = document.body.classList.contains('koonly') ? '뜻만 보기' : '영문 보기';
-  };
-  syncEn();
-  eb.onclick = () => {
-    const ko = document.body.classList.contains('koonly');
-    document.body.classList.toggle('koonly', !ko);
-    document.body.classList.toggle('enonly', ko);
-    syncEn();
-  };
+  /* 뜻만 ↔ 영어 — 뜻+영어를 보고 있었으면 뜻만으로 돌아옵니다 */
+  eb.onclick = () => { boxView = (boxView === 'ko') ? 'en' : 'ko'; boxApply(); };
+  const bb = document.getElementById('boxBoth');
+  if(bb) bb.onclick = () => { boxView = (boxView === 'both') ? 'ko' : 'both'; boxApply(); };
   b.querySelectorAll('[data-speak]').forEach(x => x.onclick = e => { e.preventDefault(); speak(x.dataset.speak); });
   b.querySelectorAll('[data-mic]').forEach(x => x.onclick = e => {
     e.preventDefault();
