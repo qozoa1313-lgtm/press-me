@@ -901,7 +901,7 @@ function markFree(m){
   const q = freeNow();
   if(m === 'ok') q.out.push(c.day);
   else q.at[c.day] = Date.now() + (FREE_MIN[m] || 3) * 60000;
-  revSeen.push(c.day);
+  revLast = null; revSeen.push(c.day);
   openRev = null;
   renderRev();
 }
@@ -995,6 +995,10 @@ const denySay = st => {
   return (DENY[name] || '마이크를 열지 못했어요') + ' (' + name + ')';
 };
 
+/* 마이크가 실제로 열렸을 때 화면 글자를 바꿔줄 함수.
+   이게 뜨기 전에 말하면 첫 낱말이 잘립니다 */
+let micStatus = null;
+
 function listen(onResult, onFail, onHeard){
   const SR = getSR();
   if(!SR){ onFail('이 브라우저는 마이크를 못 씁니다 (no-api)'); return null; }
@@ -1005,8 +1009,8 @@ function listen(onResult, onFail, onHeard){
   /* 여러 번에 걸쳐 들은 조각을 여기 모읍니다 — 다시 들을 때도 안 버립니다 */
   let got = [];
   let hushed = false;                       /* 말이 멎어서 우리가 끊었다 */
-  const win  = a => { if(!settled){ settled = true; onResult(a); } };
-  const lose = m => { if(!settled){ settled = true; onFail(m); } };
+  const win  = a => { if(!settled){ settled = true; micStatus = null; onResult(a); } };
+  const lose = m => { if(!settled){ settled = true; micStatus = null; onFail(m); } };
 
   micReady().then(st => {
     if(st.indexOf('denied') === 0){ lose(denySay(st)); return; }
@@ -1021,6 +1025,8 @@ function listen(onResult, onFail, onHeard){
     /* continuous 로 계속 듣고, 말이 멎은 뒤에야 끝냅니다.
        false 로 두면 문장 중간에 숨만 쉬어도 거기서 잘립니다 */
     r.lang = 'en-US'; r.interimResults = true; r.maxAlternatives = 3; r.continuous = true;
+    /* 마이크가 진짜 열린 순간 — 이제부터 말해야 첫 낱말이 안 잘립니다 */
+    r.onaudiostart = () => { if(micStatus) micStatus(); };
 
     /* 말이 들어올 때마다 「멎음」 시계를 다시 켭니다 */
     const touch = () => {
@@ -1476,7 +1482,8 @@ function wordSpans(en){
 function paintRev(){
   const line = document.getElementById('revEn');
   if(!line) return;
-  paintMarks(line.querySelectorAll('.w'), revLast);
+  /* 말해본 그 문장일 때만 칠합니다. 다른 카드로 넘어갔으면 깨끗하게 둡니다 */
+  paintMarks(line.querySelectorAll('.w'), revLastDay === openRev ? revLast : null);
 }
 
 function viewNew(s, done, pre){
@@ -1659,7 +1666,8 @@ function wireLearn(s, done){
   mic.onclick = () => {
     if(micJob){ micJob.cancel(); micJob = null; mic.classList.remove('on'); say(''); return; }
     paint(null); mic.classList.add('on');
-    say('<b style="color:var(--accent)">듣는 중…</b>');
+    say('<b style="color:var(--soft)">마이크 켜는 중…</b>');
+    micStatus = () => say('<b style="color:var(--accent)">말하세요</b>');
     /* 말하는 동안에는 윗줄 단어 색만 바뀝니다 */
     const live = t => paintLive(lrnWords(), s.en, t);
     micJob = listen(alts => {
@@ -1929,6 +1937,7 @@ let openRev = null;   /* 지금 펼쳐둔 돌아온 카드의 day */
 let revTries = 0;     /* 복습 카드에서 몇 번 말해봤는지 (카드를 바꾸면 0 으로) */
 const PASSN = 5;      /* 다섯 번 못 알아들으면 넘어갈 수 있게 합니다 */
 let revLast = null;   /* 그 카드에서 마지막으로 말해본 결과 — 답 보기 때 색칠에 씁니다 */
+let revLastDay = null;   /* 그 결과가 어느 문장 것인지. 다른 문장이면 칠하지 않습니다 */
 
 /* 말해보기 시도 횟수 — 3번 해야 넘어가기가 나옵니다 */
 let micTries = 0;
@@ -1997,7 +2006,8 @@ function wireToday(){
     if(micJob){ micJob.cancel(); micJob = null; micBtn.classList.remove('on'); tryText(''); return; }
     paintWords(null);
     micBtn.classList.add('on');
-    tryText('<b style="color:var(--accent)">듣는 중…</b>');
+    tryText('<b style="color:var(--soft)">마이크 켜는 중…</b>');
+    micStatus = () => tryText('<b style="color:var(--accent)">말하세요</b>');
     const live = t => paintLive(todayWords(), s.en, t);
     micJob = listen(alts => {
       micJob = null;
@@ -2110,13 +2120,14 @@ function wireToday(){
       };
     };
     revLast = null; paintRev();
-    revOut.status('<b style="color:var(--accent)">듣는 중…</b>');
+    revOut.status('<b style="color:var(--soft)">마이크 켜는 중…</b>');
+    micStatus = () => revOut.status('<b style="color:var(--accent)">말하세요</b>');
     micJob = listen(alts => {
       micJob = null;
       revMic.classList.remove('on');
       let best = { rate:-1 }, raw = alts[0] || '';
       alts.forEach(a => { const r = compare(en, a); if(r.rate > best.rate) best = r; });
-      revLast = best; paintRev();
+      revLast = best; revLastDay = openRev; paintRev();
       if(best.rate >= HEARD_OK){
         revOut.result(heardLine(best, raw) + '<p class="hint2"><b style="color:var(--accent)">'
           + heardMsg(best.rate) + '</b></p>');
@@ -2205,7 +2216,7 @@ function mark(m){
   if(revLang === 'en'){
     const dir = dirToday(c);
     if(m === 'ok') dir.en = true; else delete dir.en;
-    revSeen.push(c.day);
+    revLast = null; revSeen.push(c.day);
     openRev = null;
     save(); renderRev();
     return;
@@ -2230,7 +2241,7 @@ function mark(m){
   if(m === 'ok') dir.ko = true; else delete dir.ko;
   c.dueWas = t;                /* 오늘 돌아왔던 문장 — 영어 모드에서는 아직 볼 수 있습니다 */
   DB.days[t] = Object.assign(DB.days[t]||{}, { done:true });
-  revSeen.push(c.day);
+  revLast = null; revSeen.push(c.day);
   openRev = null;
   save(); renderRev(); renderToday();
 }
@@ -2505,7 +2516,9 @@ function renderBox(){
     x.classList.add('on');
     paintMarks(words(), null);
     out.status('<p class="lead" style="font-size:13px">'
-      + '<b style="color:var(--accent)">듣는 중…</b></p>');
+      + '<b style="color:var(--soft)">마이크 켜는 중…</b></p>');
+    micStatus = () => out.status('<p class="lead" style="font-size:13px">'
+      + '<b style="color:var(--accent)">말하세요</b></p>');
     const live = t => paintLive(words(), target, t);
     micJob = listen(alts => {
       micJob = null;
