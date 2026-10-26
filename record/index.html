@@ -111,6 +111,55 @@ input,textarea{font:inherit;color:inherit}
 .field .tx{white-space:pre-wrap;font-size:15px}
 .blank{font-size:14px;color:var(--faint)}
 
+/* ───── 시작 ───── */
+.hello{font-size:21px;font-weight:700;margin:4px 2px 14px;letter-spacing:-.01em}
+.gseg{margin-bottom:14px}
+.actgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.act{min-height:76px;padding:14px 16px;text-align:left;font-size:16px;font-weight:600;display:flex;align-items:center;border-radius:18px;background:var(--card);border:1px solid var(--line);box-shadow:var(--shadow)}
+.act:hover{border-color:var(--sage)}
+.act:active{background:var(--sage-bg)}
+.act.add{border-style:dashed;color:var(--soft);font-weight:500;justify-content:center;box-shadow:none;background:transparent}
+.actgrid.editing{grid-template-columns:1fr}
+.actgrid.editing .act{min-height:56px;gap:8px;cursor:default}
+.act .nm{flex:1}
+.act .ctl{display:flex;gap:2px}
+.act .ctl button{font-size:13px;color:var(--soft);padding:6px 9px;border-radius:8px;font-weight:500}
+.act .ctl button:hover{background:var(--sunk);color:var(--ink)}
+.act .ctl button:disabled{opacity:.3;cursor:default}
+.editbar{display:flex;justify-content:flex-end;margin:8px 2px 0}
+.linkbtn{font-size:13px;color:var(--soft);padding:6px 8px;border-radius:8px}
+.linkbtn:hover{background:var(--sunk)}
+.timer{padding:28px 18px 20px;text-align:center}
+.timer .grp{font-size:13px;color:var(--soft)}
+.timer .tn{font-size:22px;font-weight:700;margin:2px 0 4px}
+.clock{font-size:56px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:.02em;line-height:1.15;margin:10px 0 6px}
+.timer.paused .clock{color:var(--faint)}
+.timer .st{font-size:14px;color:var(--soft);min-height:22px}
+.timer .st b{color:var(--sage-ink)}
+.timer .btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:22px}
+.timer .btn{height:58px;font-size:16px;border-radius:16px}
+.timer .wake{font-size:12px;color:var(--faint);margin-top:12px;min-height:18px}
+/* 타이머 기록 */
+.sessbox{padding:12px 16px;margin-bottom:10px}
+.sbh{font-size:13px;font-weight:700;color:var(--soft)}
+.sg{font-size:12px;color:var(--soft);margin:10px 0 0}
+.sa summary{list-style:none;display:flex;gap:10px;padding:6px 0;cursor:pointer;font-size:15px}
+.sa summary::-webkit-details-marker{display:none}
+.sa summary .nm{flex:1}
+.sa summary .dur{color:var(--soft);white-space:nowrap}
+.sa summary .dur::after{content:' ›';color:var(--faint)}
+.sa[open] summary .dur::after{content:' ⌄'}
+.si{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--soft);padding:2px 0 2px 12px;border-left:2px solid var(--line);margin:0 0 6px 2px}
+.si .t{flex:1}
+.si button{font-size:13px;color:var(--soft);padding:4px 8px;border-radius:8px}
+.si button:hover{background:var(--sunk);color:var(--ink)}
+.dots b,.legend b{width:10px;height:3px;border-radius:2px;background:var(--soft);display:block;align-self:center}
+.legend b{display:inline-block}
+.tabs button{position:relative}
+.tabs button.run::after{content:'';position:absolute;top:11px;left:calc(50% + 9px);width:7px;height:7px;border-radius:50%;background:var(--sage)}
+.txt-in{width:100%}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
 /* ───── 모아보기 ───── */
 .search{display:flex;align-items:center;gap:8px;padding:0 14px;height:46px;margin-bottom:10px}
 .search input{flex:1;border:none;outline:none;background:transparent;font-size:15px;min-width:0}
@@ -172,7 +221,7 @@ textarea::placeholder,.search input::placeholder{color:var(--faint)}
 .confirm .msg{font-size:15px;white-space:pre-wrap;margin:4px 0 4px}
 .confirm .sub{font-size:13px;color:var(--soft);white-space:pre-wrap}
 
-.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:var(--bg);font-size:14px;padding:10px 16px;border-radius:12px;z-index:30;max-width:calc(100% - 32px);text-align:center}
+.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:var(--bg);font-size:14px;padding:10px 16px;border-radius:12px;z-index:30;max-width:calc(100% - 32px);text-align:center;pointer-events:none}
 .toast.err{background:var(--danger);color:#fff}
 @media (prefers-reduced-motion:no-preference){
   .sheet{animation:up .16s ease-out}
@@ -187,12 +236,37 @@ textarea::placeholder,.search input::placeholder{color:var(--faint)}
     <div class="status" id="status" role="status"><span class="dot"></span><span id="statusTx">이 기기에 저장됨</span></div>
   </header>
 
-  <!-- ───── 캘린더 ───── -->
-  <main id="v-cal">
+  <!-- ───── 시작 ───── -->
+  <main id="v-home">
     <div class="note" id="firstNote">
       <p>기록은 <b>지금 이 브라우저에만</b> 저장됩니다. PC와 휴대폰은 자동으로 맞춰지지 않아요. 가끔 「백업」 탭에서 파일로 받아두세요.</p>
       <button class="x" id="firstNoteX" aria-label="안내 닫기">닫기</button>
     </div>
+    <div id="homePick">
+      <h2 class="hello">오늘은 무엇을 해볼까요?</h2>
+      <div class="seg gseg" id="groupSeg">
+        <button data-g="daily">일상</button>
+        <button data-g="levelup">레벨업</button>
+      </div>
+      <div class="actgrid" id="actGrid"></div>
+      <div class="editbar"><button class="linkbtn" id="editActs">목록 편집</button></div>
+    </div>
+    <section class="card timer hidden" id="homeTimer">
+      <div class="grp" id="tGroup"></div>
+      <div class="tn" id="tName"></div>
+      <div class="clock" id="tClock" role="timer">00:00:00</div>
+      <div class="st" id="tState"></div>
+      <div class="btns">
+        <button class="btn ghost" id="tPause">잠깐 쉬기</button>
+        <button class="btn primary" id="tStop">여기까지</button>
+      </div>
+      <div class="wake" id="tWake"></div>
+    </section>
+    <div id="homeToday" style="margin-top:20px"></div>
+  </main>
+
+  <!-- ───── 캘린더 ───── -->
+  <main id="v-cal" class="hidden">
     <section class="card cal">
       <div class="calhd">
         <div class="ym" id="ym"></div>
@@ -210,6 +284,7 @@ textarea::placeholder,.search input::placeholder{color:var(--faint)}
       <h2 id="dayTitle"></h2>
       <button class="btn primary sm" id="addBtn">＋ 기록</button>
     </div>
+    <div id="daySess"></div>
     <div id="dayList"></div>
   </main>
 
@@ -281,7 +356,9 @@ textarea::placeholder,.search input::placeholder{color:var(--faint)}
 
 <nav class="tabs" aria-label="화면 이동">
   <div class="in">
-    <button data-tab="cal" class="on">
+    <button data-tab="home" class="on">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M10.2 8.8v6.4l5-3.2z"/></svg>시작</button>
+    <button data-tab="cal">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>캘린더</button>
     <button data-tab="list">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M8 6h12M8 12h12M8 18h12"/><circle cx="4" cy="6" r=".9" fill="currentColor"/><circle cx="4" cy="12" r=".9" fill="currentColor"/><circle cx="4" cy="18" r=".9" fill="currentColor"/></svg>모아보기</button>
@@ -334,6 +411,53 @@ textarea::placeholder,.search input::placeholder{color:var(--faint)}
   </div>
 </div>
 
+<!-- 타이머 기록 수정 -->
+<div class="scrim hidden" id="seScrim">
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="seTitle">
+    <div class="sh">
+      <h2 id="seTitle">활동 기록 수정</h2>
+      <button class="iconbtn" id="seClose" aria-label="닫기">✕</button>
+    </div>
+    <label class="flab" for="seName">활동</label>
+    <input id="seName" class="date-in txt-in" maxlength="30">
+    <div class="flab">그룹</div>
+    <div class="seg" id="seGroup">
+      <button data-g="daily">일상</button>
+      <button data-g="levelup">레벨업</button>
+    </div>
+    <label class="flab" for="seDate">날짜</label>
+    <input type="date" id="seDate" class="date-in">
+    <div class="two">
+      <div><label class="flab" for="seStart">시작</label><input type="time" id="seStart" class="date-in txt-in"></div>
+      <div><label class="flab" for="seEnd">종료</label><input type="time" id="seEnd" class="date-in txt-in"></div>
+    </div>
+    <label class="flab" for="seMin">실제 활동 시간<small>분 · 쉰 시간은 뺀 시간</small></label>
+    <input type="number" id="seMin" class="date-in txt-in" min="0" step="1" inputmode="numeric">
+    <div class="foot">
+      <button class="btn danger" id="seDel">삭제</button>
+      <span class="grow"></span>
+      <button class="btn ghost" id="seCancel">취소</button>
+      <button class="btn primary" id="seSave">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 활동 추가 · 이름 바꾸기 -->
+<div class="scrim hidden" id="nmScrim">
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="nmTitle">
+    <div class="sh">
+      <h2 id="nmTitle"></h2>
+      <button class="iconbtn" id="nmClose" aria-label="닫기">✕</button>
+    </div>
+    <input id="nmInput" class="date-in txt-in" maxlength="30" placeholder="예: SQL 공부" autocomplete="off">
+    <div class="foot">
+      <span class="grow"></span>
+      <button class="btn ghost" id="nmCancel">취소</button>
+      <button class="btn primary" id="nmSave">저장</button>
+    </div>
+  </div>
+</div>
+
 <!-- 확인창 -->
 <div class="scrim hidden" id="cfScrim">
   <div class="sheet confirm" role="alertdialog" aria-modal="true" aria-labelledby="cfTitle">
@@ -382,21 +506,43 @@ const fmtStamp = t => { const d = new Date(t); return `${d.getFullYear()}. ${d.g
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 
+/* ───── 활동 (타이머) ───── */
+const TIMER_KEY = 'myrecord.v1.timer';      // 진행 중인 타이머 하나 — 「여기까지」 전까지 여기에만 있음
+const GROUPS = [
+  { id:'daily',   name:'일상' },
+  { id:'levelup', name:'레벨업' },
+];
+const GROUP = Object.fromEntries(GROUPS.map(g => [g.id, g]));
+const defaultActs = () => ({
+  daily:   ['밥 먹기','청소','설거지','빨래'].map(name => ({ id:newId(), name })),
+  levelup: ['영어 (한 문장)','영어 (프렌즈)','면접 연습','바이브코딩'].map(name => ({ id:newId(), name })),
+});
+const validActs = a => !!a && GROUPS.every(g => Array.isArray(a[g.id])
+  && a[g.id].every(x => x && typeof x.id === 'string' && typeof x.name === 'string'));
+
 /* ───── 저장소 ───── */
 let loadFailed = false;
+const emptyDb = () => ({ version:2, records:[], sessions:[], activities:defaultActs() });
+/* 1차 자료(records 만 있음)에 타이머 칸을 덧붙입니다. records 는 손대지 않습니다 */
+function migrate(d){
+  if (!Array.isArray(d.sessions)) d.sessions = [];
+  if (!validActs(d.activities)) d.activities = defaultActs();
+  d.version = 2;
+  return d;
+}
 function readDb(){
   let raw;
   try { raw = localStorage.getItem(KEY); }
-  catch(e){ loadFailed = true; return { version:1, records:[] }; }
-  if (!raw) return { version:1, records:[] };
+  catch(e){ loadFailed = true; return emptyDb(); }
+  if (!raw) return emptyDb();
   try {
     const d = JSON.parse(raw);
     if (!d || !Array.isArray(d.records)) throw new Error('형식 아님');
-    return d;
+    return migrate(d);
   } catch(e){
     /* 읽지 못한 원본을 빈 값으로 덮어쓰지 않도록 저장을 막습니다 */
     loadFailed = true;
-    return { version:1, records:[] };
+    return emptyDb();
   }
 }
 let db = readDb();
@@ -425,6 +571,7 @@ function savePrefs(){ try { localStorage.setItem(PREF_KEY, JSON.stringify(prefs)
 /* 다른 창에서 고쳤으면 다시 읽습니다 */
 addEventListener('storage', e => {
   if (e.key === KEY){ loadFailed = false; db = readDb(); renderAll(); }
+  if (e.key === TIMER_KEY){ timer = readTimer(); syncWake(); renderAll(); }
 });
 
 /* 브라우저가 공간 부족 때 마음대로 지우지 않도록 요청 */
@@ -439,10 +586,10 @@ async function askPersist(){
 }
 
 /* ───── 화면 상태 ───── */
-const today = ymd(new Date());
+let today = ymd(new Date());   // 자정을 넘기면 시계가 바꿔줍니다
 let view = { y: new Date().getFullYear(), m: new Date().getMonth() };
 let sel = today;
-let tab = 'cal';
+let tab = 'home';
 let filterCat = 'all';
 let sortDesc = true;
 let openAll = false;
@@ -464,6 +611,7 @@ function toast(msg, err){
 function renderCal(){
   $('ym').textContent = `${view.y}년 ${view.m+1}월`;
   const map = byDate();
+  const sessDays = new Set(db.sessions.map(s => s.date));
   const first = new Date(view.y, view.m, 1);
   const start = new Date(view.y, view.m, 1 - first.getDay());
   const lastDate = new Date(view.y, view.m + 1, 0).getDate();
@@ -478,9 +626,9 @@ function renderCal(){
       d.getMonth() !== view.m && 'out',
       d.getDay() === 0 && 'sun', d.getDay() === 6 && 'sat',
       k === today && 'today', k === sel && 'sel'].filter(Boolean).join(' ');
-    const label = `${fmtDay(k)}${recs.length ? `, 기록 ${recs.length}개` : ''}`;
+    const label = `${fmtDay(k)}${recs.length ? `, 기록 ${recs.length}개` : ''}${sessDays.has(k) ? ', 타이머 기록 있음' : ''}`;
     h += `<button class="${cls}" data-d="${k}" aria-label="${label}"><span class="n">${d.getDate()}</span>`
-      + `<span class="dots">${cats.map(c => `<i style="background:${catColor(c)}"></i>`).join('')}</span></button>`;
+      + `<span class="dots">${cats.map(c => `<i style="background:${catColor(c)}"></i>`).join('')}${sessDays.has(k) ? '<b></b>' : ''}</span></button>`;
   }
   $('days').innerHTML = h;
   renderDay();
@@ -498,14 +646,18 @@ function recCard(r, withActs){
 
 function renderDay(){
   const recs = (byDate()[sel] || []).sort(sortRecs);
-  $('dayTitle').innerHTML = `${esc(fmtDay(sel))}${recs.length ? `<span class="cnt">${recs.length}개</span>` : ''}`;
+  const sess = sessHtml(sel, sel === today ? '오늘 한 일 · 타이머' : '한 일 · 타이머');
+  const n = recs.length + db.sessions.filter(s => s.date === sel).length;
+  $('dayTitle').innerHTML = `${esc(fmtDay(sel))}${n ? `<span class="cnt">${n}개</span>` : ''}`;
+  $('daySess').innerHTML = sess;
   $('dayList').innerHTML = recs.length
     ? recs.map(r => recCard(r, true)).join('')
-    : `<div class="empty">이 날의 기록이 없습니다.</div>`;
+    : sess ? '' : `<div class="empty">이 날의 기록이 없습니다.</div>`;
 }
 
 $('wdays').innerHTML = WD.map((w, i) => `<div class="wd ${i===0?'sun':i===6?'sat':''}">${w}</div>`).join('');
-$('legend').innerHTML = CATS.map(c => `<span><i style="background:${catColor(c.id)}"></i>${c.name}</span>`).join('');
+$('legend').innerHTML = CATS.map(c => `<span><i style="background:${catColor(c.id)}"></i>${c.name}</span>`).join('')
+  + `<span><b></b>타이머</span>`;
 $('days').addEventListener('click', e => {
   const b = e.target.closest('[data-d]'); if (!b) return;
   sel = b.dataset.d;
@@ -704,9 +856,295 @@ addEventListener('keydown', e => {
   if (!$('edScrim').classList.contains('hidden')) return closeEditor();
 });
 
+/* ───── 시간 표시 ───── */
+const fmtClock = ms => { const s = Math.floor(ms / 1000); return `${pad(Math.floor(s / 3600))}:${pad(Math.floor(s / 60) % 60)}:${pad(s % 60)}`; };
+const fmtDur = ms => {
+  const s = Math.floor(ms / 1000);
+  if (s < 60) return `${s}초`;
+  const h = Math.floor(s / 3600), m = Math.floor(s / 60) % 60;
+  return h ? `${h}시간${m ? ` ${m}분` : ''}` : `${m}분`;
+};
+const fmtHm = t => { const d = new Date(t), h = d.getHours(); return `${h < 12 ? '오전' : '오후'} ${h % 12 || 12}:${pad(d.getMinutes())}`; };
+const hm = t => { const d = new Date(t); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+const pauseMs = s => Math.max(0, s.end - s.start - s.activeMs);
+
+/* ───── 타이머 ─────
+   초를 하나씩 세지 않고, 시작·쉬기·이어하기 시각을 저장해 두고 그때그때 계산합니다.
+   그래서 화면이 꺼지거나 새로고침해도 시간이 틀어지지 않습니다. */
+function readTimer(){
+  try {
+    const t = JSON.parse(localStorage.getItem(TIMER_KEY) || 'null');
+    return t && t.id && Number.isFinite(t.start) ? t : null;
+  } catch(e){ return null; }
+}
+let timer = readTimer();
+function saveTimer(){
+  try {
+    if (timer) localStorage.setItem(TIMER_KEY, JSON.stringify(timer));
+    else localStorage.removeItem(TIMER_KEY);
+  } catch(e){ toast('타이머 상태를 저장하지 못했습니다. 새로고침하면 사라질 수 있어요.', true); }
+}
+const activeMs = (t, now = Date.now()) => t.accMs + (t.segStart ? Math.max(0, now - t.segStart) : 0);
+
+function startTimer(act){
+  timer = readTimer();   // 다른 창에서 이미 켰을 수 있음 — 동시에 두 개는 켜지 않습니다
+  if (timer){ syncWake(); renderAll(); toast('이미 진행 중인 활동이 있어요'); return; }
+  const now = Date.now();
+  timer = { id:newId(), activityId:act.id, name:act.name, group:homeGroup, start:now, segStart:now, accMs:0, pauses:[] };
+  saveTimer(); syncWake(); renderAll();
+}
+function pauseTimer(){
+  timer = readTimer() || timer;
+  if (!timer || !timer.segStart) return renderAll();
+  const now = Date.now();
+  timer.accMs += now - timer.segStart;
+  timer.segStart = null;
+  timer.pauses.push({ start:now, end:null });
+  saveTimer(); renderAll();
+}
+function resumeTimer(){
+  timer = readTimer() || timer;
+  if (!timer || timer.segStart) return renderAll();
+  const now = Date.now();
+  const p = timer.pauses[timer.pauses.length - 1];
+  if (p && p.end == null) p.end = now;
+  timer.segStart = now;
+  saveTimer(); renderAll();
+}
+function finishTimer(){
+  const t = readTimer() || timer;
+  if (!t){ timer = null; return renderAll(); }
+  const now = Date.now();
+  const ms = activeMs(t, now);
+  if (!loadFailed) db = readDb();   // 다른 창에서 고친 내용까지 읽고 덧붙입니다
+  /* 같은 타이머 id 가 이미 있으면 다시 넣지 않습니다 (두 번 눌림 · 두 창) */
+  if (!db.sessions.some(s => s.id === t.id)){
+    db.sessions.push({ id:t.id, activityId:t.activityId, name:t.name, group:t.group,
+      date: ymd(new Date(t.start)), start:t.start, end:now, activeMs:ms,
+      pauses: t.pauses.map(p => ({ start:p.start, end:p.end ?? now })),
+      createdAt:now, updatedAt:now });
+    if (!persist()){ db.sessions.pop(); return; }   // 저장 못 하면 타이머를 그대로 둡니다
+  }
+  timer = null; saveTimer(); syncWake();
+  renderAll();
+  toast(`${t.name} · ${fmtDur(ms)} 기록했어요`);
+}
+$('tPause').onclick = () => (timer && timer.segStart ? pauseTimer() : resumeTimer());
+$('tStop').onclick = finishTimer;
+
+/* 타이머가 켜져 있는 동안 휴대폰 화면이 꺼지지 않게 (지원하는 브라우저만) */
+let wakeLock = null;
+async function syncWake(){
+  const want = !!timer && document.visibilityState === 'visible';
+  if (!('wakeLock' in navigator)){ $('tWake').textContent = timer ? '이 브라우저에서는 화면 켜짐 유지가 안 돼요' : ''; return; }
+  if (want && !wakeLock){
+    try {
+      wakeLock = await navigator.wakeLock.request('screen');
+      wakeLock.addEventListener('release', () => { wakeLock = null; paintWake(); });
+    } catch(e){ wakeLock = null; }
+  } else if (!want && wakeLock){
+    try { await wakeLock.release(); } catch(e){}
+    wakeLock = null;
+  }
+  paintWake();
+}
+function paintWake(){
+  if (!('wakeLock' in navigator)) return;
+  $('tWake').textContent = timer ? (wakeLock ? '타이머가 켜져 있는 동안 화면이 꺼지지 않아요' : '') : '';
+}
+
+/* 화면 시계 — 0.25초마다 실제 시각으로 다시 계산 */
+function paintClock(){ if (timer) $('tClock').textContent = fmtClock(activeMs(timer)); }
+setInterval(() => {
+  if (timer && tab === 'home') paintClock();
+  const t = ymd(new Date());
+  if (t !== today){ if (sel === today) sel = t; today = t; renderAll(); }
+}, 250);
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible'){ timer = readTimer(); renderAll(); }
+  syncWake();
+});
+
+/* ───── 시작 화면 ───── */
+let homeGroup = GROUP[prefs.homeGroup] ? prefs.homeGroup : 'daily';
+let editActs = false;
+
+function renderHome(){
+  $('homePick').classList.toggle('hidden', !!timer);
+  $('homeTimer').classList.toggle('hidden', !timer);
+  if (timer){
+    const paused = !timer.segStart;
+    $('homeTimer').classList.toggle('paused', paused);
+    $('tGroup').textContent = GROUP[timer.group]?.name || '';
+    $('tName').textContent = timer.name;
+    $('tState').innerHTML = paused ? '<b>잠시 쉬는 중</b>' : `${fmtHm(timer.start)} 시작`;
+    $('tPause').textContent = paused ? '이어서 하기' : '잠깐 쉬기';
+    paintClock(); paintWake();
+  } else paintActs();
+  $('homeToday').innerHTML = sessHtml(today, '오늘 기록한 활동');
+}
+
+function paintActs(){
+  for (const b of $('groupSeg').children) b.classList.toggle('on', b.dataset.g === homeGroup);
+  const list = db.activities[homeGroup];
+  $('actGrid').classList.toggle('editing', editActs);
+  $('editActs').textContent = editActs ? '편집 끝' : '목록 편집';
+  $('actGrid').innerHTML = (editActs
+    ? list.map((a, i) => `<div class="act"><span class="nm">${esc(a.name)}</span><span class="ctl">
+        <button data-up="${a.id}" ${i === 0 ? 'disabled' : ''} aria-label="위로">↑</button>
+        <button data-down="${a.id}" ${i === list.length - 1 ? 'disabled' : ''} aria-label="아래로">↓</button>
+        <button data-ren="${a.id}">이름</button><button data-rm="${a.id}">삭제</button></span></div>`).join('')
+    : list.map(a => `<button class="act" data-act="${a.id}">${esc(a.name)}</button>`).join(''))
+    + `<button class="act add" data-add="1">＋ 활동 추가</button>`;
+}
+
+/* 활동 목록 바꾸기 — 저장 못 하면 원래대로 */
+function changeActs(fn){
+  const before = JSON.stringify(db.activities);
+  fn(db.activities[homeGroup]);
+  if (!persist()) db.activities = JSON.parse(before);
+  renderAll();
+}
+
+$('groupSeg').addEventListener('click', e => {
+  const b = e.target.closest('[data-g]'); if (!b) return;
+  homeGroup = b.dataset.g; prefs.homeGroup = homeGroup; savePrefs(); paintActs();
+});
+$('editActs').onclick = () => { editActs = !editActs; paintActs(); };
+$('actGrid').addEventListener('click', async e => {
+  const b = e.target.closest('button'); if (!b) return;
+  const list = db.activities[homeGroup];
+  if (b.dataset.act){ const a = list.find(x => x.id === b.dataset.act); if (a) startTimer(a); return; }
+  if (b.dataset.add) return openName(null);
+  if (b.dataset.ren) return openName(b.dataset.ren);
+  const id = b.dataset.up || b.dataset.down;
+  if (id) return changeActs(l => {
+    const i = l.findIndex(x => x.id === id), j = b.dataset.up ? i - 1 : i + 1;
+    if (i >= 0 && j >= 0 && j < l.length) [l[i], l[j]] = [l[j], l[i]];
+  });
+  if (b.dataset.rm){
+    const a = list.find(x => x.id === b.dataset.rm); if (!a) return;
+    const ok = await ask(`「${a.name}」을 목록에서 뺄까요?`, '지금까지 남긴 이 활동의 기록은 그대로 남습니다.', '', '빼기', true);
+    if (ok) changeActs(l => { const i = l.findIndex(x => x.id === a.id); if (i >= 0) l.splice(i, 1); });
+  }
+});
+
+let nmTarget = null;   // 이름 바꿀 활동 id (새로 추가면 null)
+function openName(id){
+  const a = id && db.activities[homeGroup].find(x => x.id === id);
+  nmTarget = a ? a.id : null;
+  $('nmTitle').textContent = a ? '활동 이름 바꾸기' : `${GROUP[homeGroup].name}에 활동 추가`;
+  $('nmInput').value = a ? a.name : '';
+  $('nmScrim').classList.remove('hidden');
+  $('nmInput').focus();
+}
+const closeName = () => $('nmScrim').classList.add('hidden');
+function saveName(){
+  const name = $('nmInput').value.trim().replace(/\s+/g, ' ');
+  if (!name){ toast('이름을 적어주세요.', true); return; }
+  if (db.activities[homeGroup].some(x => x.name === name && x.id !== nmTarget)){ toast('이미 있는 이름이에요.', true); return; }
+  changeActs(l => {
+    const a = nmTarget && l.find(x => x.id === nmTarget);
+    if (a) a.name = name; else l.push({ id:newId(), name });
+  });
+  closeName();
+}
+$('nmSave').onclick = saveName;
+$('nmCancel').onclick = closeName;
+$('nmClose').onclick = closeName;
+$('nmInput').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing){ e.preventDefault(); saveName(); } });
+
+/* ───── 타이머 기록 보기 ─────
+   같은 날 · 같은 활동은 합계로 한 줄, 누르면 한 번 한 번의 시작 · 종료 시각이 펼쳐집니다 */
+function sessHtml(date, title){
+  const list = db.sessions.filter(s => s.date === date).sort((a, b) => a.start - b.start);
+  if (!list.length) return '';
+  let h = `<section class="card sessbox"><div class="sbh">${esc(title)}</div>`;
+  for (const g of GROUPS){
+    const gs = list.filter(s => s.group === g.id);
+    if (!gs.length) continue;
+    h += `<div class="sg">${g.name}</div>`;
+    for (const name of [...new Set(gs.map(s => s.name))]){
+      const ss = gs.filter(s => s.name === name);
+      const tot = ss.reduce((a, s) => a + s.activeMs, 0);
+      h += `<details class="sa"><summary><span class="nm">${esc(name)}</span><span class="dur">${fmtDur(tot)}${ss.length > 1 ? ` · ${ss.length}번` : ''}</span></summary>`
+        + ss.map(s => `<div class="si"><span class="t">${fmtHm(s.start)} – ${fmtHm(s.end)} · ${fmtDur(s.activeMs)}${pauseMs(s) >= 60000 ? ` (쉼 ${fmtDur(pauseMs(s))})` : ''}</span>`
+          + `<button data-sedit="${s.id}">수정</button><button data-sdel="${s.id}">삭제</button></div>`).join('')
+        + `</details>`;
+    }
+  }
+  return h + `</section>`;
+}
+for (const id of ['homeToday', 'daySess']){
+  $(id).addEventListener('click', e => {
+    const ed = e.target.closest('[data-sedit]'); if (ed) return openSess(ed.dataset.sedit);
+    const dl = e.target.closest('[data-sdel]'); if (dl) return deleteSess(dl.dataset.sdel);
+  });
+}
+
+async function deleteSess(id){
+  const s = db.sessions.find(x => x.id === id); if (!s) return false;
+  const ok = await ask('이 활동 기록을 삭제할까요?', `${fmtDay(s.date)} · ${s.name} · ${fmtDur(s.activeMs)}`, '삭제하면 되돌릴 수 없습니다.', '삭제', true);
+  if (!ok) return false;
+  const idx = db.sessions.indexOf(s);
+  db.sessions.splice(idx, 1);
+  if (!persist()){ db.sessions.splice(idx, 0, s); return false; }
+  renderAll(); toast('삭제했습니다');
+  return true;
+}
+
+let seId = null, seGroupV = 'daily', seSnap = null;
+function paintSeGroup(){ for (const b of $('seGroup').children) b.classList.toggle('on', b.dataset.g === seGroupV); }
+$('seGroup').addEventListener('click', e => { const b = e.target.closest('[data-g]'); if (b){ seGroupV = b.dataset.g; paintSeGroup(); } });
+function openSess(id){
+  const s = db.sessions.find(x => x.id === id); if (!s) return;
+  seId = id; seGroupV = s.group;
+  $('seName').value = s.name;
+  $('seDate').value = s.date;
+  $('seStart').value = hm(s.start);
+  $('seEnd').value = hm(s.end);
+  $('seMin').value = String(Math.round(s.activeMs / 60000));
+  seSnap = { date:s.date, start:$('seStart').value, end:$('seEnd').value, min:$('seMin').value };
+  paintSeGroup();
+  $('seScrim').classList.remove('hidden');
+}
+const closeSess = () => $('seScrim').classList.add('hidden');
+function saveSess(){
+  const s = db.sessions.find(x => x.id === seId); if (!s) return closeSess();
+  const name = $('seName').value.trim(), date = $('seDate').value, st = $('seStart').value, en = $('seEnd').value;
+  const min = Number($('seMin').value);
+  if (!name){ toast('활동 이름을 적어주세요.', true); return; }
+  if (!DATE_RE.test(date) || !/^\d\d:\d\d/.test(st) || !/^\d\d:\d\d/.test(en)){ toast('날짜와 시각을 확인해주세요.', true); return; }
+  if ($('seMin').value === '' || !Number.isFinite(min) || min < 0){ toast('활동 시간을 확인해주세요.', true); return; }
+  const before = { ...s };
+  s.name = name; s.group = seGroupV;
+  /* 손대지 않은 칸은 초 단위 원래 값을 그대로 둡니다 */
+  if (date !== seSnap.date || st !== seSnap.start || en !== seSnap.end){
+    const at = (d, t) => { const [h, m] = t.split(':').map(Number); const x = parseYmd(d); x.setHours(h, m, 0, 0); return x.getTime(); };
+    s.date = date; s.start = at(date, st); s.end = at(date, en);
+    if (s.end < s.start) s.end += 86400000;   // 자정을 넘긴 활동
+  }
+  if ($('seMin').value !== seSnap.min) s.activeMs = Math.round(min * 60000);
+  s.updatedAt = Date.now();
+  if (!persist()){ Object.assign(s, before); return; }
+  closeSess(); renderAll(); toast('고쳤습니다');
+}
+$('seSave').onclick = saveSess;
+$('seCancel').onclick = closeSess;
+$('seClose').onclick = closeSess;
+$('seDel').onclick = async () => { if (await deleteSess(seId)) closeSess(); };
+for (const [id, fn] of [['seScrim', closeSess], ['nmScrim', closeName]]){
+  $(id).addEventListener('click', e => { if (e.target.id === id) fn(); });
+}
+addEventListener('keydown', e => {
+  if (e.key !== 'Escape' || !$('cfScrim').classList.contains('hidden')) return;
+  if (!$('nmScrim').classList.contains('hidden')) closeName();
+  else if (!$('seScrim').classList.contains('hidden')) closeSess();
+}, true);   // 확인창 닫기보다 먼저 봐야 두 개가 한꺼번에 닫히지 않습니다
+
 /* ───── 백업 · 복원 ───── */
 function renderSet(){
-  $('sCount').textContent = `${db.records.length}개`;
+  $('sCount').textContent = `일기 ${db.records.length}개 · 타이머 ${db.sessions.length}개`;
   let bytes = 0; try { bytes = (localStorage.getItem(KEY) || '').length * 2; } catch(e){}
   $('sSize').textContent = bytes < 1024 ? `${bytes} B` : `${(bytes/1024).toFixed(1)} KB`;
   $('sLast').textContent = prefs.lastBackup ? fmtStamp(prefs.lastBackup) : '아직 없음';
@@ -714,13 +1152,14 @@ function renderSet(){
   let before = null;
   try { before = JSON.parse(localStorage.getItem(BEFORE_KEY) || 'null'); } catch(e){}
   $('undoBox').classList.toggle('hidden', !before);
-  if (before) $('undoTx').textContent = `${fmtStamp(before.savedAt)} 에 ${before.reason} 하기 직전 상태(기록 ${before.records.length}개)가 보관되어 있습니다.`;
+  if (before) $('undoTx').textContent = `${fmtStamp(before.savedAt)} 에 ${before.reason} 하기 직전 상태(일기 ${before.records.length}개 · 타이머 ${(before.sessions || []).length}개)가 보관되어 있습니다.`;
 }
 
 function exportBackup(){
   const n = new Date();
   const name = `my-record-backup-${ymd(n).replace(/-/g,'')}-${pad(n.getHours())}${pad(n.getMinutes())}.json`;
-  const data = { app:'나의 기록', version:1, exportedAt: n.toISOString(), records: db.records };
+  const data = { app:'나의 기록', version:2, exportedAt: n.toISOString(),
+    records: db.records, sessions: db.sessions, activities: db.activities };
   const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type:'application/json' }));
   const a = document.createElement('a'); a.href = url; a.download = name;
   document.body.appendChild(a); a.click(); a.remove();
@@ -747,10 +1186,38 @@ function cleanRecords(data){
   }
   return out;
 }
+function cleanSessions(list){
+  if (!Array.isArray(list)) return null;
+  const out = [], seen = new Set();
+  for (const s of list){
+    if (!s || typeof s !== 'object' || !DATE_RE.test(s.date)) return null;
+    const start = Number(s.start), end = Number(s.end), act = Number(s.activeMs);
+    if (![start, end, act].every(Number.isFinite) || act < 0) return null;
+    let id = typeof s.id === 'string' && s.id ? s.id : newId();
+    if (seen.has(id)) id = newId();
+    seen.add(id);
+    out.push({ id, activityId: String(s.activityId ?? ''), name: String(s.name ?? '').trim() || '활동',
+      group: GROUP[s.group] ? s.group : 'daily', date: s.date, start, end, activeMs: act,
+      pauses: Array.isArray(s.pauses) ? s.pauses.filter(p => p && Number.isFinite(Number(p.start)))
+        .map(p => ({ start: Number(p.start), end: Number(p.end) || Number(p.start) })) : [],
+      createdAt: Number(s.createdAt) || end, updatedAt: Number(s.updatedAt) || end });
+  }
+  return out;
+}
+/* 1차 백업(records 만 있음)도 받습니다 — 타이머 기록 0개, 활동 목록은 지금 것 유지 */
+function cleanBackup(data){
+  const records = cleanRecords(data); if (!records) return null;
+  const obj = data && !Array.isArray(data) ? data : {};
+  const sessions = obj.sessions === undefined ? [] : cleanSessions(obj.sessions);
+  if (!sessions) return null;
+  return { records, sessions, activities: validActs(obj.activities) ? obj.activities : null };
+}
+const dbFrom = bk => ({ version:2, records: bk.records, sessions: bk.sessions, activities: bk.activities || db.activities });
 
 function keepBefore(reason){
   try {
-    localStorage.setItem(BEFORE_KEY, JSON.stringify({ reason, savedAt: Date.now(), records: db.records }));
+    localStorage.setItem(BEFORE_KEY, JSON.stringify({ reason, savedAt: Date.now(),
+      records: db.records, sessions: db.sessions, activities: db.activities }));
     return true;
   } catch(e){ return false; }
 }
@@ -759,13 +1226,13 @@ $('importBtn').onclick = () => $('importFile').click();
 $('importFile').addEventListener('change', async e => {
   const file = e.target.files[0]; e.target.value = '';
   if (!file) return;
-  let recs = null;
-  try { recs = cleanRecords(JSON.parse(await file.text())); } catch(err){ recs = null; }
-  if (!recs){ toast('「나의 기록」 백업 파일이 아니거나 내용이 손상되었습니다. 아무것도 바꾸지 않았습니다.', true); return; }
-  const dates = recs.map(r => r.date).sort();
+  let bk = null;
+  try { bk = cleanBackup(JSON.parse(await file.text())); } catch(err){ bk = null; }
+  if (!bk){ toast('「나의 기록」 백업 파일이 아니거나 내용이 손상되었습니다. 아무것도 바꾸지 않았습니다.', true); return; }
+  const dates = bk.records.map(r => r.date).concat(bk.sessions.map(s => s.date)).sort();
   const range = dates.length ? `${fmtFull(dates[0])} ~ ${fmtFull(dates[dates.length-1])}` : '기록 없음';
   const ok = await ask('백업으로 덮어쓸까요?',
-    `지금 이 기기 기록 ${db.records.length}개  →  백업 기록 ${recs.length}개\n백업 기간: ${range}`,
+    `일기  ${db.records.length}개  →  ${bk.records.length}개\n타이머 기록  ${db.sessions.length}개  →  ${bk.sessions.length}개\n백업 기간: ${range}`,
     '지금 기록은 백업 내용으로 바뀌고, 백업에 없는 기록은 사라집니다.\n바로 직전 상태 하나는 「직전 상태로 되돌리기」로 살릴 수 있지만, 걱정되면 취소하고 먼저 「백업 파일 받기」를 하세요.',
     '덮어쓰기', true);
   if (!ok) return;
@@ -773,30 +1240,32 @@ $('importFile').addEventListener('change', async e => {
     const go = await ask('직전 상태를 보관하지 못했습니다', '저장 공간이 부족해 되돌리기용 사본을 만들지 못했습니다.', '그래도 덮어쓰면 지금 기록은 되살릴 수 없습니다.', '그래도 덮어쓰기', true);
     if (!go) return;
   }
-  const old = db; db = { version:1, records: recs }; loadFailed = false;
+  const old = db; db = dbFrom(bk); loadFailed = false;
   if (!persist()){ db = old; return; }
-  renderAll(); toast(`기록 ${recs.length}개를 복원했습니다`);
+  renderAll(); toast(`일기 ${bk.records.length}개 · 타이머 기록 ${bk.sessions.length}개를 복원했습니다`);
 });
 
 $('undoBtn').onclick = async () => {
   let before = null;
   try { before = JSON.parse(localStorage.getItem(BEFORE_KEY) || 'null'); } catch(e){}
-  const recs = before && cleanRecords(before.records);
-  if (!recs){ toast('보관된 상태를 읽지 못했습니다.', true); return; }
-  const ok = await ask('직전 상태로 되돌릴까요?', `지금 기록 ${db.records.length}개  →  보관된 기록 ${recs.length}개`, '지금 기록은 보관된 상태로 바뀝니다.', '되돌리기', false);
+  const bk = before && cleanBackup(before);
+  if (!bk){ toast('보관된 상태를 읽지 못했습니다.', true); return; }
+  const ok = await ask('직전 상태로 되돌릴까요?',
+    `일기  ${db.records.length}개  →  ${bk.records.length}개\n타이머 기록  ${db.sessions.length}개  →  ${bk.sessions.length}개`,
+    '지금 기록은 보관된 상태로 바뀝니다.', '되돌리기', false);
   if (!ok) return;
-  const old = db; db = { version:1, records: recs }; loadFailed = false;
+  const old = db; db = dbFrom(bk); loadFailed = false;
   if (!persist()){ db = old; return; }
   try { localStorage.removeItem(BEFORE_KEY); } catch(e){}
   renderAll(); toast('되돌렸습니다');
 };
 
 $('wipeBtn').onclick = async () => {
-  if (!db.records.length){ toast('지울 기록이 없습니다'); return; }
-  const ok = await ask('모든 기록을 지울까요?', `이 기기의 기록 ${db.records.length}개를 지웁니다.`, '지우기 직전 상태 하나는 「직전 상태로 되돌리기」로 살릴 수 있습니다.\n확실히 남기려면 먼저 「백업 파일 받기」를 하세요.', '모두 지우기', true);
+  if (!db.records.length && !db.sessions.length){ toast('지울 기록이 없습니다'); return; }
+  const ok = await ask('모든 기록을 지울까요?', `이 기기의 일기 ${db.records.length}개 · 타이머 기록 ${db.sessions.length}개를 지웁니다.\n활동 목록은 그대로 둡니다.`, '지우기 직전 상태 하나는 「직전 상태로 되돌리기」로 살릴 수 있습니다.\n확실히 남기려면 먼저 「백업 파일 받기」를 하세요.', '모두 지우기', true);
   if (!ok) return;
   keepBefore('전체 삭제');
-  const old = db; db = { version:1, records: [] };
+  const old = db; db = { ...db, records: [], sessions: [] };
   if (!persist()){ db = old; return; }
   renderAll(); toast('모든 기록을 지웠습니다');
 };
@@ -819,6 +1288,7 @@ matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', applyThe
 function switchTab(t){
   tab = t;
   for (const b of document.querySelectorAll('.tabs button')) b.classList.toggle('on', b.dataset.tab === t);
+  $('v-home').classList.toggle('hidden', t !== 'home');
   $('v-cal').classList.toggle('hidden', t !== 'cal');
   $('v-list').classList.toggle('hidden', t !== 'list');
   $('v-set').classList.toggle('hidden', t !== 'set');
@@ -830,6 +1300,8 @@ document.querySelector('.tabs').addEventListener('click', e => {
 });
 
 function renderAll(){
+  document.querySelector('.tabs [data-tab="home"]').classList.toggle('run', !!timer);
+  if (tab === 'home') renderHome();
   if (tab === 'cal') renderCal();
   if (tab === 'list') renderList();
   if (tab === 'set') renderSet();
@@ -839,6 +1311,7 @@ function renderAll(){
 applyTheme();
 if (loadFailed) setStatus(false, '저장된 기록을 읽지 못했습니다');
 renderAll();
+syncWake();
 askPersist();
 if ('serviceWorker' in navigator && location.protocol !== 'file:'){
   addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
