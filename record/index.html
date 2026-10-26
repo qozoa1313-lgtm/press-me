@@ -1,0 +1,848 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>나의 기록</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<meta name="theme-color" content="#FAF9F5">
+<style>
+:root{
+  /* 아이보리 종이 + 세이지 그린 한 색만 포인트로 씁니다 */
+  --bg:#FAF9F5; --card:#FFFFFF; --sunk:#F3F2EC; --ink:#2F332F; --soft:#7A7F78; --faint:#A9ADA6;
+  --line:#E7E5DE; --sage:#7C9A82; --on-sage:#FFFFFF; --sage-ink:#4F6B55; --sage-bg:#EEF2EC;
+  --sun:#B0776F; --sat:#6E8BA8; --danger:#A8645A; --danger-bg:#F6ECE9;
+  /* 카테고리 색 — 채도를 낮춰 점으로만 씁니다 */
+  --c-english:#6E95B5; --c-interview:#C4925E; --c-drawing:#8D80B5; --c-project:#5E9E92; --c-etc:#A39E94;
+  --shadow:0 1px 2px rgba(40,45,40,.05),0 4px 16px rgba(40,45,40,.05);
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#1B1D1B; --card:#242725; --sunk:#202321; --ink:#E7E8E3; --soft:#9DA39B; --faint:#6D736C;
+    --line:#343833; --sage:#93B39A; --on-sage:#17201A; --sage-ink:#B5CDB9; --sage-bg:#2A322C;
+    --sun:#C99189; --sat:#8EA8C2; --danger:#D08F85; --danger-bg:#3A2A27;
+    --shadow:none; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#1B1D1B; --card:#242725; --sunk:#202321; --ink:#E7E8E3; --soft:#9DA39B; --faint:#6D736C;
+  --line:#343833; --sage:#93B39A; --on-sage:#17201A; --sage-ink:#B5CDB9; --sage-bg:#2A322C;
+  --sun:#C99189; --sat:#8EA8C2; --danger:#D08F85; --danger-bg:#3A2A27;
+  --shadow:none; color-scheme:dark;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--ink); font-size:16px; line-height:1.6;
+  font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",system-ui,sans-serif;
+  padding-bottom:calc(76px + env(safe-area-inset-bottom));
+  word-break:keep-all; overflow-wrap:anywhere;
+}
+button{font:inherit;color:inherit;border:none;background:none;cursor:pointer;padding:0}
+input,textarea{font:inherit;color:inherit}
+.wrap{max-width:560px;margin:0 auto;padding:14px 16px 24px}
+.hidden{display:none!important}
+
+/* ───── 머리 ───── */
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:4px 0 14px}
+.top h1{font-size:19px;margin:0;font-weight:700;letter-spacing:-.01em}
+.status{font-size:12px;color:var(--soft);display:flex;align-items:center;gap:6px;white-space:nowrap}
+.status .dot{width:7px;height:7px;border-radius:50%;background:var(--sage)}
+.status.err{color:var(--danger)} .status.err .dot{background:var(--danger)}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow)}
+.note{font-size:13px;color:var(--soft);background:var(--sunk);border-radius:14px;padding:12px 14px;margin:0 0 14px;display:flex;gap:10px;align-items:flex-start}
+.note p{margin:0;flex:1}
+.note .x{color:var(--soft);font-size:13px;padding:2px 4px}
+
+/* ───── 캘린더 ───── */
+.cal{padding:14px 12px 10px}
+.calhd{display:flex;align-items:center;justify-content:space-between;padding:0 4px 10px}
+.calhd .ym{font-size:17px;font-weight:700}
+.calhd .nav{display:flex;gap:4px;align-items:center}
+.iconbtn{width:36px;height:36px;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;color:var(--soft);font-size:18px}
+.iconbtn:hover{background:var(--sunk)}
+.pill{font-size:13px;padding:6px 12px;border-radius:999px;border:1px solid var(--line);color:var(--soft)}
+.pill:hover{background:var(--sunk)}
+.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.wd{text-align:center;font-size:12px;color:var(--faint);padding:4px 0 6px}
+.wd.sun{color:var(--sun)} .wd.sat{color:var(--sat)}
+.day{aspect-ratio:1/1.08;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding-top:6px;border-radius:12px;font-size:14px;position:relative}
+.day:hover{background:var(--sunk)}
+.day.out{color:var(--faint);opacity:.55}
+.day.sun .n{color:var(--sun)} .day.sat .n{color:var(--sat)}
+.day .n{width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:50%;line-height:1}
+.day.today .n{background:var(--sage);color:var(--on-sage);font-weight:700}
+.day.sel{background:var(--sage-bg)}
+.day.sel:not(.today) .n{font-weight:700;color:var(--sage-ink)}
+@media (min-width:640px){.day{aspect-ratio:auto;height:60px}}
+.dots{display:flex;gap:3px;margin-top:5px;height:6px}
+.dots i{width:6px;height:6px;border-radius:50%;display:block}
+.legend{display:flex;flex-wrap:wrap;gap:6px 12px;padding:10px 6px 2px;font-size:12px;color:var(--soft)}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.legend i{width:7px;height:7px;border-radius:50%;display:inline-block}
+
+/* ───── 하루 기록 ───── */
+.dayhd{display:flex;align-items:center;justify-content:space-between;margin:20px 2px 10px}
+.dayhd h2{font-size:16px;margin:0}
+.dayhd .cnt{font-size:13px;color:var(--soft);font-weight:400;margin-left:6px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:42px;padding:0 16px;border-radius:12px;font-size:15px;font-weight:600}
+.btn.primary{background:var(--sage);color:var(--on-sage)}
+.btn.primary:hover{filter:brightness(.96)}
+.btn.ghost{border:1px solid var(--line);color:var(--ink);background:var(--card)}
+.btn.ghost:hover{background:var(--sunk)}
+.btn.danger{color:var(--danger);border:1px solid var(--line);background:var(--card)}
+.btn.danger.solid{background:var(--danger);color:#fff;border-color:var(--danger)}
+.btn.sm{height:34px;padding:0 12px;font-size:13px;border-radius:10px}
+.btn.wide{width:100%}
+.empty{color:var(--soft);font-size:14px;text-align:center;padding:22px 10px}
+
+.rec{padding:14px 16px;margin-bottom:10px}
+.rec .meta{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:13px;color:var(--soft)}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--ink)}
+.chip i{width:8px;height:8px;border-radius:50%;display:inline-block}
+.rec .acts{margin-left:auto;display:flex;gap:2px}
+.rec .acts button{font-size:13px;color:var(--soft);padding:4px 8px;border-radius:8px}
+.rec .acts button:hover{background:var(--sunk);color:var(--ink)}
+.field{margin-top:8px}
+.field .lb{font-size:12px;color:var(--soft);margin-bottom:1px}
+.field .tx{white-space:pre-wrap;font-size:15px}
+.blank{font-size:14px;color:var(--faint)}
+
+/* ───── 모아보기 ───── */
+.search{display:flex;align-items:center;gap:8px;padding:0 14px;height:46px;margin-bottom:10px}
+.search input{flex:1;border:none;outline:none;background:transparent;font-size:15px;min-width:0}
+.search .clr{color:var(--soft);font-size:13px}
+.filters{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:6px;scrollbar-width:none}
+.filters::-webkit-scrollbar{display:none}
+.fbtn{flex:none;display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 13px;border-radius:999px;border:1px solid var(--line);background:var(--card);font-size:13px;color:var(--soft)}
+.fbtn i{width:7px;height:7px;border-radius:50%}
+.fbtn.on{background:var(--sage-bg);border-color:var(--sage);color:var(--sage-ink);font-weight:600}
+.listbar{display:flex;align-items:center;justify-content:space-between;font-size:13px;color:var(--soft);margin:6px 2px 10px}
+.listbar .tg{display:flex;gap:4px}
+.listbar .tg button{padding:4px 9px;border-radius:8px;color:var(--soft)}
+.listbar .tg button.on{background:var(--sunk);color:var(--ink);font-weight:600}
+.dategrp{font-size:13px;font-weight:700;color:var(--soft);margin:16px 4px 8px}
+.item{width:100%;text-align:left;padding:13px 16px;margin-bottom:8px;display:block}
+.item:hover{border-color:var(--sage)}
+.item .head{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--soft)}
+.item .sum{margin-top:4px;font-size:15px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.item.open .sum{display:none}
+
+/* ───── 백업 · 설정 ───── */
+.sec{padding:16px 16px;margin-bottom:12px}
+.sec h3{font-size:15px;margin:0 0 4px}
+.sec p{font-size:14px;color:var(--soft);margin:0 0 12px}
+.sec .row{display:flex;gap:8px;flex-wrap:wrap}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:14px;margin:0}
+.kv dt{color:var(--soft)} .kv dd{margin:0}
+.seg{display:flex;background:var(--sunk);border-radius:12px;padding:3px}
+.seg button{flex:1;height:36px;border-radius:10px;font-size:14px;color:var(--soft)}
+.seg button.on{background:var(--card);color:var(--ink);font-weight:600;box-shadow:var(--shadow)}
+
+/* ───── 아래 탭 ───── */
+.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);z-index:10}
+.tabs .in{max-width:560px;margin:0 auto;display:flex}
+.tabs button{flex:1;height:60px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:12px;color:var(--faint)}
+.tabs button svg{width:22px;height:22px}
+.tabs button.on{color:var(--sage-ink);font-weight:600}
+
+/* ───── 시트(작성 · 상세 · 확인) ───── */
+.scrim{position:fixed;inset:0;background:rgba(20,22,20,.38);z-index:20;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--bg);width:100%;max-width:560px;max-height:94vh;overflow:auto;border-radius:22px 22px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom))}
+@media (min-width:640px){
+  .scrim{align-items:center}
+  .sheet{border-radius:22px;max-height:88vh}
+}
+.sheet .sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.sheet .sh h2{font-size:17px;margin:0}
+.flab{display:block;font-size:14px;font-weight:600;margin:14px 2px 6px}
+.flab small{font-weight:400;color:var(--soft);margin-left:6px;font-size:12px}
+.date-in{height:44px;border:1px solid var(--line);border-radius:12px;background:var(--card);padding:0 12px;font-size:15px}
+.cats{display:flex;flex-wrap:wrap;gap:6px}
+.cats .fbtn{height:38px;font-size:14px}
+textarea{width:100%;min-height:76px;resize:vertical;border:1px solid var(--line);border-radius:14px;background:var(--card);padding:11px 13px;font-size:15px;line-height:1.55;outline:none}
+textarea:focus,.date-in:focus,.search:focus-within{border-color:var(--sage)}
+textarea::placeholder,.search input::placeholder{color:var(--faint)}
+.sheet .foot{display:flex;gap:8px;margin-top:18px;align-items:center}
+.sheet .foot .grow{flex:1}
+.hint{font-size:12px;color:var(--faint);margin-top:10px;text-align:center}
+.confirm .msg{font-size:15px;white-space:pre-wrap;margin:4px 0 4px}
+.confirm .sub{font-size:13px;color:var(--soft);white-space:pre-wrap}
+
+.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:var(--bg);font-size:14px;padding:10px 16px;border-radius:12px;z-index:30;max-width:calc(100% - 32px);text-align:center}
+.toast.err{background:var(--danger);color:#fff}
+@media (prefers-reduced-motion:no-preference){
+  .sheet{animation:up .16s ease-out}
+  @keyframes up{from{transform:translateY(12px);opacity:.6}to{transform:none;opacity:1}}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>나의 기록</h1>
+    <div class="status" id="status" role="status"><span class="dot"></span><span id="statusTx">이 기기에 저장됨</span></div>
+  </header>
+
+  <!-- ───── 캘린더 ───── -->
+  <main id="v-cal">
+    <div class="note" id="firstNote">
+      <p>기록은 <b>지금 이 브라우저에만</b> 저장됩니다. PC와 휴대폰은 자동으로 맞춰지지 않아요. 가끔 「백업」 탭에서 파일로 받아두세요.</p>
+      <button class="x" id="firstNoteX" aria-label="안내 닫기">닫기</button>
+    </div>
+    <section class="card cal">
+      <div class="calhd">
+        <div class="ym" id="ym"></div>
+        <div class="nav">
+          <button class="pill" id="todayBtn">오늘</button>
+          <button class="iconbtn" id="prevM" aria-label="이전 달">‹</button>
+          <button class="iconbtn" id="nextM" aria-label="다음 달">›</button>
+        </div>
+      </div>
+      <div class="grid" id="wdays"></div>
+      <div class="grid" id="days"></div>
+      <div class="legend" id="legend"></div>
+    </section>
+    <div class="dayhd">
+      <h2 id="dayTitle"></h2>
+      <button class="btn primary sm" id="addBtn">＋ 기록</button>
+    </div>
+    <div id="dayList"></div>
+  </main>
+
+  <!-- ───── 모아보기 ───── -->
+  <main id="v-list" class="hidden">
+    <label class="card search">
+      <span style="color:var(--faint)" aria-hidden="true">⌕</span>
+      <input id="q" type="search" placeholder="키워드로 찾기" autocomplete="off">
+      <button class="clr hidden" id="qClr">지우기</button>
+    </label>
+    <div class="filters" id="filters"></div>
+    <div class="listbar">
+      <span id="listCnt"></span>
+      <div class="tg">
+        <button id="sortBtn">최신순</button>
+        <button id="openBtn" title="모든 기록의 내용을 펼쳐서 날짜끼리 비교합니다">내용 펼치기</button>
+      </div>
+    </div>
+    <div id="list"></div>
+  </main>
+
+  <!-- ───── 백업 · 설정 ───── -->
+  <main id="v-set" class="hidden">
+    <section class="card sec">
+      <h3>저장 위치</h3>
+      <p>기록은 서버가 아니라 <b>지금 쓰는 이 브라우저</b> 안에만 저장됩니다. 인터넷에 올라가지 않아요.<br>
+      그래서 <b>PC와 휴대폰 기록은 서로 자동으로 맞춰지지 않습니다.</b> 다른 기기로 옮기려면 백업 파일을 받아 그 기기에서 복원하세요.</p>
+      <dl class="kv">
+        <dt>기록 수</dt><dd id="sCount"></dd>
+        <dt>사용 용량</dt><dd id="sSize"></dd>
+        <dt>마지막 백업</dt><dd id="sLast"></dd>
+        <dt>저장 보호</dt><dd id="sPersist">확인 중</dd>
+      </dl>
+    </section>
+
+    <section class="card sec">
+      <h3>백업 받기</h3>
+      <p>모든 기록을 JSON 파일(기록을 글자로 담은 파일) 하나로 내려받습니다.</p>
+      <button class="btn primary wide" id="exportBtn">백업 파일 받기</button>
+    </section>
+
+    <section class="card sec">
+      <h3>백업에서 복원</h3>
+      <p>백업 파일을 고르면 내용을 먼저 보여드립니다. 복원하면 <b>지금 이 기기의 기록이 백업 내용으로 바뀝니다.</b></p>
+      <input type="file" id="importFile" accept=".json,application/json" class="hidden">
+      <button class="btn ghost wide" id="importBtn">백업 파일 고르기</button>
+      <div id="undoBox" class="hidden" style="margin-top:12px">
+        <p id="undoTx" style="margin-bottom:8px"></p>
+        <button class="btn ghost wide" id="undoBtn">직전 상태로 되돌리기</button>
+      </div>
+    </section>
+
+    <section class="card sec">
+      <h3>화면</h3>
+      <div class="seg" id="themeSeg">
+        <button data-v="system">기기 설정</button>
+        <button data-v="light">밝게</button>
+        <button data-v="dark">어둡게</button>
+      </div>
+    </section>
+
+    <section class="card sec">
+      <h3>모든 기록 지우기</h3>
+      <p>이 기기에 있는 「나의 기록」만 지웁니다. 같은 주소의 다른 사이트(영어 등) 기록은 건드리지 않아요.</p>
+      <button class="btn danger wide" id="wipeBtn">모든 기록 지우기</button>
+    </section>
+  </main>
+</div>
+
+<nav class="tabs" aria-label="화면 이동">
+  <div class="in">
+    <button data-tab="cal" class="on">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>캘린더</button>
+    <button data-tab="list">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M8 6h12M8 12h12M8 18h12"/><circle cx="4" cy="6" r=".9" fill="currentColor"/><circle cx="4" cy="12" r=".9" fill="currentColor"/><circle cx="4" cy="18" r=".9" fill="currentColor"/></svg>모아보기</button>
+    <button data-tab="set">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7.5 10.5 12 15l4.5-4.5"/><path d="M4.5 16v2.5a1.5 1.5 0 0 0 1.5 1.5h12a1.5 1.5 0 0 0 1.5-1.5V16"/></svg>백업</button>
+  </div>
+</nav>
+
+<!-- 작성 · 수정 -->
+<div class="scrim hidden" id="edScrim">
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="edTitle">
+    <div class="sh">
+      <h2 id="edTitle">기록 쓰기</h2>
+      <button class="iconbtn" id="edClose" aria-label="닫기">✕</button>
+    </div>
+    <label class="flab" for="edDate">날짜</label>
+    <input type="date" id="edDate" class="date-in">
+    <div class="flab">카테고리</div>
+    <div class="cats" id="edCats"></div>
+    <label class="flab" for="edDid">오늘 한 일<small>실제로 무엇을 했나요?</small></label>
+    <textarea id="edDid" placeholder="예: 영어 문장 3개를 10분 동안 공부했다."></textarea>
+    <label class="flab" for="edLearned">달라진 점 · 알게 된 것<small>없으면 비워도 됩니다</small></label>
+    <textarea id="edLearned" placeholder="예: 어제 기억하지 못한 문장을 오늘은 외웠다."></textarea>
+    <label class="flab" for="edNext">다음에 해볼 것<small>유지할 것 · 바꿔볼 것</small></label>
+    <textarea id="edNext" placeholder="예: 내일 한국어 뜻만 보고 말해보자."></textarea>
+    <div class="foot">
+      <button class="btn danger hidden" id="edDel">삭제</button>
+      <span class="grow"></span>
+      <button class="btn ghost" id="edCancel">취소</button>
+      <button class="btn primary" id="edSave">저장</button>
+    </div>
+    <div class="hint">모든 칸은 비워도 저장됩니다.</div>
+  </div>
+</div>
+
+<!-- 상세 -->
+<div class="scrim hidden" id="dtScrim">
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="dtTitle">
+    <div class="sh">
+      <h2 id="dtTitle"></h2>
+      <button class="iconbtn" id="dtClose" aria-label="닫기">✕</button>
+    </div>
+    <div id="dtBody"></div>
+    <div class="foot">
+      <button class="btn danger" id="dtDel">삭제</button>
+      <span class="grow"></span>
+      <button class="btn ghost" id="dtCal">캘린더에서 보기</button>
+      <button class="btn primary" id="dtEdit">수정</button>
+    </div>
+  </div>
+</div>
+
+<!-- 확인창 -->
+<div class="scrim hidden" id="cfScrim">
+  <div class="sheet confirm" role="alertdialog" aria-modal="true" aria-labelledby="cfTitle">
+    <div class="sh"><h2 id="cfTitle"></h2></div>
+    <div class="msg" id="cfMsg"></div>
+    <div class="sub" id="cfSub"></div>
+    <div class="foot">
+      <span class="grow"></span>
+      <button class="btn ghost" id="cfNo">취소</button>
+      <button class="btn primary" id="cfYes">확인</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast hidden" id="toast" role="status"></div>
+
+<script>
+'use strict';
+/* ───── 저장 이름 — 같은 주소의 다른 사이트(oneline.v1 · maestro.v3)와 겹치지 않게 ───── */
+const KEY = 'myrecord.v1.data';
+const PREF_KEY = 'myrecord.v1.prefs';
+const BEFORE_KEY = 'myrecord.v1.before';   // 복원 · 전체 삭제 직전 상태 하나만 보관
+
+const CATS = [
+  { id:'english',   name:'영어' },
+  { id:'interview', name:'면접' },
+  { id:'drawing',   name:'도면' },
+  { id:'project',   name:'프로젝트' },
+  { id:'etc',       name:'기타' },
+];
+const CAT = Object.fromEntries(CATS.map(c => [c.id, c]));
+const catColor = id => `var(--c-${CAT[id] ? id : 'etc'})`;
+const WD = ['일','월','화','수','목','금','토'];
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* 날짜는 늘 이 기기 시간 기준 'YYYY-MM-DD' — toISOString 은 한국에서 하루가 밀려서 쓰지 않습니다 */
+const pad = n => String(n).padStart(2, '0');
+const ymd = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const parseYmd = s => { const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); };
+const fmtDay = s => { const d = parseYmd(s); return `${d.getMonth()+1}월 ${d.getDate()}일 (${WD[d.getDay()]})`; };
+const fmtFull = s => { const d = parseYmd(s); return `${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일 (${WD[d.getDay()]})`; };
+const fmtTime = t => { const d = new Date(t); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+const fmtStamp = t => { const d = new Date(t); return `${d.getFullYear()}. ${d.getMonth()+1}. ${d.getDate()}. ${fmtTime(t)}`; };
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+
+/* ───── 저장소 ───── */
+let loadFailed = false;
+function readDb(){
+  let raw;
+  try { raw = localStorage.getItem(KEY); }
+  catch(e){ loadFailed = true; return { version:1, records:[] }; }
+  if (!raw) return { version:1, records:[] };
+  try {
+    const d = JSON.parse(raw);
+    if (!d || !Array.isArray(d.records)) throw new Error('형식 아님');
+    return d;
+  } catch(e){
+    /* 읽지 못한 원본을 빈 값으로 덮어쓰지 않도록 저장을 막습니다 */
+    loadFailed = true;
+    return { version:1, records:[] };
+  }
+}
+let db = readDb();
+
+function persist(){
+  if (loadFailed){ setStatus(false, '저장된 기록을 읽지 못해 저장을 멈췄습니다'); return false; }
+  try {
+    localStorage.setItem(KEY, JSON.stringify(db));
+    setStatus(true, `이 기기에 저장됨 · ${fmtTime(Date.now())}`);
+    return true;
+  } catch(e){
+    setStatus(false, '저장 실패');
+    toast('저장하지 못했습니다. 저장 공간이 부족하거나 브라우저가 막고 있어요.', true);
+    return false;
+  }
+}
+function setStatus(ok, tx){
+  $('status').classList.toggle('err', !ok);
+  $('statusTx').textContent = tx;
+}
+
+let prefs = {};
+try { prefs = JSON.parse(localStorage.getItem(PREF_KEY) || '{}') || {}; } catch(e){ prefs = {}; }
+function savePrefs(){ try { localStorage.setItem(PREF_KEY, JSON.stringify(prefs)); } catch(e){} }
+
+/* 다른 창에서 고쳤으면 다시 읽습니다 */
+addEventListener('storage', e => {
+  if (e.key === KEY){ loadFailed = false; db = readDb(); renderAll(); }
+});
+
+/* 브라우저가 공간 부족 때 마음대로 지우지 않도록 요청 */
+async function askPersist(){
+  const el = $('sPersist');
+  if (!navigator.storage || !navigator.storage.persist){ el.textContent = '이 브라우저는 지원하지 않음'; return; }
+  try {
+    let ok = await navigator.storage.persisted();
+    if (!ok) ok = await navigator.storage.persist();
+    el.textContent = ok ? '켜짐 (브라우저가 임의로 지우지 않음)' : '꺼짐 — 백업을 받아두면 안전합니다';
+  } catch(e){ el.textContent = '확인 못 함'; }
+}
+
+/* ───── 화면 상태 ───── */
+const today = ymd(new Date());
+let view = { y: new Date().getFullYear(), m: new Date().getMonth() };
+let sel = today;
+let tab = 'cal';
+let filterCat = 'all';
+let sortDesc = true;
+let openAll = false;
+
+const byDate = () => {
+  const map = {};
+  for (const r of db.records) (map[r.date] ||= []).push(r);
+  return map;
+};
+const sortRecs = (a, b) => (a.date === b.date ? a.createdAt - b.createdAt : a.date < b.date ? -1 : 1);
+
+function toast(msg, err){
+  const t = $('toast');
+  t.textContent = msg; t.classList.toggle('err', !!err); t.classList.remove('hidden');
+  clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.add('hidden'), err ? 4200 : 1800);
+}
+
+/* ───── 캘린더 ───── */
+function renderCal(){
+  $('ym').textContent = `${view.y}년 ${view.m+1}월`;
+  const map = byDate();
+  const first = new Date(view.y, view.m, 1);
+  const start = new Date(view.y, view.m, 1 - first.getDay());
+  const lastDate = new Date(view.y, view.m + 1, 0).getDate();
+  const weeks = Math.ceil((first.getDay() + lastDate) / 7);
+  let h = '';
+  for (let i = 0; i < weeks * 7; i++){
+    const d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
+    const k = ymd(d);
+    const recs = map[k] || [];
+    const cats = CATS.filter(c => recs.some(r => r.category === c.id)).map(c => c.id);
+    const cls = ['day',
+      d.getMonth() !== view.m && 'out',
+      d.getDay() === 0 && 'sun', d.getDay() === 6 && 'sat',
+      k === today && 'today', k === sel && 'sel'].filter(Boolean).join(' ');
+    const label = `${fmtDay(k)}${recs.length ? `, 기록 ${recs.length}개` : ''}`;
+    h += `<button class="${cls}" data-d="${k}" aria-label="${label}"><span class="n">${d.getDate()}</span>`
+      + `<span class="dots">${cats.map(c => `<i style="background:${catColor(c)}"></i>`).join('')}</span></button>`;
+  }
+  $('days').innerHTML = h;
+  renderDay();
+}
+
+function recCard(r, withActs){
+  const f = (lb, tx) => tx ? `<div class="field"><div class="lb">${lb}</div><div class="tx">${esc(tx)}</div></div>` : '';
+  const body = f('오늘 한 일', r.did) + f('달라진 점 · 알게 된 것', r.learned) + f('다음에 해볼 것', r.next);
+  return `<article class="card rec">
+    <div class="meta"><span class="chip"><i style="background:${catColor(r.category)}"></i>${esc(CAT[r.category]?.name || '기타')}</span>
+      ${withActs ? `<span class="acts"><button data-edit="${r.id}">수정</button><button data-del="${r.id}">삭제</button></span>` : ''}</div>
+    ${body || '<div class="blank">적은 내용 없이 남긴 기록</div>'}
+  </article>`;
+}
+
+function renderDay(){
+  const recs = (byDate()[sel] || []).sort(sortRecs);
+  $('dayTitle').innerHTML = `${esc(fmtDay(sel))}${recs.length ? `<span class="cnt">${recs.length}개</span>` : ''}`;
+  $('dayList').innerHTML = recs.length
+    ? recs.map(r => recCard(r, true)).join('')
+    : `<div class="empty">이 날의 기록이 없습니다.</div>`;
+}
+
+$('wdays').innerHTML = WD.map((w, i) => `<div class="wd ${i===0?'sun':i===6?'sat':''}">${w}</div>`).join('');
+$('legend').innerHTML = CATS.map(c => `<span><i style="background:${catColor(c.id)}"></i>${c.name}</span>`).join('');
+$('days').addEventListener('click', e => {
+  const b = e.target.closest('[data-d]'); if (!b) return;
+  sel = b.dataset.d;
+  const d = parseYmd(sel);
+  if (d.getMonth() !== view.m || d.getFullYear() !== view.y) view = { y:d.getFullYear(), m:d.getMonth() };
+  renderCal();
+});
+const moveMonth = n => { const d = new Date(view.y, view.m + n, 1); view = { y:d.getFullYear(), m:d.getMonth() }; renderCal(); };
+$('prevM').onclick = () => moveMonth(-1);
+$('nextM').onclick = () => moveMonth(1);
+$('todayBtn').onclick = () => { sel = today; view = { y:new Date().getFullYear(), m:new Date().getMonth() }; renderCal(); };
+$('addBtn').onclick = () => openEditor(null, sel);
+$('dayList').addEventListener('click', e => {
+  const ed = e.target.closest('[data-edit]'); if (ed) return openEditor(ed.dataset.edit);
+  const dl = e.target.closest('[data-del]'); if (dl) return deleteRec(dl.dataset.del);
+});
+
+if (prefs.noteClosed) $('firstNote').classList.add('hidden');
+$('firstNoteX').onclick = () => { prefs.noteClosed = true; savePrefs(); $('firstNote').classList.add('hidden'); };
+
+/* ───── 작성 · 수정 ───── */
+let editing = null;      // 고치는 기록 id (새 기록이면 null)
+let edCat = 'etc';
+let edSnap = '';
+
+$('edCats').innerHTML = CATS.map(c => `<button class="fbtn" data-c="${c.id}"><i style="background:${catColor(c.id)}"></i>${c.name}</button>`).join('');
+$('edCats').addEventListener('click', e => {
+  const b = e.target.closest('[data-c]'); if (!b) return;
+  edCat = b.dataset.c; paintEdCats();
+});
+function paintEdCats(){
+  for (const b of $('edCats').children) b.classList.toggle('on', b.dataset.c === edCat);
+}
+const edState = () => JSON.stringify([$('edDate').value, edCat, $('edDid').value, $('edLearned').value, $('edNext').value]);
+
+function openEditor(id, date){
+  const r = id ? db.records.find(x => x.id === id) : null;
+  if (id && !r) return;
+  editing = r ? r.id : null;
+  $('edTitle').textContent = r ? '기록 수정' : '기록 쓰기';
+  $('edDate').value = r ? r.date : (date || today);
+  edCat = r ? r.category : (prefs.lastCat && CAT[prefs.lastCat] ? prefs.lastCat : 'english');
+  $('edDid').value = r?.did || '';
+  $('edLearned').value = r?.learned || '';
+  $('edNext').value = r?.next || '';
+  $('edDel').classList.toggle('hidden', !r);
+  paintEdCats();
+  edSnap = edState();
+  $('edScrim').classList.remove('hidden');
+  if (matchMedia('(pointer:fine)').matches) $('edDid').focus();
+}
+async function closeEditor(){
+  if (edState() !== edSnap){
+    const ok = await ask('저장하지 않고 닫을까요?', '적은 내용이 사라집니다.', '', '닫기', true);
+    if (!ok) return;
+  }
+  $('edScrim').classList.add('hidden');
+}
+function saveEditor(){
+  const date = $('edDate').value;
+  if (!DATE_RE.test(date)){ toast('날짜를 골라주세요.', true); return; }
+  const now = Date.now();
+  const data = { date, category: edCat,
+    did: $('edDid').value.trim(), learned: $('edLearned').value.trim(), next: $('edNext').value.trim() };
+  let before = null;
+  if (editing){
+    const r = db.records.find(x => x.id === editing);
+    before = { ...r };
+    Object.assign(r, data, { updatedAt: now });
+  } else {
+    db.records.push({ id: newId(), ...data, createdAt: now, updatedAt: now });
+  }
+  if (!persist()){
+    /* 저장 못 했으면 화면 속 자료도 원래대로 */
+    if (editing) Object.assign(db.records.find(x => x.id === editing), before);
+    else db.records.pop();
+    return;
+  }
+  prefs.lastCat = edCat; savePrefs();
+  $('edScrim').classList.add('hidden');
+  sel = date;
+  const d = parseYmd(date); view = { y:d.getFullYear(), m:d.getMonth() };
+  renderAll();
+  toast('저장했습니다');
+}
+$('edSave').onclick = saveEditor;
+$('edCancel').onclick = closeEditor;
+$('edClose').onclick = closeEditor;
+$('edDel').onclick = async () => { if (await deleteRec(editing)) $('edScrim').classList.add('hidden'); };
+$('edScrim').addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter'){ e.preventDefault(); saveEditor(); }
+});
+
+async function deleteRec(id){
+  const r = db.records.find(x => x.id === id); if (!r) return false;
+  const ok = await ask('이 기록을 삭제할까요?', `${fmtDay(r.date)} · ${CAT[r.category]?.name || '기타'}`, '삭제하면 되돌릴 수 없습니다.', '삭제', true);
+  if (!ok) return false;
+  const idx = db.records.indexOf(r);
+  db.records.splice(idx, 1);
+  if (!persist()){ db.records.splice(idx, 0, r); return false; }
+  renderAll();
+  toast('삭제했습니다');
+  return true;
+}
+
+/* ───── 모아보기 ───── */
+$('filters').innerHTML = `<button class="fbtn on" data-f="all">전체</button>`
+  + CATS.map(c => `<button class="fbtn" data-f="${c.id}"><i style="background:${catColor(c.id)}"></i>${c.name}</button>`).join('');
+$('filters').addEventListener('click', e => {
+  const b = e.target.closest('[data-f]'); if (!b) return;
+  filterCat = b.dataset.f;
+  for (const x of $('filters').children) x.classList.toggle('on', x === b);
+  renderList();
+});
+$('q').addEventListener('input', () => { $('qClr').classList.toggle('hidden', !$('q').value); renderList(); });
+$('qClr').onclick = e => { e.preventDefault(); $('q').value = ''; $('qClr').classList.add('hidden'); renderList(); };
+$('sortBtn').onclick = () => { sortDesc = !sortDesc; renderList(); };
+$('openBtn').onclick = () => { openAll = !openAll; renderList(); };
+
+function renderList(){
+  const words = $('q').value.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  let recs = db.records.filter(r => filterCat === 'all' || r.category === filterCat);
+  if (words.length){
+    recs = recs.filter(r => {
+      const hay = [r.did, r.learned, r.next, CAT[r.category]?.name, r.date].join(' ').toLowerCase();
+      return words.every(w => hay.includes(w));
+    });
+  }
+  recs.sort(sortRecs); if (sortDesc) recs.reverse();
+  $('sortBtn').textContent = sortDesc ? '최신순' : '오래된순';
+  $('openBtn').classList.toggle('on', openAll);
+  $('listCnt').textContent = `${recs.length}개`;
+  if (!db.records.length){ $('list').innerHTML = `<div class="empty">아직 기록이 없습니다.<br>캘린더에서 날짜를 누르고 「＋ 기록」으로 시작하세요.</div>`; return; }
+  if (!recs.length){ $('list').innerHTML = `<div class="empty">조건에 맞는 기록이 없습니다.</div>`; return; }
+  let h = '', last = '';
+  for (const r of recs){
+    if (r.date !== last){ h += `<div class="dategrp">${esc(fmtFull(r.date))}</div>`; last = r.date; }
+    if (openAll){ h += recCard(r, true); continue; }
+    const sum = r.did || r.learned || r.next;
+    h += `<button class="card item" data-open="${r.id}">
+      <div class="head"><span class="chip"><i style="background:${catColor(r.category)}"></i>${esc(CAT[r.category]?.name || '기타')}</span></div>
+      <div class="sum">${sum ? esc(sum) : '<span class="blank">적은 내용 없이 남긴 기록</span>'}</div></button>`;
+  }
+  $('list').innerHTML = h;
+}
+$('list').addEventListener('click', e => {
+  const o = e.target.closest('[data-open]'); if (o) return openDetail(o.dataset.open);
+  const ed = e.target.closest('[data-edit]'); if (ed) return openEditor(ed.dataset.edit);
+  const dl = e.target.closest('[data-del]'); if (dl) return deleteRec(dl.dataset.del);
+});
+
+/* ───── 상세 ───── */
+let detailId = null;
+function openDetail(id){
+  const r = db.records.find(x => x.id === id); if (!r) return;
+  detailId = id;
+  $('dtTitle').textContent = fmtFull(r.date);
+  $('dtBody').innerHTML = recCard(r, false)
+    + `<div class="hint" style="text-align:left">처음 쓴 때 ${fmtStamp(r.createdAt)}${r.updatedAt !== r.createdAt ? ` · 고친 때 ${fmtStamp(r.updatedAt)}` : ''}</div>`;
+  $('dtScrim').classList.remove('hidden');
+}
+const closeDetail = () => $('dtScrim').classList.add('hidden');
+$('dtClose').onclick = closeDetail;
+$('dtEdit').onclick = () => { closeDetail(); openEditor(detailId); };
+$('dtDel').onclick = async () => { if (await deleteRec(detailId)) closeDetail(); };
+$('dtCal').onclick = () => {
+  const r = db.records.find(x => x.id === detailId); if (!r) return;
+  closeDetail(); sel = r.date; const d = parseYmd(r.date); view = { y:d.getFullYear(), m:d.getMonth() };
+  switchTab('cal');
+};
+
+/* ───── 확인창 ───── */
+let cfResolve = null;
+function ask(title, msg, sub, yesLabel, danger){
+  $('cfTitle').textContent = title;
+  $('cfMsg').textContent = msg || '';
+  $('cfSub').textContent = sub || '';
+  $('cfYes').textContent = yesLabel || '확인';
+  $('cfYes').className = 'btn ' + (danger ? 'danger solid' : 'primary');
+  $('cfScrim').classList.remove('hidden');
+  $('cfNo').focus();
+  return new Promise(res => { cfResolve = res; });
+}
+const cfDone = v => { $('cfScrim').classList.add('hidden'); if (cfResolve){ cfResolve(v); cfResolve = null; } };
+$('cfYes').onclick = () => cfDone(true);
+$('cfNo').onclick = () => cfDone(false);
+
+/* 바깥 누르기 · Esc 로 닫기 */
+for (const [id, fn] of [['edScrim', closeEditor], ['dtScrim', closeDetail], ['cfScrim', () => cfDone(false)]]){
+  $(id).addEventListener('click', e => { if (e.target.id === id) fn(); });
+}
+addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  if (!$('cfScrim').classList.contains('hidden')) return cfDone(false);
+  if (!$('dtScrim').classList.contains('hidden')) return closeDetail();
+  if (!$('edScrim').classList.contains('hidden')) return closeEditor();
+});
+
+/* ───── 백업 · 복원 ───── */
+function renderSet(){
+  $('sCount').textContent = `${db.records.length}개`;
+  let bytes = 0; try { bytes = (localStorage.getItem(KEY) || '').length * 2; } catch(e){}
+  $('sSize').textContent = bytes < 1024 ? `${bytes} B` : `${(bytes/1024).toFixed(1)} KB`;
+  $('sLast').textContent = prefs.lastBackup ? fmtStamp(prefs.lastBackup) : '아직 없음';
+  for (const b of $('themeSeg').children) b.classList.toggle('on', b.dataset.v === (prefs.theme || 'system'));
+  let before = null;
+  try { before = JSON.parse(localStorage.getItem(BEFORE_KEY) || 'null'); } catch(e){}
+  $('undoBox').classList.toggle('hidden', !before);
+  if (before) $('undoTx').textContent = `${fmtStamp(before.savedAt)} 에 ${before.reason} 하기 직전 상태(기록 ${before.records.length}개)가 보관되어 있습니다.`;
+}
+
+function exportBackup(){
+  const n = new Date();
+  const name = `my-record-backup-${ymd(n).replace(/-/g,'')}-${pad(n.getHours())}${pad(n.getMinutes())}.json`;
+  const data = { app:'나의 기록', version:1, exportedAt: n.toISOString(), records: db.records };
+  const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type:'application/json' }));
+  const a = document.createElement('a'); a.href = url; a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  prefs.lastBackup = Date.now(); savePrefs(); renderSet();
+  toast(`${name} 을 내려받았습니다`);
+}
+$('exportBtn').onclick = exportBackup;
+
+/* 백업 파일을 검사해 기록 목록으로 바꿉니다. 이상하면 null */
+function cleanRecords(data){
+  const list = Array.isArray(data) ? data : data && Array.isArray(data.records) ? data.records : null;
+  if (!list) return null;
+  const out = [], seen = new Set();
+  for (const r of list){
+    if (!r || typeof r !== 'object' || !DATE_RE.test(r.date)) return null;
+    let id = typeof r.id === 'string' && r.id ? r.id : newId();
+    if (seen.has(id)) id = newId();
+    seen.add(id);
+    const created = Number(r.createdAt) || Date.now();
+    out.push({ id, date: r.date, category: CAT[r.category] ? r.category : 'etc',
+      did: String(r.did ?? ''), learned: String(r.learned ?? ''), next: String(r.next ?? ''),
+      createdAt: created, updatedAt: Number(r.updatedAt) || created });
+  }
+  return out;
+}
+
+function keepBefore(reason){
+  try {
+    localStorage.setItem(BEFORE_KEY, JSON.stringify({ reason, savedAt: Date.now(), records: db.records }));
+    return true;
+  } catch(e){ return false; }
+}
+
+$('importBtn').onclick = () => $('importFile').click();
+$('importFile').addEventListener('change', async e => {
+  const file = e.target.files[0]; e.target.value = '';
+  if (!file) return;
+  let recs = null;
+  try { recs = cleanRecords(JSON.parse(await file.text())); } catch(err){ recs = null; }
+  if (!recs){ toast('「나의 기록」 백업 파일이 아니거나 내용이 손상되었습니다. 아무것도 바꾸지 않았습니다.', true); return; }
+  const dates = recs.map(r => r.date).sort();
+  const range = dates.length ? `${fmtFull(dates[0])} ~ ${fmtFull(dates[dates.length-1])}` : '기록 없음';
+  const ok = await ask('백업으로 덮어쓸까요?',
+    `지금 이 기기 기록 ${db.records.length}개  →  백업 기록 ${recs.length}개\n백업 기간: ${range}`,
+    '지금 기록은 백업 내용으로 바뀌고, 백업에 없는 기록은 사라집니다.\n바로 직전 상태 하나는 「직전 상태로 되돌리기」로 살릴 수 있지만, 걱정되면 취소하고 먼저 「백업 파일 받기」를 하세요.',
+    '덮어쓰기', true);
+  if (!ok) return;
+  if (!keepBefore('복원')){
+    const go = await ask('직전 상태를 보관하지 못했습니다', '저장 공간이 부족해 되돌리기용 사본을 만들지 못했습니다.', '그래도 덮어쓰면 지금 기록은 되살릴 수 없습니다.', '그래도 덮어쓰기', true);
+    if (!go) return;
+  }
+  const old = db; db = { version:1, records: recs }; loadFailed = false;
+  if (!persist()){ db = old; return; }
+  renderAll(); toast(`기록 ${recs.length}개를 복원했습니다`);
+});
+
+$('undoBtn').onclick = async () => {
+  let before = null;
+  try { before = JSON.parse(localStorage.getItem(BEFORE_KEY) || 'null'); } catch(e){}
+  const recs = before && cleanRecords(before.records);
+  if (!recs){ toast('보관된 상태를 읽지 못했습니다.', true); return; }
+  const ok = await ask('직전 상태로 되돌릴까요?', `지금 기록 ${db.records.length}개  →  보관된 기록 ${recs.length}개`, '지금 기록은 보관된 상태로 바뀝니다.', '되돌리기', false);
+  if (!ok) return;
+  const old = db; db = { version:1, records: recs }; loadFailed = false;
+  if (!persist()){ db = old; return; }
+  try { localStorage.removeItem(BEFORE_KEY); } catch(e){}
+  renderAll(); toast('되돌렸습니다');
+};
+
+$('wipeBtn').onclick = async () => {
+  if (!db.records.length){ toast('지울 기록이 없습니다'); return; }
+  const ok = await ask('모든 기록을 지울까요?', `이 기기의 기록 ${db.records.length}개를 지웁니다.`, '지우기 직전 상태 하나는 「직전 상태로 되돌리기」로 살릴 수 있습니다.\n확실히 남기려면 먼저 「백업 파일 받기」를 하세요.', '모두 지우기', true);
+  if (!ok) return;
+  keepBefore('전체 삭제');
+  const old = db; db = { version:1, records: [] };
+  if (!persist()){ db = old; return; }
+  renderAll(); toast('모든 기록을 지웠습니다');
+};
+
+/* ───── 화면 모드 ───── */
+function applyTheme(){
+  const t = prefs.theme || 'system';
+  if (t === 'system') document.documentElement.removeAttribute('data-theme');
+  else document.documentElement.setAttribute('data-theme', t);
+  const dark = t === 'dark' || (t === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
+  document.querySelector('meta[name="theme-color"]').content = dark ? '#1B1D1B' : '#FAF9F5';
+}
+$('themeSeg').addEventListener('click', e => {
+  const b = e.target.closest('[data-v]'); if (!b) return;
+  prefs.theme = b.dataset.v; savePrefs(); applyTheme(); renderSet();
+});
+matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', applyTheme);
+
+/* ───── 탭 ───── */
+function switchTab(t){
+  tab = t;
+  for (const b of document.querySelectorAll('.tabs button')) b.classList.toggle('on', b.dataset.tab === t);
+  $('v-cal').classList.toggle('hidden', t !== 'cal');
+  $('v-list').classList.toggle('hidden', t !== 'list');
+  $('v-set').classList.toggle('hidden', t !== 'set');
+  renderAll();
+  scrollTo(0, 0);
+}
+document.querySelector('.tabs').addEventListener('click', e => {
+  const b = e.target.closest('[data-tab]'); if (b) switchTab(b.dataset.tab);
+});
+
+function renderAll(){
+  if (tab === 'cal') renderCal();
+  if (tab === 'list') renderList();
+  if (tab === 'set') renderSet();
+}
+
+/* ───── 시작 ───── */
+applyTheme();
+if (loadFailed) setStatus(false, '저장된 기록을 읽지 못했습니다');
+renderAll();
+askPersist();
+if ('serviceWorker' in navigator && location.protocol !== 'file:'){
+  addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+}
+</script>
+</body>
+</html>

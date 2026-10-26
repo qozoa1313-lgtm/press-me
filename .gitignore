@@ -8,3 +8,6 @@ merged/
 fgo-japanese/**/*.mp3
 fgo-japanese/**/*.wav
 fgo-japanese/**/*.ogg
+
+# 나의 기록(record) — 개인 기록 백업 파일은 절대 올리지 않는다
+my-record-backup*.json
