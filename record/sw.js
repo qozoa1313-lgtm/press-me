@@ -1,6 +1,6 @@
 /* 나의 기록 — 인터넷이 없어도 열리게 화면 파일만 저장해 둡니다 (기록 내용은 여기 담기지 않습니다) */
-const CACHE = 'myrecord-v1';
-const SHELL = ['./','./index.html','./manifest.json','./icon-192.png','./icon-512.png'];
+const CACHE = 'myrecord-v2';
+const SHELL = ['./','./index.html','./quotes.js','./manifest.json','./icon-192.png','./icon-512.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE)

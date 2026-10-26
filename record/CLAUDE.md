@@ -4,6 +4,7 @@
 
 ## 파일
 - index.html — 화면·기능 전부 (HTML 한 장, 빌드 없음)
+- quotes.js — 단계별 하루 한 문장 169개 (시작 43 · 진행 42 · 마무리 42 · 돌아보기 42). 직접 쓴 문장, 명언 없음
 - manifest.json · icon-192.png · icon-512.png — 휴대폰 홈 화면 추가용
 - sw.js — 인터넷 없이도 화면이 열리게 하는 장치 (기록 내용은 담지 않음)
 
@@ -13,7 +14,12 @@ https://qozoa1313-lgtm.github.io/press-me/record/
 ## 이미 정한 것 (바꾸지 말 것)
 - 영어 사이트(press-me/english)와 같은 방식: press-me 저장소 하위 폴더, HTML 한 장
 - 기록은 브라우저 localStorage 에만 저장. 이름은 myrecord.v1.data / .prefs / .before / .timer
-- data 안: records(수동 일기) · sessions(타이머 기록) · activities(활동 목록). 1차 자료(records만)는 열 때 칸만 덧붙임(version 2), records 는 손대지 않음
+- data 안(version 3): records(수동 일기) · sessions(타이머 기록, note=한 줄 기록) · activities · reviews(7일 돌아보기 답) · checks(14일 점검 답) · savedQuotes · checkStart
+- 예전 자료는 열 때 빈 칸만 덧붙임(migrate). records 내용은 손대지 않음. 예전 백업 복원 시 백업에 없는 칸은 지금 것 유지
+- 기본 활동 id 고정(d1~d4, l1~l4) — 「최근에 해본 일」이 같은 활동을 찾게
+- prefs(기기별, 백업 안 됨): hideTime · hideStats · showQuotes · askNote · quotes(문장 뽑기 기록 14일) · checkLater · checkHidden
+- 14일 점검: 1일 차 = checkStart 또는 가장 이른 타이머 날짜. 날짜(현지) 기준 15일 차부터 시작 화면에 작은 카드. 점검 1번 하면 다시 안 띄움. 점수 없음, 답에 맞는 참고 안내 3종
+- 화면 켜짐 유지는 「진행 중」에만. 쉬는 중·끝나면 풂
 - 진행 중 타이머는 myrecord.v1.timer 에만. 시작·쉬기·이어하기 시각으로 계산(초 세기 아님). 「여기까지」 때 타이머 id 로 중복 저장 막음
 - 타이머 기록은 시작한 날짜에 들어감. 활동 목록에서 지워도 과거 기록은 남음(이름을 기록에 복사해 둠)
 - 타이머가 켜져 있는 동안 화면 켜짐 유지(Wake Lock) — 지원 안 하는 브라우저는 안내만
@@ -23,9 +29,11 @@ https://qozoa1313-lgtm.github.io/press-me/record/
 - 백업 파일 이름 my-record-backup-*.json — .gitignore 로 저장소 업로드 차단
 
 ## 다음에 할 것
-- 2차 남은 것: 검증 기록, 주간 돌아보기 (타이머 · 시작 화면은 2026-10-26 추가)
-- 모아보기에는 아직 타이머 기록이 안 나옴(수동 일기만)
+- 2026-10-26 최종 개선 반영(문장 · 시간 숨김 · 최근 활동 · 한 줄 기록 · 7일 돌아보기 · 14일 점검 · 모아보기 통합). 이제 실사용 후 불편한 점만 고침
+- 검증 기록(방법·기간·기준 템플릿)은 아직 안 만듦 — 7일 돌아보기의 「결정」으로 일부 대신
+- 3차: PC·휴대폰 자동 동기화 검토
 - 3차: PC·휴대폰 자동 동기화 검토
 
 ## 아직 확인 못 한 것
-- 실제 갤럭시 휴대폰(삼성 인터넷·크롬)에서의 동작 · 화면 켜짐 유지 — 2026-10-26 기준 PC 크롬 휴대폰 크기 흉내 + 가짜 시계로만 시험
+- 실제 갤럭시 휴대폰(삼성 인터넷·크롬)에서의 동작 · 화면 켜짐 유지 — 2026-10-26 기준 PC 크롬 휴대폰 크기 흉내 + 가짜 시계 + 가짜 화면 켜짐 장치로만 시험
+- 시험 파일은 저장소 밖(임시 폴더)에 있음: test_record.py(39) · test_timer.py(52) · test_final.py(85)

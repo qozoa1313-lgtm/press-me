@@ -137,7 +137,7 @@ input,textarea{font:inherit;color:inherit}
 .timer .st{font-size:14px;color:var(--soft);min-height:22px}
 .timer .st b{color:var(--sage-ink)}
 .timer .btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:22px}
-.timer .btn{height:58px;font-size:16px;border-radius:16px}
+.timer .btn{height:58px;font-size:16px;border-radius:16px;padding:0 8px;white-space:nowrap}
 .timer .wake{font-size:12px;color:var(--faint);margin-top:12px;min-height:18px}
 /* 타이머 기록 */
 .sessbox{padding:12px 16px;margin-bottom:10px}
@@ -159,6 +159,64 @@ input,textarea{font:inherit;color:inherit}
 .tabs button.run::after{content:'';position:absolute;top:11px;left:calc(50% + 9px);width:7px;height:7px;border-radius:50%;background:var(--sage)}
 .txt-in{width:100%}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+/* 하루 한 문장 — 작은 카드 */
+.quote{display:flex;align-items:flex-start;gap:4px;font-size:14px;color:var(--soft);background:var(--sunk);border-radius:14px;padding:10px 6px 10px 14px;margin:0 0 14px}
+.quote p{margin:0;flex:1;padding-top:3px}
+.qb{width:30px;height:30px;border-radius:9px;color:var(--faint);font-size:15px;flex:none}
+.qb:hover{background:var(--card)}
+.qb.on{color:var(--sage-ink)}
+/* 최근에 해본 일 */
+.recent{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 18px}
+.recent button{height:42px;padding:0 16px;border-radius:999px;border:1px solid var(--line);background:var(--card);font-size:15px;font-weight:600}
+.recent button:hover{border-color:var(--sage)}
+.recent button:active{background:var(--sage-bg)}
+/* 타이머 숨김 · 마무리 */
+.tbusy{margin:14px 0 6px}
+.tbusy .big{font-size:26px;font-weight:700;color:var(--sage-ink)}
+.tbusy .sub{font-size:14px;color:var(--soft);margin-top:4px}
+.timer .tg2{margin-top:2px}
+.done{padding:22px 18px 18px}
+.done .dk{font-size:13px;color:var(--soft)}
+.done .dn{font-size:19px;font-weight:700;margin:2px 0 4px}
+.done .btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.done .btn{height:50px}
+.sa .note1{font-size:13px;color:var(--ink);padding:0 0 4px 14px;margin:-4px 0 6px 2px;border-left:2px solid var(--line);white-space:pre-wrap}
+/* 안내 카드 (14일 점검) */
+.ckcard{padding:16px;margin-top:14px}
+.ckcard h3{font-size:15px;margin:0 0 2px}
+.ckcard p{font-size:14px;color:var(--soft);margin:0 0 12px}
+.ckcard .row{display:flex;gap:8px}
+.ckres{background:var(--sage-bg);border-radius:14px;padding:14px;margin:6px 0 10px}
+.ckres b{display:block;color:var(--sage-ink);margin-bottom:4px}
+.ckres p{margin:0;font-size:15px}
+.cklist .it{display:flex;align-items:center;gap:8px;font-size:14px;padding:8px 0;border-top:1px solid var(--line)}
+.cklist .it span{flex:1}
+/* 설정 스위치 */
+.tgl{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line);cursor:pointer}
+.tgl:first-of-type{border-top:none}
+.tgl span{flex:1;font-size:15px}
+.tgl small{display:block;font-size:12px;color:var(--soft)}
+.tgl input{appearance:none;-webkit-appearance:none;width:44px;height:26px;border-radius:999px;background:var(--line);position:relative;flex:none;cursor:pointer;margin:0;transition:background .15s}
+.tgl input::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .15s}
+.tgl input:checked{background:var(--sage)}
+.tgl input:checked::after{left:21px}
+.tgl input:focus-visible,.tgl.flash input{outline:2px solid var(--sage);outline-offset:3px}
+.saved .it{display:flex;gap:8px;align-items:flex-start;font-size:14px;padding:8px 0;border-top:1px solid var(--line)}
+.saved .it:first-child{border-top:none}
+.saved .it span{flex:1}
+/* 7일 돌아보기 */
+.wnav{display:flex;align-items:center;justify-content:space-between;margin:0 0 12px}
+.wnav .rg{font-size:15px;font-weight:600}
+.wact{padding:14px 16px;margin-bottom:10px}
+.wact .hd{display:flex;align-items:center;gap:8px}
+.wact .hd .nm{font-weight:700;flex:1}
+.wact .num{font-size:13px;color:var(--soft)}
+.wact ul,.wsec ul{margin:6px 0 0;padding-left:18px;font-size:14px}
+.wact li,.wsec li{margin:2px 0}
+.wact li small,.wsec li small{color:var(--faint);margin-right:6px}
+.wsec{padding:14px 16px;margin-bottom:10px}
+.wsec h3{font-size:14px;margin:0;color:var(--soft)}
+.toprow{display:flex;justify-content:flex-end;margin:-4px 0 8px}
 
 /* ───── 모아보기 ───── */
 .search{display:flex;align-items:center;gap:8px;padding:0 14px;height:46px;margin-bottom:10px}
@@ -239,11 +297,13 @@ textarea::placeholder,.search input::placeholder{color:var(--faint)}
   <!-- ───── 시작 ───── -->
   <main id="v-home">
     <div class="note" id="firstNote">
-      <p>기록은 <b>지금 이 브라우저에만</b> 저장됩니다. PC와 휴대폰은 자동으로 맞춰지지 않아요. 가끔 「백업」 탭에서 파일로 받아두세요.</p>
+      <p>기록은 <b>지금 이 브라우저에만</b> 저장됩니다. PC와 휴대폰은 자동으로 맞춰지지 않아요. 가끔 「설정」 탭에서 백업 파일을 받아두세요.</p>
       <button class="x" id="firstNoteX" aria-label="안내 닫기">닫기</button>
     </div>
     <div id="homePick">
       <h2 class="hello">오늘은 무엇을 해볼까요?</h2>
+      <div id="qStart"></div>
+      <div id="recentBox"></div>
       <div class="seg gseg" id="groupSeg">
         <button data-g="daily">일상</button>
         <button data-g="levelup">레벨업</button>
@@ -255,14 +315,58 @@ textarea::placeholder,.search input::placeholder{color:var(--faint)}
       <div class="grp" id="tGroup"></div>
       <div class="tn" id="tName"></div>
       <div class="clock" id="tClock" role="timer">00:00:00</div>
+      <div class="tbusy hidden" id="tBusy"><div class="big" id="tBusyBig">진행 중</div><div class="sub" id="tBusySub">지금은 이 일에 집중하는 시간이에요.</div></div>
       <div class="st" id="tState"></div>
+      <button class="linkbtn tg2" id="tToggle">시간 숨기기</button>
       <div class="btns">
         <button class="btn ghost" id="tPause">잠깐 쉬기</button>
-        <button class="btn primary" id="tStop">여기까지</button>
+        <button class="btn primary" id="tStop">오늘은 여기까지</button>
       </div>
       <div class="wake" id="tWake"></div>
     </section>
+    <div id="qDoing" class="hidden" style="margin-top:14px"></div>
+    <section class="card done hidden" id="homeDone">
+      <div class="dk">오늘은 여기까지</div>
+      <div class="dn" id="dName"></div>
+      <div id="dAsk">
+        <label class="flab" for="dNote">오늘 알게 된 것이 있나요?<small>적지 않아도 돼요</small></label>
+        <textarea id="dNote" placeholder="예: 아직 효과는 모르겠다."></textarea>
+        <div class="btns">
+          <button class="btn ghost" id="dSkip">그냥 마치기</button>
+          <button class="btn primary" id="dSave">기록 남기기</button>
+        </div>
+      </div>
+      <button class="btn ghost wide hidden" id="dHome" style="margin-top:12px">시작 화면으로</button>
+    </section>
+    <div id="qEnd" class="hidden" style="margin-top:14px"></div>
     <div id="homeToday" style="margin-top:20px"></div>
+    <div id="checkCard"></div>
+  </main>
+
+  <!-- ───── 7일 돌아보기 ───── -->
+  <main id="v-week" class="hidden">
+    <div class="toprow" style="justify-content:flex-start"><button class="linkbtn" id="wBack">‹ 돌아가기</button></div>
+    <h2 class="hello" style="margin-bottom:10px">7일 돌아보기</h2>
+    <div class="wnav">
+      <button class="iconbtn" id="wPrev" aria-label="이전 7일">‹</button>
+      <span class="rg" id="wRange"></span>
+      <button class="iconbtn" id="wNext" aria-label="다음 7일">›</button>
+    </div>
+    <div id="qReview"></div>
+    <div id="wBody"></div>
+    <section class="card sec" id="wAsk">
+      <h3>돌아보기 질문</h3>
+      <p>모두 선택이에요. 비워 두어도 됩니다.</p>
+      <label class="flab" for="wLearned">이번에 실제로 알게 된 것은 무엇인가요?</label>
+      <textarea id="wLearned"></textarea>
+      <label class="flab" for="wEvidence">지금 방법을 계속해 볼 근거가 있나요?</label>
+      <textarea id="wEvidence"></textarea>
+      <label class="flab" for="wNextIn">다음에는 무엇을 유지하거나 바꿀까요?</label>
+      <textarea id="wNextIn"></textarea>
+      <div class="flab">결정</div>
+      <div class="cats" id="wDecision"></div>
+      <button class="btn primary wide" id="wSave" style="margin-top:16px">저장</button>
+    </section>
   </main>
 
   <!-- ───── 캘린더 ───── -->
@@ -280,6 +384,7 @@ textarea::placeholder,.search input::placeholder{color:var(--faint)}
       <div class="grid" id="days"></div>
       <div class="legend" id="legend"></div>
     </section>
+    <button class="btn ghost wide" data-week="1" style="margin-top:10px">최근 7일 돌아보기</button>
     <div class="dayhd">
       <h2 id="dayTitle"></h2>
       <button class="btn primary sm" id="addBtn">＋ 기록</button>
@@ -290,12 +395,23 @@ textarea::placeholder,.search input::placeholder{color:var(--faint)}
 
   <!-- ───── 모아보기 ───── -->
   <main id="v-list" class="hidden">
+    <div class="toprow"><button class="linkbtn" data-week="1">7일 돌아보기 ›</button></div>
+    <div class="seg" id="kindSeg" style="margin-bottom:10px">
+      <button data-k="all">전체</button>
+      <button data-k="diary">일기</button>
+      <button data-k="act">활동</button>
+      <button data-k="look">돌아보기·점검</button>
+    </div>
     <label class="card search">
       <span style="color:var(--faint)" aria-hidden="true">⌕</span>
       <input id="q" type="search" placeholder="키워드로 찾기" autocomplete="off">
       <button class="clr hidden" id="qClr">지우기</button>
     </label>
     <div class="filters" id="filters"></div>
+    <div class="two" style="margin:4px 0 2px">
+      <input type="date" id="lFrom" class="date-in txt-in" aria-label="시작 날짜">
+      <input type="date" id="lTo" class="date-in txt-in" aria-label="끝 날짜">
+    </div>
     <div class="listbar">
       <span id="listCnt"></span>
       <div class="tg">
@@ -308,6 +424,32 @@ textarea::placeholder,.search input::placeholder{color:var(--faint)}
 
   <!-- ───── 백업 · 설정 ───── -->
   <main id="v-set" class="hidden">
+    <section class="card sec" id="comfort">
+      <h3>편안하게 사용하기</h3>
+      <p>모두 선택 사항이에요. 켜도 꺼도 활동 기록은 똑같이 저장됩니다.</p>
+      <label class="tgl"><span>타이머 시간 숨기기<small>진행 중에 숫자 대신 「진행 중」만 보여요</small></span><input type="checkbox" id="pHideTime"></label>
+      <label class="tgl"><span>요약 통계 숨기기<small>오늘 · 7일 합계 시간과 횟수를 숨겨요</small></span><input type="checkbox" id="pHideStats"></label>
+      <label class="tgl"><span>좋은 문장 보기<small>단계마다 하루 한 문장</small></span><input type="checkbox" id="pShowQuotes"></label>
+      <label class="tgl"><span>활동 후 한 줄 질문<small>마친 뒤 「오늘 알게 된 것」 칸을 보여줘요</small></span><input type="checkbox" id="pAskNote"></label>
+    </section>
+
+    <section class="card sec" id="checkSec">
+      <h3>14일 사용 점검</h3>
+      <p id="ckInfo"></p>
+      <label class="flab" for="ckStart" style="margin-top:0">1일 차<small>첫 타이머 기록 날짜가 기본값</small></label>
+      <div class="row" style="display:flex;gap:8px;align-items:center">
+        <input type="date" id="ckStart" class="date-in">
+        <button class="btn ghost sm" id="ckStartAuto">자동으로</button>
+      </div>
+      <div class="cklist" id="ckList" style="margin-top:12px"></div>
+      <button class="btn ghost wide" id="ckOpen" style="margin-top:8px">점검하기</button>
+    </section>
+
+    <section class="card sec">
+      <h3>내가 모은 문장</h3>
+      <div class="saved" id="savedList"></div>
+    </section>
+
     <section class="card sec">
       <h3>저장 위치</h3>
       <p>기록은 서버가 아니라 <b>지금 쓰는 이 브라우저</b> 안에만 저장됩니다. 인터넷에 올라가지 않아요.<br>
@@ -363,7 +505,7 @@ textarea::placeholder,.search input::placeholder{color:var(--faint)}
     <button data-tab="list">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M8 6h12M8 12h12M8 18h12"/><circle cx="4" cy="6" r=".9" fill="currentColor"/><circle cx="4" cy="12" r=".9" fill="currentColor"/><circle cx="4" cy="18" r=".9" fill="currentColor"/></svg>모아보기</button>
     <button data-tab="set">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7.5 10.5 12 15l4.5-4.5"/><path d="M4.5 16v2.5a1.5 1.5 0 0 0 1.5 1.5h12a1.5 1.5 0 0 0 1.5-1.5V16"/></svg>백업</button>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7.5 10.5 12 15l4.5-4.5"/><path d="M4.5 16v2.5a1.5 1.5 0 0 0 1.5 1.5h12a1.5 1.5 0 0 0 1.5-1.5V16"/></svg>설정</button>
   </div>
 </nav>
 
@@ -433,6 +575,8 @@ textarea::placeholder,.search input::placeholder{color:var(--faint)}
     </div>
     <label class="flab" for="seMin">실제 활동 시간<small>분 · 쉰 시간은 뺀 시간</small></label>
     <input type="number" id="seMin" class="date-in txt-in" min="0" step="1" inputmode="numeric">
+    <label class="flab" for="seNote">한 줄 기록<small>선택</small></label>
+    <textarea id="seNote" placeholder="예: 방법이 생각보다 복잡했다."></textarea>
     <div class="foot">
       <button class="btn danger" id="seDel">삭제</button>
       <span class="grow"></span>
@@ -458,6 +602,37 @@ textarea::placeholder,.search input::placeholder{color:var(--faint)}
   </div>
 </div>
 
+<!-- 14일 사용 점검 -->
+<div class="scrim hidden" id="ckScrim">
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="ckTitle">
+    <div class="sh">
+      <h2 id="ckTitle">14일 사용 점검</h2>
+      <button class="iconbtn" id="ckClose" aria-label="닫기">✕</button>
+    </div>
+    <div id="ckForm">
+      <p class="hint" style="text-align:left;margin:0;font-size:14px;color:var(--soft)">시험이나 성적이 아니에요. 이 앱을 쓰는 방식이 나에게 도움이 되는지 살펴보는 질문입니다. 모두 답하지 않아도 됩니다.</p>
+      <div id="ckQs"></div>
+      <label class="flab" for="ckQ4">4. 이 앱에서 가장 도움이 되었거나 불편했던 점은 무엇인가요?<small>선택</small></label>
+      <textarea id="ckQ4"></textarea>
+      <div class="foot">
+        <span class="grow"></span>
+        <button class="btn ghost" id="ckCancel">취소</button>
+        <button class="btn primary" id="ckSave">저장하고 안내 보기</button>
+      </div>
+    </div>
+    <div id="ckResult" class="hidden">
+      <div class="ckres"><b id="ckLabel"></b><p id="ckMsg"></p></div>
+      <div id="ckActs" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+      <p class="hint" style="text-align:left">이 안내는 진단이나 임상적 판정이 아니라, 고른 답에 따라 보여주는 참고 문구입니다. 14일이라는 기간도 이 앱을 점검하려고 정한 기간일 뿐이에요.</p>
+      <div class="foot">
+        <button class="btn ghost" id="ckEdit">답 고치기</button>
+        <span class="grow"></span>
+        <button class="btn primary" id="ckDone">닫기</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- 확인창 -->
 <div class="scrim hidden" id="cfScrim">
   <div class="sheet confirm" role="alertdialog" aria-modal="true" aria-labelledby="cfTitle">
@@ -474,6 +649,7 @@ textarea::placeholder,.search input::placeholder{color:var(--faint)}
 
 <div class="toast hidden" id="toast" role="status"></div>
 
+<script src="quotes.js"></script>
 <script>
 'use strict';
 /* ───── 저장 이름 — 같은 주소의 다른 사이트(oneline.v1 · maestro.v3)와 겹치지 않게 ───── */
@@ -513,21 +689,27 @@ const GROUPS = [
   { id:'levelup', name:'레벨업' },
 ];
 const GROUP = Object.fromEntries(GROUPS.map(g => [g.id, g]));
+/* 기본 활동 id 는 고정 — 저장 전에 다시 읽어도 「최근에 해본 일」이 같은 활동을 찾을 수 있게 */
 const defaultActs = () => ({
-  daily:   ['밥 먹기','청소','설거지','빨래'].map(name => ({ id:newId(), name })),
-  levelup: ['영어 (한 문장)','영어 (프렌즈)','면접 연습','바이브코딩'].map(name => ({ id:newId(), name })),
+  daily:   ['밥 먹기','청소','설거지','빨래'].map((name, i) => ({ id:`d${i+1}`, name })),
+  levelup: ['영어 (한 문장)','영어 (프렌즈)','면접 연습','바이브코딩'].map((name, i) => ({ id:`l${i+1}`, name })),
 });
 const validActs = a => !!a && GROUPS.every(g => Array.isArray(a[g.id])
   && a[g.id].every(x => x && typeof x.id === 'string' && typeof x.name === 'string'));
 
 /* ───── 저장소 ───── */
 let loadFailed = false;
-const emptyDb = () => ({ version:2, records:[], sessions:[], activities:defaultActs() });
-/* 1차 자료(records 만 있음)에 타이머 칸을 덧붙입니다. records 는 손대지 않습니다 */
+const emptyDb = () => migrate({ records:[] });
+/* 예전 자료에 새 칸만 덧붙입니다. records · sessions 안의 내용은 손대지 않습니다
+   v1: records / v2: + sessions · activities / v3: + reviews(7일 돌아보기) · checks(14일 점검) · savedQuotes · checkStart */
 function migrate(d){
   if (!Array.isArray(d.sessions)) d.sessions = [];
   if (!validActs(d.activities)) d.activities = defaultActs();
-  d.version = 2;
+  if (!Array.isArray(d.reviews)) d.reviews = [];
+  if (!Array.isArray(d.checks)) d.checks = [];
+  if (!Array.isArray(d.savedQuotes)) d.savedQuotes = [];
+  if (!DATE_RE.test(d.checkStart || '')) d.checkStart = null;
+  d.version = 3;
   return d;
 }
 function readDb(){
@@ -591,8 +773,20 @@ let view = { y: new Date().getFullYear(), m: new Date().getMonth() };
 let sel = today;
 let tab = 'home';
 let filterCat = 'all';
+let listKind = 'all';
 let sortDesc = true;
 let openAll = false;
+
+/* 「편안하게 사용하기」 — 기기마다 따로 기억합니다 */
+const P = {
+  hideTime:   () => prefs.hideTime === true,
+  hideStats:  () => prefs.hideStats === true,
+  showQuotes: () => prefs.showQuotes !== false,
+  askNote:    () => prefs.askNote !== false,
+};
+const addDays = (s, n) => { const d = parseYmd(s); d.setDate(d.getDate() + n); return ymd(d); };
+const daysBetween = (a, b) => Math.round((parseYmd(b) - parseYmd(a)) / 86400000);
+const fmtMd = s => { const d = parseYmd(s); return `${d.getMonth()+1}/${d.getDate()}`; };
 
 const byDate = () => {
   const map = {};
@@ -776,34 +970,88 @@ $('q').addEventListener('input', () => { $('qClr').classList.toggle('hidden', !$
 $('qClr').onclick = e => { e.preventDefault(); $('q').value = ''; $('qClr').classList.add('hidden'); renderList(); };
 $('sortBtn').onclick = () => { sortDesc = !sortDesc; renderList(); };
 $('openBtn').onclick = () => { openAll = !openAll; renderList(); };
+$('kindSeg').addEventListener('click', e => {
+  const b = e.target.closest('[data-k]'); if (!b) return;
+  listKind = b.dataset.k; renderList();
+});
+for (const id of ['lFrom', 'lTo']) $(id).addEventListener('change', renderList);
+
+const DECISIONS = { keep:'그대로 해보기', one:'한 가지만 바꾸기', observe:'조금 더 관찰하기', rest:'일단 쉬어가기' };
+
+/* 모아보기 — 저장된 원본을 그대로 읽어 한 줄로 늘어놓습니다 (복사해 두지 않음) */
+function listItems(){
+  const out = [];
+  const catOn = filterCat !== 'all';
+  if (listKind === 'all' || listKind === 'diary'){
+    for (const r of db.records){
+      if (catOn && r.category !== filterCat) continue;
+      out.push({ date:r.date, t:r.createdAt, hay:[r.did, r.learned, r.next, CAT[r.category]?.name],
+        html: () => {
+          if (openAll) return recCard(r, true);
+          const sum = r.did || r.learned || r.next;
+          return `<button class="card item" data-open="${r.id}">
+            <div class="head"><span class="chip"><i style="background:${catColor(r.category)}"></i>${esc(CAT[r.category]?.name || '기타')}</span><span>일기</span></div>
+            <div class="sum">${sum ? esc(sum) : '<span class="blank">적은 내용 없이 남긴 기록</span>'}</div></button>`;
+        } });
+    }
+  }
+  if (catOn) return out;   // 카테고리는 일기에만 있습니다
+  if (listKind === 'all' || listKind === 'act'){
+    for (const s of db.sessions){
+      out.push({ date:s.date, t:s.start, hay:[s.name, s.note, GROUP[s.group]?.name, '활동'],
+        html: () => `<button class="card item" data-sopen="${s.id}">
+          <div class="head"><span class="chip">${esc(s.name)}</span><span>${GROUP[s.group]?.name || ''} · ${fmtHm(s.start)}${P.hideStats() ? '' : ` · ${fmtDur(s.activeMs)}`}</span></div>
+          ${s.note ? `<div class="sum" style="${openAll ? '-webkit-line-clamp:unset' : ''}">${esc(s.note)}</div>` : ''}</button>` });
+    }
+  }
+  if (listKind === 'all' || listKind === 'look'){
+    for (const r of db.reviews){
+      const sum = [r.decision && DECISIONS[r.decision], r.learned, r.evidence, r.next].filter(Boolean).join(' · ');
+      out.push({ date:r.end, t:r.updatedAt, hay:['돌아보기', r.learned, r.evidence, r.next, DECISIONS[r.decision]],
+        html: () => `<button class="card item" data-wopen="${r.end}">
+          <div class="head"><span class="chip">7일 돌아보기</span><span>${fmtMd(r.start)} – ${fmtMd(r.end)}</span></div>
+          <div class="sum">${esc(sum)}</div></button>` });
+    }
+    for (const c of db.checks){
+      out.push({ date:c.date, t:c.updatedAt, hay:['점검', c.q4, CHECK_TYPE[checkType(c)].label],
+        html: () => `<button class="card item" data-copen="${c.id}">
+          <div class="head"><span class="chip">14일 사용 점검</span></div>
+          <div class="sum">${esc(CHECK_TYPE[checkType(c)].label)}${c.q4 ? ` · ${esc(c.q4)}` : ''}</div></button>` });
+    }
+  }
+  return out;
+}
 
 function renderList(){
+  for (const b of $('kindSeg').children) b.classList.toggle('on', b.dataset.k === listKind);
+  $('filters').classList.toggle('hidden', listKind !== 'all' && listKind !== 'diary');
   const words = $('q').value.trim().toLowerCase().split(/\s+/).filter(Boolean);
-  let recs = db.records.filter(r => filterCat === 'all' || r.category === filterCat);
-  if (words.length){
-    recs = recs.filter(r => {
-      const hay = [r.did, r.learned, r.next, CAT[r.category]?.name, r.date].join(' ').toLowerCase();
-      return words.every(w => hay.includes(w));
-    });
-  }
-  recs.sort(sortRecs); if (sortDesc) recs.reverse();
+  const from = $('lFrom').value, to = $('lTo').value;
+  let items = listItems().filter(it => (!from || it.date >= from) && (!to || it.date <= to));
+  if (words.length) items = items.filter(it => {
+    const hay = it.hay.concat(it.date).join(' ').toLowerCase();
+    return words.every(w => hay.includes(w));
+  });
+  items.sort((a, b) => a.date === b.date ? a.t - b.t : a.date < b.date ? -1 : 1);
+  if (sortDesc) items.reverse();
   $('sortBtn').textContent = sortDesc ? '최신순' : '오래된순';
   $('openBtn').classList.toggle('on', openAll);
-  $('listCnt').textContent = `${recs.length}개`;
-  if (!db.records.length){ $('list').innerHTML = `<div class="empty">아직 기록이 없습니다.<br>캘린더에서 날짜를 누르고 「＋ 기록」으로 시작하세요.</div>`; return; }
-  if (!recs.length){ $('list').innerHTML = `<div class="empty">조건에 맞는 기록이 없습니다.</div>`; return; }
+  $('listCnt').textContent = `${items.length}개`;
+  if (!db.records.length && !db.sessions.length && !db.reviews.length && !db.checks.length){
+    $('list').innerHTML = `<div class="empty">아직 기록이 없습니다.<br>「시작」에서 활동을 고르거나, 캘린더에서 「＋ 기록」으로 일기를 쓸 수 있어요.</div>`; return;
+  }
+  if (!items.length){ $('list').innerHTML = `<div class="empty">조건에 맞는 기록이 없습니다.</div>`; return; }
   let h = '', last = '';
-  for (const r of recs){
-    if (r.date !== last){ h += `<div class="dategrp">${esc(fmtFull(r.date))}</div>`; last = r.date; }
-    if (openAll){ h += recCard(r, true); continue; }
-    const sum = r.did || r.learned || r.next;
-    h += `<button class="card item" data-open="${r.id}">
-      <div class="head"><span class="chip"><i style="background:${catColor(r.category)}"></i>${esc(CAT[r.category]?.name || '기타')}</span></div>
-      <div class="sum">${sum ? esc(sum) : '<span class="blank">적은 내용 없이 남긴 기록</span>'}</div></button>`;
+  for (const it of items){
+    if (it.date !== last){ h += `<div class="dategrp">${esc(fmtFull(it.date))}</div>`; last = it.date; }
+    h += it.html();
   }
   $('list').innerHTML = h;
 }
 $('list').addEventListener('click', e => {
+  const so = e.target.closest('[data-sopen]'); if (so) return openSess(so.dataset.sopen);
+  const wo = e.target.closest('[data-wopen]'); if (wo) return openWeek(wo.dataset.wopen);
+  const co = e.target.closest('[data-copen]'); if (co) return openCheck(co.dataset.copen);
   const o = e.target.closest('[data-open]'); if (o) return openDetail(o.dataset.open);
   const ed = e.target.closest('[data-edit]'); if (ed) return openEditor(ed.dataset.edit);
   const dl = e.target.closest('[data-del]'); if (dl) return deleteRec(dl.dataset.del);
@@ -886,12 +1134,13 @@ function saveTimer(){
 }
 const activeMs = (t, now = Date.now()) => t.accMs + (t.segStart ? Math.max(0, now - t.segStart) : 0);
 
-function startTimer(act){
+function startTimer(act, group){
   timer = readTimer();   // 다른 창에서 이미 켰을 수 있음 — 동시에 두 개는 켜지 않습니다
   if (timer){ syncWake(); renderAll(); toast('이미 진행 중인 활동이 있어요'); return; }
   const now = Date.now();
-  timer = { id:newId(), activityId:act.id, name:act.name, group:homeGroup, start:now, segStart:now, accMs:0, pauses:[] };
-  saveTimer(); syncWake(); renderAll();
+  done = null;
+  timer = { id:newId(), activityId:act.id, name:act.name, group, start:now, segStart:now, accMs:0, pauses:[] };
+  saveTimer(); syncWake(); renderAll(); scrollTo(0, 0);
 }
 function pauseTimer(){
   timer = readTimer() || timer;
@@ -900,7 +1149,7 @@ function pauseTimer(){
   timer.accMs += now - timer.segStart;
   timer.segStart = null;
   timer.pauses.push({ start:now, end:null });
-  saveTimer(); renderAll();
+  saveTimer(); syncWake(); renderAll();
 }
 function resumeTimer(){
   timer = readTimer() || timer;
@@ -909,7 +1158,7 @@ function resumeTimer(){
   const p = timer.pauses[timer.pauses.length - 1];
   if (p && p.end == null) p.end = now;
   timer.segStart = now;
-  saveTimer(); renderAll();
+  saveTimer(); syncWake(); renderAll();
 }
 function finishTimer(){
   const t = readTimer() || timer;
@@ -926,16 +1175,35 @@ function finishTimer(){
     if (!persist()){ db.sessions.pop(); return; }   // 저장 못 하면 타이머를 그대로 둡니다
   }
   timer = null; saveTimer(); syncWake();
-  renderAll();
-  toast(`${t.name} · ${fmtDur(ms)} 기록했어요`);
+  /* 저장은 이미 끝났습니다. 마무리 화면은 한 줄을 「덧붙일지」만 묻습니다 */
+  done = t.id; $('dNote').value = '';
+  renderAll(); scrollTo(0, 0);
 }
 $('tPause').onclick = () => (timer && timer.segStart ? pauseTimer() : resumeTimer());
 $('tStop').onclick = finishTimer;
+$('tToggle').onclick = () => { prefs.hideTime = !P.hideTime(); savePrefs(); renderAll(); };
 
-/* 타이머가 켜져 있는 동안 휴대폰 화면이 꺼지지 않게 (지원하는 브라우저만) */
+/* 마무리 화면 */
+let done = null;   // 방금 저장한 타이머 기록 id
+function closeDone(){ done = null; renderAll(); }
+$('dSkip').onclick = closeDone;
+$('dHome').onclick = closeDone;
+$('dSave').onclick = () => {
+  const note = $('dNote').value.trim();
+  const s = db.sessions.find(x => x.id === done);
+  if (note && s){
+    const before = s.note;
+    s.note = note; s.updatedAt = Date.now();   // 같은 기록에 덮어쓰므로 두 번 눌러도 하나
+    if (!persist()){ s.note = before; return; }
+    toast('남겼어요');
+  }
+  closeDone();
+};
+
+/* 타이머가 「진행 중」인 동안만 휴대폰 화면이 꺼지지 않게 — 쉬는 동안은 풀어서 배터리를 아낍니다 */
 let wakeLock = null;
 async function syncWake(){
-  const want = !!timer && document.visibilityState === 'visible';
+  const want = !!timer && !!timer.segStart && document.visibilityState === 'visible';
   if (!('wakeLock' in navigator)){ $('tWake').textContent = timer ? '이 브라우저에서는 화면 켜짐 유지가 안 돼요' : ''; return; }
   if (want && !wakeLock){
     try {
@@ -950,7 +1218,7 @@ async function syncWake(){
 }
 function paintWake(){
   if (!('wakeLock' in navigator)) return;
-  $('tWake').textContent = timer ? (wakeLock ? '타이머가 켜져 있는 동안 화면이 꺼지지 않아요' : '') : '';
+  $('tWake').textContent = timer && wakeLock ? '진행 중에는 화면이 꺼지지 않아요' : '';
 }
 
 /* 화면 시계 — 0.25초마다 실제 시각으로 다시 계산 */
@@ -970,19 +1238,64 @@ let homeGroup = GROUP[prefs.homeGroup] ? prefs.homeGroup : 'daily';
 let editActs = false;
 
 function renderHome(){
-  $('homePick').classList.toggle('hidden', !!timer);
-  $('homeTimer').classList.toggle('hidden', !timer);
-  if (timer){
-    const paused = !timer.segStart;
+  if (done && !db.sessions.some(s => s.id === done)) done = null;   // 다른 곳에서 지워졌으면
+  const mode = timer ? 'timer' : done ? 'done' : 'pick';
+  $('homePick').classList.toggle('hidden', mode !== 'pick');
+  $('homeTimer').classList.toggle('hidden', mode !== 'timer');
+  $('qDoing').classList.toggle('hidden', mode !== 'timer');
+  $('homeDone').classList.toggle('hidden', mode !== 'done');
+  $('qEnd').classList.toggle('hidden', mode !== 'done');
+  if (mode === 'timer'){
+    const paused = !timer.segStart, hide = P.hideTime();
     $('homeTimer').classList.toggle('paused', paused);
     $('tGroup').textContent = GROUP[timer.group]?.name || '';
     $('tName').textContent = timer.name;
-    $('tState').innerHTML = paused ? '<b>잠시 쉬는 중</b>' : `${fmtHm(timer.start)} 시작`;
+    $('tClock').classList.toggle('hidden', hide);
+    $('tBusy').classList.toggle('hidden', !hide);
+    $('tBusyBig').textContent = paused ? '잠시 쉬는 중' : '진행 중';
+    $('tBusySub').classList.toggle('hidden', paused);
+    $('tState').innerHTML = hide ? '' : paused ? '<b>잠시 쉬는 중</b>' : `${fmtHm(timer.start)} 시작`;
+    $('tToggle').textContent = hide ? '시간 보기' : '시간 숨기기';
     $('tPause').textContent = paused ? '이어서 하기' : '잠깐 쉬기';
+    $('qDoing').innerHTML = quoteHtml('doing');
     paintClock(); paintWake();
-  } else paintActs();
+  } else if (mode === 'done'){
+    const s = db.sessions.find(x => x.id === done);
+    $('dName').textContent = `${s.name} · 기록됨`;
+    $('dAsk').classList.toggle('hidden', !P.askNote());
+    $('dHome').classList.toggle('hidden', P.askNote());
+    $('qEnd').innerHTML = quoteHtml('end');
+  } else {
+    $('qStart').innerHTML = quoteHtml('start');
+    const rec = recentActs();
+    $('recentBox').innerHTML = rec.length ? `<div class="sbh">최근에 해본 일</div><div class="recent">`
+      + rec.map(x => `<button data-rg="${x.group}" data-ra="${x.act.id}">${esc(x.act.name)}</button>`).join('') + `</div>` : '';
+    paintActs();
+  }
   $('homeToday').innerHTML = sessHtml(today, '오늘 기록한 활동');
+  $('checkCard').innerHTML = mode === 'pick' && checkDue()
+    ? `<section class="card ckcard"><h3>14일 사용 점검</h3>
+        <p>이 앱이 실제로 나에게 도움이 되었는지 살펴볼까요? 시험이나 평가가 아니라, 앱을 쓰는 방법을 점검하는 짧은 질문이에요.</p>
+        <div class="row"><button class="btn primary sm" id="ckGo">시험해 봐요</button><button class="btn ghost sm" id="ckLater">나중에</button></div></section>` : '';
 }
+
+/* 최근에 해본 일 — 마친 순서대로 3개. 목록에서 지운 활동은 뺍니다 */
+function recentActs(){
+  const out = [], seen = new Set();
+  for (const s of [...db.sessions].sort((a, b) => b.end - a.end)){
+    const act = (db.activities[s.group] || []).find(x => x.id === s.activityId);
+    if (!act || seen.has(s.group + act.id)) continue;
+    seen.add(s.group + act.id);
+    out.push({ group:s.group, act });
+    if (out.length === 3) break;
+  }
+  return out;
+}
+$('recentBox').addEventListener('click', e => {
+  const b = e.target.closest('[data-ra]'); if (!b) return;
+  const act = (db.activities[b.dataset.rg] || []).find(x => x.id === b.dataset.ra);
+  if (act) startTimer(act, b.dataset.rg);
+});
 
 function paintActs(){
   for (const b of $('groupSeg').children) b.classList.toggle('on', b.dataset.g === homeGroup);
@@ -1014,7 +1327,7 @@ $('editActs').onclick = () => { editActs = !editActs; paintActs(); };
 $('actGrid').addEventListener('click', async e => {
   const b = e.target.closest('button'); if (!b) return;
   const list = db.activities[homeGroup];
-  if (b.dataset.act){ const a = list.find(x => x.id === b.dataset.act); if (a) startTimer(a); return; }
+  if (b.dataset.act){ const a = list.find(x => x.id === b.dataset.act); if (a) startTimer(a, homeGroup); return; }
   if (b.dataset.add) return openName(null);
   if (b.dataset.ren) return openName(b.dataset.ren);
   const id = b.dataset.up || b.dataset.down;
@@ -1067,9 +1380,10 @@ function sessHtml(date, title){
     for (const name of [...new Set(gs.map(s => s.name))]){
       const ss = gs.filter(s => s.name === name);
       const tot = ss.reduce((a, s) => a + s.activeMs, 0);
-      h += `<details class="sa"><summary><span class="nm">${esc(name)}</span><span class="dur">${fmtDur(tot)}${ss.length > 1 ? ` · ${ss.length}번` : ''}</span></summary>`
+      h += `<details class="sa"><summary><span class="nm">${esc(name)}</span><span class="dur">${P.hideStats() ? '' : `${fmtDur(tot)}${ss.length > 1 ? ` · ${ss.length}번` : ''}`}</span></summary>`
         + ss.map(s => `<div class="si"><span class="t">${fmtHm(s.start)} – ${fmtHm(s.end)} · ${fmtDur(s.activeMs)}${pauseMs(s) >= 60000 ? ` (쉼 ${fmtDur(pauseMs(s))})` : ''}</span>`
-          + `<button data-sedit="${s.id}">수정</button><button data-sdel="${s.id}">삭제</button></div>`).join('')
+          + `<button data-sedit="${s.id}">수정</button><button data-sdel="${s.id}">삭제</button></div>`
+          + (s.note ? `<div class="note1">${esc(s.note)}</div>` : '')).join('')
         + `</details>`;
     }
   }
@@ -1104,6 +1418,7 @@ function openSess(id){
   $('seStart').value = hm(s.start);
   $('seEnd').value = hm(s.end);
   $('seMin').value = String(Math.round(s.activeMs / 60000));
+  $('seNote').value = s.note || '';
   seSnap = { date:s.date, start:$('seStart').value, end:$('seEnd').value, min:$('seMin').value };
   paintSeGroup();
   $('seScrim').classList.remove('hidden');
@@ -1125,8 +1440,10 @@ function saveSess(){
     if (s.end < s.start) s.end += 86400000;   // 자정을 넘긴 활동
   }
   if ($('seMin').value !== seSnap.min) s.activeMs = Math.round(min * 60000);
+  const note = $('seNote').value.trim();
+  if (note) s.note = note; else delete s.note;
   s.updatedAt = Date.now();
-  if (!persist()){ Object.assign(s, before); return; }
+  if (!persist()){ for (const k of Object.keys(s)) delete s[k]; Object.assign(s, before); return; }
   closeSess(); renderAll(); toast('고쳤습니다');
 }
 $('seSave').onclick = saveSess;
@@ -1142,8 +1459,259 @@ addEventListener('keydown', e => {
   else if (!$('seScrim').classList.contains('hidden')) closeSess();
 }, true);   // 확인창 닫기보다 먼저 봐야 두 개가 한꺼번에 닫히지 않습니다
 
+/* ───── 하루 한 문장 ─────
+   단계마다 하루에 하나를 뽑아 기억해 둡니다 → 같은 날엔 새로고침해도 그대로, 다음 날 새로 뽑습니다.
+   최근 14일 동안 같은 단계에 나온 문장은 되도록 다시 뽑지 않습니다. */
+const STAGE_NAME = { start:'시작', doing:'진행', end:'마무리', review:'돌아보기' };
+function quoteFor(stage){
+  const pool = typeof QUOTES !== 'undefined' && QUOTES[stage];
+  if (!pool || !pool.length) return null;   // 문장 파일을 못 읽어도 앱은 그대로 씁니다
+  prefs.quotes ||= {};
+  const q = prefs.quotes[stage] ||= { hist: [] };
+  const cur = q.hist[q.hist.length - 1];
+  if (cur && cur.d === today && pool.includes(cur.t)) return cur.t;
+  const since = addDays(today, -13);
+  const recent = new Set(q.hist.filter(h => h.d >= since).map(h => h.t));
+  const fresh = pool.filter(t => !recent.has(t));
+  const from = fresh.length ? fresh : pool;
+  const t = from[Math.floor(Math.random() * from.length)];
+  q.hist = q.hist.filter(h => h.d >= since && h.d !== today).concat({ d:today, t });
+  savePrefs();
+  return t;
+}
+function quoteHtml(stage){
+  if (!P.showQuotes()) return '';
+  const t = quoteFor(stage); if (!t) return '';
+  const saved = db.savedQuotes.some(x => x.text === t);
+  return `<div class="quote"><p>${esc(t)}</p>`
+    + `<button class="qb${saved ? ' on' : ''}" data-qsave="${stage}" aria-pressed="${saved}" aria-label="${saved ? '보관 취소' : '내가 모은 문장에 보관'}">${saved ? '♥' : '♡'}</button>`
+    + `<button class="qb" data-qhide="1" aria-label="문장 숨기기">✕</button></div>`;
+}
+function toggleSaved(text, stage){
+  const i = db.savedQuotes.findIndex(x => x.text === text);
+  const before = db.savedQuotes.slice();
+  if (i >= 0) db.savedQuotes.splice(i, 1);
+  else db.savedQuotes.push({ text, stage, savedAt: Date.now() });
+  if (!persist()){ db.savedQuotes = before; return; }
+  renderAll();
+  toast(i >= 0 ? '보관함에서 뺐어요' : '「내가 모은 문장」에 넣었어요');
+}
+document.addEventListener('click', e => {
+  const s = e.target.closest('[data-qsave]');
+  if (s){ const t = quoteFor(s.dataset.qsave); if (t) toggleSaved(t, s.dataset.qsave); return; }
+  if (e.target.closest('[data-qhide]')){
+    prefs.showQuotes = false; savePrefs(); renderAll();
+    toast('문장을 숨겼어요. 설정에서 다시 켤 수 있어요.');
+    return;
+  }
+  if (e.target.closest('[data-week]')) openWeek(today);
+});
+
+/* ───── 7일 돌아보기 ─────
+   기록을 새로 만들지 않고, 저장된 기록을 7일 단위로 모아서 보여주기만 합니다 */
+let weekEnd = today, weekFrom = 'cal';
+function openWeek(end){
+  weekFrom = tab === 'week' ? weekFrom : tab;
+  weekEnd = end > today ? today : end;
+  fillWeekForm();
+  switchTab('week');
+}
+$('wBack').onclick = () => switchTab(weekFrom);
+$('wPrev').onclick = () => { weekEnd = addDays(weekEnd, -7); fillWeekForm(); renderWeek(); };
+$('wNext').onclick = () => { const n = addDays(weekEnd, 7); weekEnd = n > today ? today : n; fillWeekForm(); renderWeek(); };
+
+function renderWeek(){
+  const start = addDays(weekEnd, -6);
+  const inWeek = d => d >= start && d <= weekEnd;
+  $('wRange').textContent = `${fmtMd(start)} – ${fmtMd(weekEnd)}${weekEnd === today ? ' (오늘까지)' : ''}`;
+  $('wNext').disabled = weekEnd >= today;
+  $('wNext').style.visibility = weekEnd >= today ? 'hidden' : '';
+  $('qReview').innerHTML = quoteHtml('review');
+  const ss = db.sessions.filter(s => inWeek(s.date)).sort((a, b) => a.start - b.start);
+  const rs = db.records.filter(r => inWeek(r.date)).sort(sortRecs);
+  let h = '';
+  /* 활동별 — 몇 번 · 실제 활동 시간 · 한 줄 기록 */
+  const keys = [...new Set(ss.map(s => s.group + '\u0000' + s.name))];
+  if (keys.length){
+    h += `<div class="sbh" style="margin:4px 2px 8px">실제로 해본 활동</div>`;
+    for (const k of keys){
+      const [g, name] = k.split('\u0000');
+      const xs = ss.filter(s => s.group === g && s.name === name);
+      const notes = xs.filter(s => s.note);
+      h += `<section class="card wact"><div class="hd"><span class="nm">${esc(name)}</span><span class="num">${GROUP[g]?.name || ''}</span></div>`
+        + (P.hideStats() ? '' : `<div class="num">총 ${xs.length}회 · 실제 활동 ${fmtDur(xs.reduce((a, s) => a + s.activeMs, 0))}</div>`)
+        + (notes.length ? `<ul>${notes.map(s => `<li><small>${fmtMd(s.date)}</small>${esc(s.note)}</li>`).join('')}</ul>` : '')
+        + `</section>`;
+    }
+  }
+  /* 일기에서 — 알게 된 것 · 다음에 해볼 것 (적은 것만) */
+  const sec = (title, list) => list.length
+    ? `<section class="card wsec"><h3>${title}</h3><ul>${list.map(r => `<li><small>${fmtMd(r.date)}</small>${esc(r.v)}</li>`).join('')}</ul></section>` : '';
+  h += sec('일기에 적은 한 일', rs.filter(r => r.did).map(r => ({ date:r.date, v:r.did })));
+  h += sec('달라진 점 · 알게 된 것', rs.filter(r => r.learned).map(r => ({ date:r.date, v:r.learned })));
+  h += sec('다음에 해볼 것', rs.filter(r => r.next).map(r => ({ date:r.date, v:r.next })));
+  $('wBody').innerHTML = h || `<div class="empty">이 7일 동안 저장된 기록이 없어요.</div>`;
+}
+
+$('wDecision').innerHTML = Object.entries(DECISIONS).map(([k, v]) => `<button class="fbtn" data-dc="${k}">${v}</button>`).join('');
+let wDec = '';
+const paintDec = () => { for (const b of $('wDecision').children) b.classList.toggle('on', b.dataset.dc === wDec); };
+$('wDecision').addEventListener('click', e => {
+  const b = e.target.closest('[data-dc]'); if (!b) return;
+  wDec = wDec === b.dataset.dc ? '' : b.dataset.dc;   // 다시 누르면 선택 해제
+  paintDec();
+});
+function fillWeekForm(){
+  const r = db.reviews.find(x => x.end === weekEnd);
+  $('wLearned').value = r?.learned || '';
+  $('wEvidence').value = r?.evidence || '';
+  $('wNextIn').value = r?.next || '';
+  wDec = r?.decision || '';
+  paintDec();
+}
+$('wSave').onclick = () => {
+  const v = { learned:$('wLearned').value.trim(), evidence:$('wEvidence').value.trim(), next:$('wNextIn').value.trim(), decision:wDec };
+  const before = db.reviews.slice();
+  const i = db.reviews.findIndex(x => x.end === weekEnd);
+  const empty = !v.learned && !v.evidence && !v.next && !v.decision;
+  const now = Date.now();
+  if (empty){ if (i >= 0) db.reviews.splice(i, 1); else { toast('적은 내용이 없어요'); return; } }
+  else if (i >= 0) db.reviews[i] = { ...db.reviews[i], ...v, updatedAt: now };
+  else db.reviews.push({ id:newId(), start:addDays(weekEnd, -6), end:weekEnd, ...v, createdAt:now, updatedAt:now });
+  if (!persist()){ db.reviews = before; return; }
+  toast(empty ? '돌아보기 답을 지웠어요' : '저장했습니다');
+};
+
+/* ───── 14일 사용 점검 ─────
+   점수나 합격·불합격 없이, 고른 답에 맞는 참고 안내만 보여줍니다 */
+const CHECK_Q = [
+  { k:'q1', t:'1. 앱을 사용하기 전보다 행동을 시작하기 쉬워졌나요?', o:['쉬워졌다','비슷하다','더 어려워졌다','잘 모르겠다'] },
+  { k:'q2', t:'2. 기록을 보면서 자신을 더 심하게 비난하게 되었나요?', o:['그렇다','아니다','잘 모르겠다'] },
+  { k:'q3', t:'3. 앱을 관리하거나 수정하는 시간이 실제 행동을 방해했나요?', o:['그렇다','아니다','잘 모르겠다'] },
+];
+const CHECK_TYPE = {
+  help:   { label:'도움이 되는 것으로 보여요', msg:'현재 사용 방식이 도움이 되는 것 같아요. 기능을 더 늘리기보다 지금의 간단한 방식을 유지해 보세요.' },
+  burden: { label:'부담을 주는 것으로 보여요', msg:'기록이 부담이 될 수 있어 보여요. 시간 표시와 기록 확인을 줄이고, 실제 행동을 우선해 보세요.' },
+  unsure: { label:'아직 판단하기 어려워요',   msg:'아직 뚜렷한 변화는 확인되지 않았어요. 기능을 늘리기보다 불편한 점이 있는지 먼저 살펴보세요.' },
+};
+const checkType = c => (c.q2 === '그렇다' || c.q3 === '그렇다') ? 'burden'
+  : (c.q1 === '쉬워졌다' && c.q2 === '아니다' && c.q3 === '아니다') ? 'help' : 'unsure';
+
+/* 1일 차 = 직접 정한 날, 없으면 가장 이른 타이머 기록 날짜. 앱을 안 연 날도 날짜는 그대로 셉니다 */
+const checkStartDate = () => db.checkStart || db.sessions.map(s => s.date).sort()[0] || null;
+const dayNo = () => { const s = checkStartDate(); return s ? daysBetween(s, today) + 1 : 0; };
+const checkDue = () => !db.checks.length && !prefs.checkHidden && dayNo() >= 15
+  && !(prefs.checkLater && today < prefs.checkLater);
+
+$('checkCard').addEventListener('click', e => {
+  if (e.target.closest('#ckGo')) return openCheck(null);
+  if (e.target.closest('#ckLater')){ prefs.checkLater = addDays(today, 3); savePrefs(); renderAll(); toast('사흘 뒤에 다시 보여드릴게요. 설정에서는 언제든 할 수 있어요.'); }
+});
+
+$('ckQs').innerHTML = CHECK_Q.map(q => `<div class="flab">${q.t}</div><div class="cats" data-q="${q.k}">`
+  + q.o.map(o => `<button class="fbtn" data-v="${o}">${o}</button>`).join('') + `</div>`).join('');
+let ckId = null, ckAns = {};
+const paintCk = () => { for (const g of $('ckQs').querySelectorAll('[data-q]')) for (const b of g.children) b.classList.toggle('on', ckAns[g.dataset.q] === b.dataset.v); };
+$('ckQs').addEventListener('click', e => {
+  const b = e.target.closest('[data-v]'); if (!b) return;
+  const k = b.parentElement.dataset.q;
+  ckAns[k] = ckAns[k] === b.dataset.v ? '' : b.dataset.v;
+  paintCk();
+});
+function openCheck(id){
+  const c = id && db.checks.find(x => x.id === id);
+  ckId = c ? c.id : null;
+  ckAns = { q1:c?.q1 || '', q2:c?.q2 || '', q3:c?.q3 || '' };
+  $('ckQ4').value = c?.q4 || '';
+  paintCk();
+  showCkResult(c || null);
+  $('ckScrim').classList.remove('hidden');
+}
+function showCkResult(c){
+  $('ckForm').classList.toggle('hidden', !!c);
+  $('ckResult').classList.toggle('hidden', !c);
+  $('ckTitle').textContent = c ? `14일 사용 점검 · ${fmtMd(c.date)}` : '14일 사용 점검';
+  if (!c) return;
+  const ty = CHECK_TYPE[checkType(c)];
+  $('ckLabel').textContent = ty.label;
+  $('ckMsg').textContent = ty.msg;
+  /* 부담으로 보일 때만, 설정으로 가는 「선택」 버튼 — 대신 바꾸지는 않습니다 */
+  $('ckActs').innerHTML = checkType(c) === 'burden'
+    ? [['pHideTime','시간 숨기기'], ['pAskNote','좋은 문장만 보기'], ['pHideStats','요약 통계 숨기기']]
+      .map(([id, l]) => `<button class="btn ghost sm" data-goset="${id}">${l} 설정으로</button>`).join('') : '';
+}
+const closeCheck = () => $('ckScrim').classList.add('hidden');
+$('ckClose').onclick = closeCheck;
+$('ckCancel').onclick = closeCheck;
+$('ckDone').onclick = closeCheck;
+$('ckEdit').onclick = () => showCkResult(null);
+$('ckSave').onclick = () => {
+  const now = Date.now();
+  const v = { q1:ckAns.q1, q2:ckAns.q2, q3:ckAns.q3, q4:$('ckQ4').value.trim() };
+  const before = db.checks.slice();
+  let c = ckId && db.checks.find(x => x.id === ckId);
+  if (c) Object.assign(c, v, { updatedAt:now });
+  else { c = { id:newId(), date:today, ...v, createdAt:now, updatedAt:now }; db.checks.push(c); }
+  if (!persist()){ db.checks = before; return; }
+  ckId = c.id;
+  showCkResult(c);
+  renderAll();
+};
+$('ckActs').addEventListener('click', e => {
+  const b = e.target.closest('[data-goset]'); if (!b) return;
+  closeCheck(); switchTab('set');
+  const lab = $(b.dataset.goset).closest('.tgl');
+  lab.scrollIntoView({ block:'center' });
+  lab.classList.add('flash'); setTimeout(() => lab.classList.remove('flash'), 2000);
+});
+$('ckOpen').onclick = () => openCheck(null);
+$('ckList').addEventListener('click', e => { const b = e.target.closest('[data-ck]'); if (b) openCheck(b.dataset.ck); });
+$('ckStart').addEventListener('change', () => {
+  const v = $('ckStart').value;
+  if (!DATE_RE.test(v)) return;
+  const before = db.checkStart; db.checkStart = v;
+  if (!persist()) db.checkStart = before;
+  renderAll();
+});
+$('ckStartAuto').onclick = () => {
+  const before = db.checkStart; db.checkStart = null;
+  if (!persist()) db.checkStart = before;
+  renderAll();
+};
+for (const [id, fn] of [['ckScrim', closeCheck]]) $(id).addEventListener('click', e => { if (e.target.id === id) fn(); });
+addEventListener('keydown', e => {
+  if (e.key === 'Escape' && $('cfScrim').classList.contains('hidden') && !$('ckScrim').classList.contains('hidden')) closeCheck();
+}, true);
+
+/* ───── 편안하게 사용하기 · 모은 문장 ───── */
+const PREF_BOX = { pHideTime:['hideTime', false], pHideStats:['hideStats', false], pShowQuotes:['showQuotes', true], pAskNote:['askNote', true] };
+for (const [id, [k]] of Object.entries(PREF_BOX)){
+  $(id).addEventListener('change', () => { prefs[k] = $(id).checked; savePrefs(); renderAll(); });
+}
+$('savedList').addEventListener('click', e => {
+  const b = e.target.closest('[data-unsave]'); if (!b) return;
+  const q = db.savedQuotes[Number(b.dataset.unsave)];
+  if (q) toggleSaved(q.text, q.stage);
+});
+function renderComfort(){
+  for (const [id, [k, def]] of Object.entries(PREF_BOX)) $(id).checked = prefs[k] === undefined ? def : prefs[k] === true;
+  const st = checkStartDate(), n = dayNo();
+  $('ckStart').value = db.checkStart || st || '';
+  $('ckStartAuto').classList.toggle('hidden', !db.checkStart);
+  $('ckInfo').textContent = !st ? '첫 타이머 활동을 마치면 그날이 1일 차가 됩니다. 앱을 쓰는 방식이 나에게 맞는지 살펴보려고 정한 기간이에요.'
+    : n >= 15 ? `오늘은 ${n}일 차예요. 점검은 원할 때 언제든 할 수 있어요.`
+    : `오늘은 ${n}일 차예요. ${fmtMd(addDays(st, 14))}(15일 차)부터 시작 화면에 점검 안내가 작게 나와요.`;
+  $('ckList').innerHTML = [...db.checks].sort((a, b) => b.createdAt - a.createdAt)
+    .map(c => `<div class="it"><span>${fmtFull(c.date)} · ${CHECK_TYPE[checkType(c)].label}</span><button class="linkbtn" data-ck="${c.id}">보기 · 고치기</button></div>`).join('');
+  $('ckOpen').textContent = db.checks.length ? '다시 점검하기' : '점검하기';
+  $('savedList').innerHTML = db.savedQuotes.length
+    ? db.savedQuotes.map((q, i) => `<div class="it"><span>${esc(q.text)}<small style="display:block;color:var(--faint)">${STAGE_NAME[q.stage] || ''}</small></span><button class="qb on" data-unsave="${i}" aria-label="보관 취소">♥</button></div>`).join('')
+    : '<p style="margin:0">문장 옆 ♡ 를 누르면 여기에 모여요.</p>';
+}
+
 /* ───── 백업 · 복원 ───── */
 function renderSet(){
+  renderComfort();
   $('sCount').textContent = `일기 ${db.records.length}개 · 타이머 ${db.sessions.length}개`;
   let bytes = 0; try { bytes = (localStorage.getItem(KEY) || '').length * 2; } catch(e){}
   $('sSize').textContent = bytes < 1024 ? `${bytes} B` : `${(bytes/1024).toFixed(1)} KB`;
@@ -1158,8 +1726,9 @@ function renderSet(){
 function exportBackup(){
   const n = new Date();
   const name = `my-record-backup-${ymd(n).replace(/-/g,'')}-${pad(n.getHours())}${pad(n.getMinutes())}.json`;
-  const data = { app:'나의 기록', version:2, exportedAt: n.toISOString(),
-    records: db.records, sessions: db.sessions, activities: db.activities };
+  const data = { app:'나의 기록', version:3, exportedAt: n.toISOString(),
+    records: db.records, sessions: db.sessions, activities: db.activities,
+    reviews: db.reviews, checks: db.checks, savedQuotes: db.savedQuotes, checkStart: db.checkStart };
   const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type:'application/json' }));
   const a = document.createElement('a'); a.href = url; a.download = name;
   document.body.appendChild(a); a.click(); a.remove();
@@ -1196,28 +1765,44 @@ function cleanSessions(list){
     let id = typeof s.id === 'string' && s.id ? s.id : newId();
     if (seen.has(id)) id = newId();
     seen.add(id);
-    out.push({ id, activityId: String(s.activityId ?? ''), name: String(s.name ?? '').trim() || '활동',
+    const o = { id, activityId: String(s.activityId ?? ''), name: String(s.name ?? '').trim() || '활동',
       group: GROUP[s.group] ? s.group : 'daily', date: s.date, start, end, activeMs: act,
       pauses: Array.isArray(s.pauses) ? s.pauses.filter(p => p && Number.isFinite(Number(p.start)))
         .map(p => ({ start: Number(p.start), end: Number(p.end) || Number(p.start) })) : [],
-      createdAt: Number(s.createdAt) || end, updatedAt: Number(s.updatedAt) || end });
+      createdAt: Number(s.createdAt) || end, updatedAt: Number(s.updatedAt) || end };
+    if (typeof s.note === 'string' && s.note.trim()) o.note = s.note.trim();
+    out.push(o);
   }
   return out;
 }
-/* 1차 백업(records 만 있음)도 받습니다 — 타이머 기록 0개, 활동 목록은 지금 것 유지 */
+const str = v => typeof v === 'string' ? v : '';
+const cleanReviews = list => !Array.isArray(list) ? null : list
+  .filter(r => r && DATE_RE.test(r.start) && DATE_RE.test(r.end))
+  .map(r => ({ id: str(r.id) || newId(), start:r.start, end:r.end, learned:str(r.learned), evidence:str(r.evidence), next:str(r.next),
+    decision: DECISIONS[r.decision] ? r.decision : '', createdAt:Number(r.createdAt) || 0, updatedAt:Number(r.updatedAt) || 0 }));
+const cleanChecks = list => !Array.isArray(list) ? null : list
+  .filter(c => c && DATE_RE.test(c.date))
+  .map(c => ({ id: str(c.id) || newId(), date:c.date, q1:str(c.q1), q2:str(c.q2), q3:str(c.q3), q4:str(c.q4),
+    createdAt:Number(c.createdAt) || 0, updatedAt:Number(c.updatedAt) || 0 }));
+const cleanQuotes = list => !Array.isArray(list) ? null : list
+  .filter(q => q && str(q.text)).map(q => ({ text:q.text, stage:str(q.stage), savedAt:Number(q.savedAt) || 0 }));
+/* 예전 백업도 받습니다 — 백업에 없는 칸(활동 목록 · 돌아보기 · 점검 · 모은 문장)은 지금 것을 그대로 둡니다 */
 function cleanBackup(data){
   const records = cleanRecords(data); if (!records) return null;
   const obj = data && !Array.isArray(data) ? data : {};
   const sessions = obj.sessions === undefined ? [] : cleanSessions(obj.sessions);
   if (!sessions) return null;
-  return { records, sessions, activities: validActs(obj.activities) ? obj.activities : null };
+  return { records, sessions, activities: validActs(obj.activities) ? obj.activities : null,
+    reviews: cleanReviews(obj.reviews), checks: cleanChecks(obj.checks), savedQuotes: cleanQuotes(obj.savedQuotes),
+    checkStart: 'checkStart' in obj ? (DATE_RE.test(obj.checkStart || '') ? obj.checkStart : null) : undefined };
 }
-const dbFrom = bk => ({ version:2, records: bk.records, sessions: bk.sessions, activities: bk.activities || db.activities });
+const dbFrom = bk => migrate({ records: bk.records, sessions: bk.sessions,
+  activities: bk.activities || db.activities, reviews: bk.reviews || db.reviews, checks: bk.checks || db.checks,
+  savedQuotes: bk.savedQuotes || db.savedQuotes, checkStart: bk.checkStart === undefined ? db.checkStart : bk.checkStart });
 
 function keepBefore(reason){
   try {
-    localStorage.setItem(BEFORE_KEY, JSON.stringify({ reason, savedAt: Date.now(),
-      records: db.records, sessions: db.sessions, activities: db.activities }));
+    localStorage.setItem(BEFORE_KEY, JSON.stringify({ reason, savedAt: Date.now(), ...db }));
     return true;
   } catch(e){ return false; }
 }
@@ -1233,7 +1818,7 @@ $('importFile').addEventListener('change', async e => {
   const range = dates.length ? `${fmtFull(dates[0])} ~ ${fmtFull(dates[dates.length-1])}` : '기록 없음';
   const ok = await ask('백업으로 덮어쓸까요?',
     `일기  ${db.records.length}개  →  ${bk.records.length}개\n타이머 기록  ${db.sessions.length}개  →  ${bk.sessions.length}개\n백업 기간: ${range}`,
-    '지금 기록은 백업 내용으로 바뀌고, 백업에 없는 기록은 사라집니다.\n바로 직전 상태 하나는 「직전 상태로 되돌리기」로 살릴 수 있지만, 걱정되면 취소하고 먼저 「백업 파일 받기」를 하세요.',
+    '지금 기록은 백업 내용으로 바뀌고, 백업에 없는 기록은 사라집니다.\n(예전 백업이라 돌아보기 · 점검 · 모은 문장 칸이 없으면 그 칸은 지금 것을 그대로 둡니다.)\n바로 직전 상태 하나는 「직전 상태로 되돌리기」로 살릴 수 있지만, 걱정되면 취소하고 먼저 「백업 파일 받기」를 하세요.',
     '덮어쓰기', true);
   if (!ok) return;
   if (!keepBefore('복원')){
@@ -1261,11 +1846,11 @@ $('undoBtn').onclick = async () => {
 };
 
 $('wipeBtn').onclick = async () => {
-  if (!db.records.length && !db.sessions.length){ toast('지울 기록이 없습니다'); return; }
-  const ok = await ask('모든 기록을 지울까요?', `이 기기의 일기 ${db.records.length}개 · 타이머 기록 ${db.sessions.length}개를 지웁니다.\n활동 목록은 그대로 둡니다.`, '지우기 직전 상태 하나는 「직전 상태로 되돌리기」로 살릴 수 있습니다.\n확실히 남기려면 먼저 「백업 파일 받기」를 하세요.', '모두 지우기', true);
+  if (!db.records.length && !db.sessions.length && !db.reviews.length && !db.checks.length){ toast('지울 기록이 없습니다'); return; }
+  const ok = await ask('모든 기록을 지울까요?', `이 기기의 일기 ${db.records.length}개 · 타이머 기록 ${db.sessions.length}개 · 돌아보기 ${db.reviews.length}개 · 점검 ${db.checks.length}개를 지웁니다.\n활동 목록과 모은 문장은 그대로 둡니다.`, '지우기 직전 상태 하나는 「직전 상태로 되돌리기」로 살릴 수 있습니다.\n확실히 남기려면 먼저 「백업 파일 받기」를 하세요.', '모두 지우기', true);
   if (!ok) return;
   keepBefore('전체 삭제');
-  const old = db; db = { ...db, records: [], sessions: [] };
+  const old = db; db = { ...db, records: [], sessions: [], reviews: [], checks: [], checkStart: null };
   if (!persist()){ db = old; return; }
   renderAll(); toast('모든 기록을 지웠습니다');
 };
@@ -1288,7 +1873,9 @@ matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', applyThe
 function switchTab(t){
   tab = t;
   for (const b of document.querySelectorAll('.tabs button')) b.classList.toggle('on', b.dataset.tab === t);
+  if (t === 'week') for (const b of document.querySelectorAll('.tabs button')) b.classList.toggle('on', b.dataset.tab === weekFrom);
   $('v-home').classList.toggle('hidden', t !== 'home');
+  $('v-week').classList.toggle('hidden', t !== 'week');
   $('v-cal').classList.toggle('hidden', t !== 'cal');
   $('v-list').classList.toggle('hidden', t !== 'list');
   $('v-set').classList.toggle('hidden', t !== 'set');
@@ -1302,6 +1889,7 @@ document.querySelector('.tabs').addEventListener('click', e => {
 function renderAll(){
   document.querySelector('.tabs [data-tab="home"]').classList.toggle('run', !!timer);
   if (tab === 'home') renderHome();
+  if (tab === 'week') renderWeek();
   if (tab === 'cal') renderCal();
   if (tab === 'list') renderList();
   if (tab === 'set') renderSet();
