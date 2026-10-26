@@ -204,6 +204,28 @@ input,textarea{font:inherit;color:inherit}
 .nline{font-size:14px;margin-top:4px;white-space:pre-wrap}
 .nline b{font-size:12px;color:var(--soft);font-weight:600;margin-right:6px}
 .exact{font-size:12px;color:var(--soft);background:var(--sunk);border-radius:10px;padding:8px 10px;margin-top:12px;font-variant-numeric:tabular-nums;line-height:1.7}
+/* 그룹 및 활동 관리 */
+.mg{border-top:1px solid var(--line);padding:12px 0 8px}
+.mg:first-child{border-top:none;padding-top:4px}
+.mgh{display:flex;align-items:center;gap:8px}
+.mgh b{flex:1;font-size:15px}
+.cdot{width:20px;height:20px;border-radius:50%;flex:none;border:2px solid var(--card);box-shadow:0 0 0 1px var(--line)}
+.pal{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 4px 28px}
+.pal button{width:26px;height:26px;border-radius:50%;border:2px solid var(--card);box-shadow:0 0 0 1px var(--line)}
+.pal button.on{box-shadow:0 0 0 2px var(--ink)}
+.ctl2{display:flex;gap:0;flex:none}
+.ctl2 button{font-size:13px;color:var(--soft);padding:6px 7px;border-radius:8px}
+.ctl2 button:hover{background:var(--sunk);color:var(--ink)}
+.ctl2 button:disabled{opacity:.3}
+.mga{margin:4px 0 0 28px}
+.mga .ar{display:flex;align-items:center;gap:6px;font-size:14px;padding:3px 0;flex-wrap:wrap}
+.mga .ar > span:first-child{flex:1;min-width:0}
+.ctl2 button{white-space:nowrap}
+.mga select{height:30px;border:1px solid var(--line);border-radius:8px;background:var(--card);font-size:12px;color:var(--soft);max-width:92px}
+.mga .gone{font-size:12px;color:var(--faint);margin-top:4px}
+.mga .gone button{font-size:12px;color:var(--sage-ink);padding:2px 4px}
+.gdot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:6px;vertical-align:1px}
+.oldcat{font-size:12px;color:var(--faint);font-weight:400}
 .sel-in{height:34px;border:1px solid var(--line);border-radius:999px;background:var(--card);padding:0 12px;font-size:13px;color:var(--ink);max-width:100%}
 /* 안내 카드 (14일 점검) */
 .ckcard{padding:16px;margin-top:14px}
@@ -333,7 +355,7 @@ textarea::placeholder,.search input::placeholder{color:var(--faint)}
         <button data-g="levelup">레벨업</button>
       </div>
       <div class="actgrid" id="actGrid"></div>
-      <div class="editbar"><button class="linkbtn" id="editActs">목록 편집</button></div>
+      <div class="editbar"><button class="linkbtn" id="toManage">그룹 관리 ›</button><button class="linkbtn" id="editActs">목록 편집</button></div>
     </div>
     <section class="card timer hidden" id="homeTimer">
       <div class="grp" id="tGroup"></div>
@@ -430,9 +452,9 @@ textarea::placeholder,.search input::placeholder{color:var(--faint)}
     <div class="toprow"><button class="linkbtn" data-week="1">7일 돌아보기 ›</button></div>
     <div class="seg" id="kindSeg" style="margin-bottom:10px">
       <button data-k="all">전체</button>
-      <button data-k="diary">일기</button>
-      <button data-k="act">활동</button>
-      <button data-k="look">돌아보기·점검</button>
+      <button data-k="diary">수동 기록</button>
+      <button data-k="act">타이머 기록</button>
+      <button data-k="look">돌아보기</button>
     </div>
     <label class="card search">
       <span style="color:var(--faint)" aria-hidden="true">⌕</span>
@@ -464,6 +486,14 @@ textarea::placeholder,.search input::placeholder{color:var(--faint)}
       <label class="tgl"><span>요약 통계 숨기기<small>오늘 · 7일 합계 시간과 횟수를 숨겨요</small></span><input type="checkbox" id="pHideStats"></label>
       <label class="tgl"><span>좋은 문장 보기<small>단계마다 하루 한 문장</small></span><input type="checkbox" id="pShowQuotes"></label>
       <label class="tgl"><span>활동 후 기분 · 경험 질문<small>마친 뒤 기분과 경험을 남기는 칸을 보여줘요</small></span><input type="checkbox" id="pAskNote"></label>
+    </section>
+
+    <section class="card sec" id="manage">
+      <h3>그룹 및 활동 관리</h3>
+      <p>여기서 바꾸면 시작 · 기록 쓰기 · 캘린더 · 모아보기에 바로 반영돼요. 이름을 바꿔도 지난 기록은 그대로 이어져요.</p>
+      <div id="mgList"></div>
+      <button class="btn ghost wide" id="gAdd" style="margin-top:8px">＋ 그룹 추가</button>
+      <div id="mgOrphan"></div>
     </section>
 
     <section class="card sec" id="checkSec">
@@ -551,8 +581,13 @@ textarea::placeholder,.search input::placeholder{color:var(--faint)}
     </div>
     <label class="flab" for="edDate">날짜</label>
     <input type="date" id="edDate" class="date-in">
-    <div class="flab">카테고리</div>
-    <div class="cats" id="edCats"></div>
+    <div class="flab">그룹<small>선택</small></div>
+    <div class="cats" id="edGroups"></div>
+    <div id="edActBox">
+      <div class="flab">활동<small>선택</small></div>
+      <div class="cats" id="edActs"></div>
+    </div>
+    <div class="hint hidden" id="edLegacy" style="text-align:left"></div>
     <label class="flab" for="edDid">오늘 한 일<small>실제로 무엇을 했나요?</small></label>
     <textarea id="edDid" placeholder="예: 영어 문장 3개를 10분 동안 공부했다."></textarea>
     <label class="flab" for="edLearned">달라진 점 · 알게 된 것<small>없으면 비워도 됩니다</small></label>
@@ -593,13 +628,11 @@ textarea::placeholder,.search input::placeholder{color:var(--faint)}
       <h2 id="seTitle">활동 기록 수정</h2>
       <button class="iconbtn" id="seClose" aria-label="닫기">✕</button>
     </div>
-    <label class="flab" for="seName">활동</label>
-    <input id="seName" class="date-in txt-in" maxlength="30">
-    <div class="flab">그룹</div>
-    <div class="seg" id="seGroup">
-      <button data-g="daily">일상</button>
-      <button data-g="levelup">레벨업</button>
-    </div>
+    <div class="flab" style="margin-top:0">그룹</div>
+    <div class="cats" id="seGroups"></div>
+    <label class="flab" for="seAct">활동</label>
+    <select id="seAct" class="date-in txt-in"></select>
+    <div class="hint hidden" id="seOrig" style="text-align:left"></div>
     <label class="flab" for="seDate">날짜</label>
     <input type="date" id="seDate" class="date-in">
     <div class="two">
@@ -633,6 +666,22 @@ textarea::placeholder,.search input::placeholder{color:var(--faint)}
       <span class="grow"></span>
       <button class="btn ghost" id="nmCancel">취소</button>
       <button class="btn primary" id="nmSave">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 기록이 있는 그룹 지우기 -->
+<div class="scrim hidden" id="gdScrim">
+  <div class="sheet confirm" role="dialog" aria-modal="true" aria-labelledby="gdTitle">
+    <div class="sh"><h2 id="gdTitle"></h2></div>
+    <div class="msg" id="gdMsg"></div>
+    <label class="flab" for="gdTo">옮길 그룹</label>
+    <select id="gdTo" class="date-in txt-in"></select>
+    <div class="foot" style="flex-wrap:wrap">
+      <button class="btn ghost" id="gdCancel">취소</button>
+      <span class="grow"></span>
+      <button class="btn ghost" id="gdArchive">보관하기</button>
+      <button class="btn primary" id="gdMove">옮기고 지우기</button>
     </div>
   </div>
 </div>
@@ -692,15 +741,19 @@ const KEY = 'myrecord.v1.data';
 const PREF_KEY = 'myrecord.v1.prefs';
 const BEFORE_KEY = 'myrecord.v1.before';   // 복원 · 전체 삭제 직전 상태 하나만 보관
 
-const CATS = [
-  { id:'english',   name:'영어' },
-  { id:'interview', name:'면접' },
-  { id:'drawing',   name:'도면' },
-  { id:'project',   name:'프로젝트' },
-  { id:'etc',       name:'기타' },
+/* 1차 수동 일기의 옛 분류 — 이름을 보여주는 데만 씁니다. 새 기록에는 쓰지 않고, 아무 활동에도 자동으로 붙이지 않습니다 */
+const OLD_CAT = { english:'영어', interview:'면접', drawing:'도면', project:'프로젝트', etc:'기타' };
+/* 그룹 색 — 차분한 색만 */
+const COLORS = [
+  { id:'sage',   hex:'#7C9A82', name:'세이지' },
+  { id:'blue',   hex:'#6E95B5', name:'파랑' },
+  { id:'purple', hex:'#8D80B5', name:'보라' },
+  { id:'amber',  hex:'#C4925E', name:'호박' },
+  { id:'teal',   hex:'#5E9E92', name:'청록' },
+  { id:'rose',   hex:'#B0776F', name:'장미' },
+  { id:'grey',   hex:'#A39E94', name:'회색' },
 ];
-const CAT = Object.fromEntries(CATS.map(c => [c.id, c]));
-const catColor = id => `var(--c-${CAT[id] ? id : 'etc'})`;
+const colorHex = id => (COLORS.find(c => c.id === id) || COLORS[COLORS.length - 1]).hex;
 const WD = ['일','월','화','수','목','금','토'];
 
 const $ = id => document.getElementById(id);
@@ -719,16 +772,48 @@ const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2
 
 /* ───── 활동 (타이머) ───── */
 const TIMER_KEY = 'myrecord.v1.timer';      // 진행 중인 타이머 하나 — 「여기까지」 전까지 여기에만 있음
-const GROUPS = [
-  { id:'daily',   name:'일상' },
-  { id:'levelup', name:'레벨업' },
+/* ───── 공통 분류: 그룹 → 활동 ─────
+   모든 화면(시작 · 기록 쓰기 · 캘린더 · 모아보기 · 7일 · 설정)이 db.groups · db.acts 하나만 봅니다.
+   그룹 · 활동은 바뀌지 않는 id 로 기록과 이어지므로, 이름을 바꿔도 지난 기록이 그대로 따라옵니다.
+   기본 그룹 id(daily · levelup)와 기본 활동 id(d1… · l1…)는 예전 기록이 쓰던 값 그대로입니다 */
+const defaultGroups = () => [
+  { id:'daily',   name:'일상',   color:'sage', archived:false },
+  { id:'levelup', name:'레벨업', color:'blue', archived:false },
 ];
-const GROUP = Object.fromEntries(GROUPS.map(g => [g.id, g]));
-/* 기본 활동 id 는 고정 — 저장 전에 다시 읽어도 「최근에 해본 일」이 같은 활동을 찾을 수 있게 */
+/* 예전(v2~v4) 저장 형식 { daily:[…], levelup:[…] } — 바꾸기 전 모양 */
 const defaultActs = () => ({
   daily:   ['밥 먹기','청소','설거지','빨래'].map((name, i) => ({ id:`d${i+1}`, name })),
   levelup: ['영어 (한 문장)','영어 (프렌즈)','면접 연습','바이브코딩'].map((name, i) => ({ id:`l${i+1}`, name })),
 });
+const LEGACY_G = ['daily', 'levelup'];
+const actsFromLegacy = old => LEGACY_G.flatMap(g => (old[g] || []).map(a => ({ id:a.id, name:a.name, groupId:g, removed:false })));
+const validGroups = a => Array.isArray(a) && a.length > 0 && a.every(g => g && typeof g.id === 'string' && g.id && typeof g.name === 'string');
+const validActList = a => Array.isArray(a) && a.every(x => x && typeof x.id === 'string' && x.id && typeof x.name === 'string' && typeof x.groupId === 'string');
+
+/* 찾기 · 풀이 — 화면은 모두 이 함수들을 거칩니다 */
+const groupOf = id => (id && db.groups.find(g => g.id === id)) || null;
+const actOf = id => (id && db.acts.find(a => a.id === id)) || null;
+const liveGroups = () => db.groups.filter(g => !g.archived);
+const actsIn = gid => db.acts.filter(a => a.groupId === gid && !a.removed);
+const gName = id => groupOf(id)?.name || '분류 없음';
+const gColor = id => groupOf(id) ? colorHex(groupOf(id).color) : 'var(--faint)';
+const gDot = id => `<i class="gdot" style="background:${gColor(id)}"></i>`;
+/* 타이머 기록: 연결된 활동이 있으면 그 활동의 「지금」 이름 · 그룹, 없으면 기록 당시 이름 · 그룹 */
+const sAct = s => actOf(s.activityId);
+const sGroupId = s => sAct(s)?.groupId ?? s.group ?? '';
+const sName = s => sAct(s)?.name ?? s.name;
+const sKey = s => sAct(s) ? 'a:' + s.activityId : 'o:' + (s.group || '') + '\u0000' + s.name;
+/* 수동 일기: 활동 → 그 활동의 그룹, 없으면 고른 그룹, 둘 다 없으면 분류 없음 */
+const rAct = r => actOf(r.actId);
+const rGroupId = r => rAct(r)?.groupId ?? r.groupId ?? '';
+const rKey = r => r.actId ? 'a:' + r.actId : '';
+function recLabel(r){
+  const g = rGroupId(r), a = rAct(r);
+  const old = r.category && OLD_CAT[r.category] ? `<span class="oldcat">${g ? ' · ' : ''}옛 분류 ${OLD_CAT[r.category]}</span>` : '';
+  if (!g && !old) return `<span class="chip">${gDot('')}분류 없음</span>`;
+  return `<span class="chip">${g ? gDot(g) + esc(gName(g)) + (a ? ' · ' + esc(a.name) : '') : ''}${old}</span>`;
+}
+const recLabelText = r => [rGroupId(r) && gName(rGroupId(r)), rAct(r)?.name, r.category && OLD_CAT[r.category] && `옛 분류 ${OLD_CAT[r.category]}`].filter(Boolean).join(' · ') || '분류 없음';
 /* 기분 — 점수나 좋고 나쁨 없이 이름만 */
 const MOODS = [
   { id:'good',    e:'😊', name:'좋음' },
@@ -749,8 +834,8 @@ const NOTE_TYPES = [
   { id:'next',    name:'다음에 해볼 것', ph:'예: 다음엔 10분만 먼저 해보자.' },
 ];
 const noteList = s => NOTE_TYPES.filter(t => s.notes && s.notes[t.id]).map(t => ({ ...t, v:s.notes[t.id] }));
-const validActs = a => !!a && GROUPS.every(g => Array.isArray(a[g.id])
-  && a[g.id].every(x => x && typeof x.id === 'string' && typeof x.name === 'string'));
+const validActs = a => !!a && LEGACY_G.every(g => Array.isArray(a[g])
+  && a[g].every(x => x && typeof x.id === 'string' && typeof x.name === 'string'));
 
 /* ───── 저장소 ───── */
 let loadFailed = false;
@@ -758,7 +843,9 @@ const emptyDb = () => migrate({ records:[] });
 /* 예전 자료에 새 칸만 덧붙입니다. records · sessions 안의 내용은 손대지 않습니다
    v1: records / v2: + sessions · activities / v3: + reviews(7일 돌아보기) · checks(14일 점검) · savedQuotes · checkStart
    v4: 타이머 기록에 mood(기분 여러 개) · notes(느낀 점 · 알게 된 점 · 어려웠던 점 · 다음에 해볼 것)
-       v3 의 한 줄 기록(note, 「오늘 알게 된 것」 질문의 답)은 글자 그대로 notes.learned 로 옮깁니다. 시간 값은 손대지 않습니다 */
+       v3 의 한 줄 기록(note, 「오늘 알게 된 것」 질문의 답)은 글자 그대로 notes.learned 로 옮깁니다. 시간 값은 손대지 않습니다
+   v5: 공통 분류 — groups[{id,name,color,archived}] · acts[{id,name,groupId,removed}] (activities 를 바꿈, id 그대로)
+       수동 일기에 groupId · actId(선택). 옛 category(영어 등)는 그대로 두고 아무 활동에도 붙이지 않습니다 */
 function migrate(d){
   if (!Array.isArray(d.sessions)) d.sessions = [];
   for (const s of d.sessions){
@@ -771,12 +858,23 @@ function migrate(d){
     s.mood = s.mood.filter(m => MOOD[m]);
     if (!s.notes || typeof s.notes !== 'object') s.notes = {};
   }
-  if (!validActs(d.activities)) d.activities = defaultActs();
+  if (!validGroups(d.groups)) d.groups = defaultGroups();
+  if (!validActList(d.acts)) d.acts = actsFromLegacy(validActs(d.activities) ? d.activities : defaultActs());
+  delete d.activities;
+  /* 예전 활동이 쓰던 그룹(daily · levelup)이 목록에 없으면 되살려 둡니다 — 이어진 기록이 「분류 없음」이 되지 않게 */
+  for (const id of new Set([...d.acts.map(a => a.groupId), ...d.sessions.map(s => s && s.group).filter(Boolean)])){
+    if (!d.groups.some(g => g.id === id)){
+      const def = defaultGroups().find(g => g.id === id);
+      d.groups.push(def ? { ...def, archived:true } : { id, name:'이름 없는 그룹', color:'grey', archived:true });
+    }
+  }
+  for (const g of d.groups){ g.archived = !!g.archived; if (!COLORS.some(c => c.id === g.color)) g.color = 'grey'; }
+  for (const a of d.acts) a.removed = !!a.removed;
   if (!Array.isArray(d.reviews)) d.reviews = [];
   if (!Array.isArray(d.checks)) d.checks = [];
   if (!Array.isArray(d.savedQuotes)) d.savedQuotes = [];
   if (!DATE_RE.test(d.checkStart || '')) d.checkStart = null;
-  d.version = 4;
+  d.version = 5;
   return d;
 }
 function readDb(){
@@ -872,7 +970,11 @@ function toast(msg, err){
 function renderCal(){
   $('ym').textContent = `${view.y}년 ${view.m+1}월`;
   const map = byDate();
-  const sessDays = new Set(db.sessions.map(s => s.date));
+  /* 날짜별로 「어느 그룹의 기록이 있는지」만 — 같은 그룹 점은 하나 */
+  const dayGroups = {};
+  for (const r of db.records) (dayGroups[r.date] ||= new Set()).add(rGroupId(r));
+  for (const s of db.sessions) (dayGroups[s.date] ||= new Set()).add(sGroupId(s));
+  const order = [...db.groups.map(g => g.id), ''];
   const first = new Date(view.y, view.m, 1);
   const start = new Date(view.y, view.m, 1 - first.getDay());
   const lastDate = new Date(view.y, view.m + 1, 0).getDate();
@@ -882,16 +984,22 @@ function renderCal(){
     const d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
     const k = ymd(d);
     const recs = map[k] || [];
-    const cats = CATS.filter(c => recs.some(r => r.category === c.id)).map(c => c.id);
+    const gs = dayGroups[k] ? order.filter(id => dayGroups[k].has(id)) : [];
+    const nSess = db.sessions.filter(s => s.date === k).length;
     const cls = ['day',
       d.getMonth() !== view.m && 'out',
       d.getDay() === 0 && 'sun', d.getDay() === 6 && 'sat',
       k === today && 'today', k === sel && 'sel'].filter(Boolean).join(' ');
-    const label = `${fmtDay(k)}${recs.length ? `, 기록 ${recs.length}개` : ''}${sessDays.has(k) ? ', 타이머 기록 있음' : ''}`;
+    const label = `${fmtDay(k)}${recs.length ? `, 일기 ${recs.length}개` : ''}${nSess ? `, 타이머 기록 ${nSess}개` : ''}`;
     h += `<button class="${cls}" data-d="${k}" aria-label="${label}"><span class="n">${d.getDate()}</span>`
-      + `<span class="dots">${cats.map(c => `<i style="background:${catColor(c)}"></i>`).join('')}${sessDays.has(k) ? '<b></b>' : ''}</span></button>`;
+      + `<span class="dots">${gs.map(id => `<i style="background:${gColor(id)}"></i>`).join('')}</span></button>`;
   }
   $('days').innerHTML = h;
+  /* 범례 — 지금 그룹 목록 그대로. 보관한 그룹 · 분류 없음은 기록이 있을 때만 */
+  const used = new Set([...db.records.map(rGroupId), ...db.sessions.map(sGroupId)]);
+  $('legend').innerHTML = db.groups.filter(g => !g.archived || used.has(g.id))
+      .map(g => `<span><i style="background:${colorHex(g.color)}"></i>${esc(g.name)}${g.archived ? ' (보관)' : ''}</span>`).join('')
+    + (used.has('') ? `<span><i style="background:var(--faint)"></i>분류 없음</span>` : '');
   renderDay();
 }
 
@@ -899,7 +1007,7 @@ function recCard(r, withActs){
   const f = (lb, tx) => tx ? `<div class="field"><div class="lb">${lb}</div><div class="tx">${esc(tx)}</div></div>` : '';
   const body = f('오늘 한 일', r.did) + f('달라진 점 · 알게 된 것', r.learned) + f('다음에 해볼 것', r.next);
   return `<article class="card rec">
-    <div class="meta"><span class="chip"><i style="background:${catColor(r.category)}"></i>${esc(CAT[r.category]?.name || '기타')}</span>
+    <div class="meta">${recLabel(r)}
       ${withActs ? `<span class="acts"><button data-edit="${r.id}">수정</button><button data-del="${r.id}">삭제</button></span>` : ''}</div>
     ${body || '<div class="blank">적은 내용 없이 남긴 기록</div>'}
   </article>`;
@@ -917,8 +1025,6 @@ function renderDay(){
 }
 
 $('wdays').innerHTML = WD.map((w, i) => `<div class="wd ${i===0?'sun':i===6?'sat':''}">${w}</div>`).join('');
-$('legend').innerHTML = CATS.map(c => `<span><i style="background:${catColor(c.id)}"></i>${c.name}</span>`).join('')
-  + `<span><b></b>타이머</span>`;
 $('days').addEventListener('click', e => {
   const b = e.target.closest('[data-d]'); if (!b) return;
   sel = b.dataset.d;
@@ -941,18 +1047,40 @@ $('firstNoteX').onclick = () => { prefs.noteClosed = true; savePrefs(); $('first
 
 /* ───── 작성 · 수정 ───── */
 let editing = null;      // 고치는 기록 id (새 기록이면 null)
-let edCat = 'etc';
+let edGroup = '', edAct = '';   // 둘 다 선택 — 비우면 「분류 없음」
 let edSnap = '';
 
-$('edCats').innerHTML = CATS.map(c => `<button class="fbtn" data-c="${c.id}"><i style="background:${catColor(c.id)}"></i>${c.name}</button>`).join('');
-$('edCats').addEventListener('click', e => {
-  const b = e.target.closest('[data-c]'); if (!b) return;
-  edCat = b.dataset.c; paintEdCats();
-});
+/* 그룹 칩 → 그 그룹의 활동 칩. 보관한 그룹 · 뺀 활동은 이 기록이 이미 쓰고 있을 때만 보여줍니다 */
 function paintEdCats(){
-  for (const b of $('edCats').children) b.classList.toggle('on', b.dataset.c === edCat);
+  const cur = editing && db.records.find(x => x.id === editing);
+  const gs = db.groups.filter(g => !g.archived || g.id === edGroup);
+  $('edGroups').innerHTML = gs.map(g => `<button class="fbtn${g.id === edGroup ? ' on' : ''}" data-eg="${g.id}">${gDot(g.id)}${esc(g.name)}</button>`).join('')
+    + `<button class="fbtn${!edGroup ? ' on' : ''}" data-eg="">분류 없음</button>`;
+  $('edActBox').classList.toggle('hidden', !edGroup);
+  const acts = db.acts.filter(a => a.groupId === edGroup && (!a.removed || a.id === edAct));
+  $('edActs').innerHTML = acts.map(a => `<button class="fbtn${a.id === edAct ? ' on' : ''}" data-ea="${a.id}">${esc(a.name)}</button>`).join('')
+    + `<button class="fbtn" data-ea-new="1">＋ 새 활동</button>`;
+  $('edLegacy').classList.toggle('hidden', !(cur && cur.category && OLD_CAT[cur.category]));
+  if (cur && cur.category) $('edLegacy').textContent = `옛 분류 「${OLD_CAT[cur.category] || cur.category}」는 그대로 보관돼요. 원하면 위에서 그룹 · 활동을 골라 이어줄 수 있어요.`;
 }
-const edState = () => JSON.stringify([$('edDate').value, edCat, $('edDid').value, $('edLearned').value, $('edNext').value]);
+$('edGroups').addEventListener('click', e => {
+  const b = e.target.closest('[data-eg]'); if (!b) return;
+  if (edGroup !== b.dataset.eg){ edGroup = b.dataset.eg; edAct = ''; }
+  paintEdCats();
+});
+$('edActs').addEventListener('click', e => {
+  if (e.target.closest('[data-ea-new]')){
+    const gid = edGroup;
+    return openName(`${gName(gid)}에 활동 추가`, '', name => {
+      const id = addAct(gid, name); if (!id) return false;
+      edAct = id; paintEdCats();   // 여기서 만든 활동은 시작 화면에도 바로 생깁니다
+    });
+  }
+  const b = e.target.closest('[data-ea]'); if (!b) return;
+  edAct = edAct === b.dataset.ea ? '' : b.dataset.ea;   // 다시 누르면 활동 없이 그룹만
+  paintEdCats();
+});
+const edState = () => JSON.stringify([$('edDate').value, edGroup, edAct, $('edDid').value, $('edLearned').value, $('edNext').value]);
 
 function openEditor(id, date){
   const r = id ? db.records.find(x => x.id === id) : null;
@@ -960,7 +1088,12 @@ function openEditor(id, date){
   editing = r ? r.id : null;
   $('edTitle').textContent = r ? '기록 수정' : '기록 쓰기';
   $('edDate').value = r ? r.date : (date || today);
-  edCat = r ? r.category : (prefs.lastCat && CAT[prefs.lastCat] ? prefs.lastCat : 'english');
+  if (r){ edGroup = rGroupId(r); edAct = r.actId && rAct(r) ? r.actId : ''; }
+  else {   // 마지막에 쓴 분류 — 지금도 쓸 수 있을 때만
+    const lg = groupOf(prefs.lastGroup), la = actOf(prefs.lastAct);
+    edGroup = lg && !lg.archived ? lg.id : '';
+    edAct = la && !la.removed && la.groupId === edGroup ? la.id : '';
+  }
   $('edDid').value = r?.did || '';
   $('edLearned').value = r?.learned || '';
   $('edNext').value = r?.next || '';
@@ -981,23 +1114,28 @@ function saveEditor(){
   const date = $('edDate').value;
   if (!DATE_RE.test(date)){ toast('날짜를 골라주세요.', true); return; }
   const now = Date.now();
-  const data = { date, category: edCat,
-    did: $('edDid').value.trim(), learned: $('edLearned').value.trim(), next: $('edNext').value.trim() };
+  const data = { date, did: $('edDid').value.trim(), learned: $('edLearned').value.trim(), next: $('edNext').value.trim() };
+  /* 옛 category 는 건드리지 않고, 새 분류(groupId · actId)만 넣거나 뺍니다 */
+  const setCls = r => {
+    if (edGroup) r.groupId = edGroup; else delete r.groupId;
+    if (edAct) r.actId = edAct; else delete r.actId;
+  };
   let before = null;
   if (editing){
     const r = db.records.find(x => x.id === editing);
     before = { ...r };
-    Object.assign(r, data, { updatedAt: now });
+    Object.assign(r, data, { updatedAt: now }); setCls(r);
   } else {
-    db.records.push({ id: newId(), ...data, createdAt: now, updatedAt: now });
+    const r = { id: newId(), ...data, createdAt: now, updatedAt: now }; setCls(r);
+    db.records.push(r);
   }
   if (!persist()){
     /* 저장 못 했으면 화면 속 자료도 원래대로 */
-    if (editing) Object.assign(db.records.find(x => x.id === editing), before);
+    if (editing){ const r = db.records.find(x => x.id === editing); for (const k of Object.keys(r)) delete r[k]; Object.assign(r, before); }
     else db.records.pop();
     return;
   }
-  prefs.lastCat = edCat; savePrefs();
+  prefs.lastGroup = edGroup; prefs.lastAct = edAct; savePrefs();
   $('edScrim').classList.add('hidden');
   sel = date;
   const d = parseYmd(date); view = { y:d.getFullYear(), m:d.getMonth() };
@@ -1014,7 +1152,7 @@ $('edScrim').addEventListener('keydown', e => {
 
 async function deleteRec(id){
   const r = db.records.find(x => x.id === id); if (!r) return false;
-  const ok = await ask('이 기록을 삭제할까요?', `${fmtDay(r.date)} · ${CAT[r.category]?.name || '기타'}`, '삭제하면 되돌릴 수 없습니다.', '삭제', true);
+  const ok = await ask('이 기록을 삭제할까요?', `${fmtDay(r.date)} · ${recLabelText(r)}`, '삭제하면 되돌릴 수 없습니다.', '삭제', true);
   if (!ok) return false;
   const idx = db.records.indexOf(r);
   db.records.splice(idx, 1);
@@ -1025,12 +1163,18 @@ async function deleteRec(id){
 }
 
 /* ───── 모아보기 ───── */
-$('filters').innerHTML = `<button class="fbtn on" data-f="all">전체</button>`
-  + CATS.map(c => `<button class="fbtn" data-f="${c.id}"><i style="background:${catColor(c.id)}"></i>${c.name}</button>`).join('');
+/* 그룹 칩 — 전체 · 그룹들(보관 포함, 기록이 있을 때) · 분류 없음 */
+function paintGroupFilters(){
+  const used = new Set([...db.records.map(rGroupId), ...db.sessions.map(sGroupId)]);
+  if (filterCat !== 'all' && filterCat !== 'none' && !groupOf(filterCat)) filterCat = 'all';
+  $('filters').innerHTML = `<button class="fbtn${filterCat === 'all' ? ' on' : ''}" data-f="all">전체</button>`
+    + db.groups.filter(g => !g.archived || used.has(g.id))
+      .map(g => `<button class="fbtn${filterCat === g.id ? ' on' : ''}" data-f="${g.id}">${gDot(g.id)}${esc(g.name)}${g.archived ? ' (보관)' : ''}</button>`).join('')
+    + (used.has('') ? `<button class="fbtn${filterCat === 'none' ? ' on' : ''}" data-f="none">분류 없음</button>` : '');
+}
 $('filters').addEventListener('click', e => {
   const b = e.target.closest('[data-f]'); if (!b) return;
-  filterCat = b.dataset.f;
-  for (const x of $('filters').children) x.classList.toggle('on', x === b);
+  filterCat = b.dataset.f; actF.act = '';
   renderList();
 });
 $('q').addEventListener('input', () => { $('qClr').classList.toggle('hidden', !$('q').value); renderList(); });
@@ -1043,39 +1187,41 @@ $('kindSeg').addEventListener('click', e => {
 });
 for (const id of ['lFrom', 'lTo']) $(id).addEventListener('change', renderList);
 
+
 const DECISIONS = { keep:'그대로 해보기', one:'한 가지만 바꾸기', observe:'조금 더 관찰하기', rest:'일단 쉬어가기' };
 
-/* 모아보기 — 저장된 원본을 그대로 읽어 한 줄로 늘어놓습니다 (복사해 두지 않음) */
+/* 모아보기 — 저장된 원본을 그대로 읽어 한 줄로 늘어놓습니다 (복사해 두지 않음)
+   그룹 · 활동은 id 로 맞춥니다 → 이름을 바꿔도 지난 기록이 같이 걸러집니다 */
+const groupOk = gid => filterCat === 'all' || (filterCat === 'none' ? gid === '' : gid === filterCat);
 function listItems(){
   const out = [];
-  const catOn = filterCat !== 'all';
-  if (listKind === 'all' || listKind === 'diary'){
+  const narrowed = filterCat !== 'all' || actF.act || actF.mood;
+  if ((listKind === 'all' || listKind === 'diary') && !actF.mood){
     for (const r of db.records){
-      if (catOn && r.category !== filterCat) continue;
-      out.push({ date:r.date, t:r.createdAt, hay:[r.did, r.learned, r.next, CAT[r.category]?.name],
+      if (!groupOk(rGroupId(r)) || (actF.act && rKey(r) !== actF.act)) continue;
+      out.push({ date:r.date, t:r.createdAt, hay:[r.did, r.learned, r.next, rGroupId(r) && gName(rGroupId(r)), rAct(r)?.name, OLD_CAT[r.category]],
         html: () => {
           if (openAll) return recCard(r, true);
           const sum = r.did || r.learned || r.next;
           return `<button class="card item" data-open="${r.id}">
-            <div class="head"><span class="chip"><i style="background:${catColor(r.category)}"></i>${esc(CAT[r.category]?.name || '기타')}</span><span>일기</span></div>
+            <div class="head">${recLabel(r)}<span>수동 기록</span></div>
             <div class="sum">${sum ? esc(sum) : '<span class="blank">적은 내용 없이 남긴 기록</span>'}</div></button>`;
         } });
     }
   }
-  if (catOn) return out;   // 카테고리는 일기에만 있습니다
   if (listKind === 'all' || listKind === 'act'){
     for (const s of db.sessions){
-      if (listKind === 'act' && ((actF.g && s.group !== actF.g) || (actF.name && s.name !== actF.name) || (actF.mood && !(s.mood || []).includes(actF.mood)))) continue;
+      if (!groupOk(sGroupId(s)) || (actF.act && sKey(s) !== actF.act) || (actF.mood && !(s.mood || []).includes(actF.mood))) continue;
       const notes = noteList(s);
-      out.push({ date:s.date, t:s.start, hay:[s.name, GROUP[s.group]?.name, '활동', ...notes.map(n => n.v), ...(s.mood || []).map(m => MOOD[m].name)],
+      out.push({ date:s.date, t:s.start, hay:[sName(s), s.name, gName(sGroupId(s)), '타이머', ...notes.map(n => n.v), ...(s.mood || []).map(m => MOOD[m].name)],
         html: () => `<button class="card item" data-sopen="${s.id}">
-          <div class="head"><span class="chip">${esc(s.name)}</span><span>${GROUP[s.group]?.name || ''} · ${fmtHm(s.start)}${P.hideStats() ? '' : ` · ${fmtDur(s.activeMs)}`}</span></div>
+          <div class="head"><span class="chip">${gDot(sGroupId(s))}${esc(sName(s))}</span><span>${esc(gName(sGroupId(s)))} · ${fmtHm(s.start)}${P.hideStats() ? '' : ` · ${fmtDur(s.activeMs)}`}</span></div>
           ${(s.mood || []).length ? `<div class="mtags">${s.mood.map(m => `<span>${moodText(m)}</span>`).join('')}</div>` : ''}
           ${openAll ? notes.map(n => `<div class="nline"><b>${n.name}</b>${esc(n.v)}</div>`).join('')
             : notes.length ? `<div class="sum"><b style="font-size:12px;color:var(--soft);margin-right:6px">${notes[0].name}</b>${esc(notes[0].v)}</div>` : ''}</button>` });
     }
   }
-  if (listKind === 'all' || listKind === 'look'){
+  if ((listKind === 'all' || listKind === 'look') && !narrowed){
     for (const r of db.reviews){
       const sum = [r.decision && DECISIONS[r.decision], r.learned, r.evidence, r.next].filter(Boolean).join(' · ');
       out.push({ date:r.end, t:r.updatedAt, hay:['돌아보기', r.learned, r.evidence, r.next, DECISIONS[r.decision]],
@@ -1093,28 +1239,39 @@ function listItems(){
   return out;
 }
 
-/* 활동 거르기 — 일상/레벨업 · 활동 이름 · 기분 */
-const actF = { g:'', name:'', mood:'' };
+/* 활동 · 기분 고르기 — 활동 목록은 고른 그룹의 활동(뺀 활동은 기록이 있을 때만) + 활동과 이어지지 않은 예전 기록 이름 */
+const actF = { act:'', mood:'' };
+function actOptions(){
+  const used = new Set([...db.sessions.map(sKey), ...db.records.map(rKey)].filter(Boolean));
+  const opts = [];
+  for (const a of db.acts){
+    if (!groupOk(a.groupId) || (a.removed && !used.has('a:' + a.id))) continue;
+    opts.push({ v:'a:' + a.id, l:(filterCat === 'all' ? gName(a.groupId) + ' · ' : '') + a.name + (a.removed ? ' (뺀 활동)' : '') });
+  }
+  for (const k of used){
+    if (!k.startsWith('o:')) continue;
+    const [g, name] = k.slice(2).split('\u0000');
+    if (groupOk(g)) opts.push({ v:k, l:(filterCat === 'all' ? gName(g) + ' · ' : '') + name + ' (연결 안 된 예전 기록)' });
+  }
+  return opts;
+}
 function paintActFilters(){
-  const names = [...new Set(db.sessions.filter(s => !actF.g || s.group === actF.g).map(s => s.name))].sort();
-  if (actF.name && !names.includes(actF.name)) actF.name = '';
-  $('actFilters').innerHTML = [['', '전체'], ...GROUPS.map(g => [g.id, g.name])]
-      .map(([v, l]) => `<button class="fbtn${actF.g === v ? ' on' : ''}" data-ag="${v}">${l}</button>`).join('')
-    + `<select class="sel-in" id="aName" aria-label="활동별"><option value="">모든 활동</option>${names.map(n => `<option${n === actF.name ? ' selected' : ''}>${esc(n)}</option>`).join('')}</select>`
+  const opts = actOptions();
+  if (actF.act && !opts.some(o => o.v === actF.act)) actF.act = '';
+  $('actFilters').innerHTML = `<select class="sel-in" id="aName" aria-label="활동별"><option value="">전체 활동</option>${opts.map(o => `<option value="${esc(o.v)}"${o.v === actF.act ? ' selected' : ''}>${esc(o.l)}</option>`).join('')}</select>`
     + `<select class="sel-in" id="aMood" aria-label="기분별"><option value="">모든 기분</option>${MOODS.map(m => `<option value="${m.id}"${m.id === actF.mood ? ' selected' : ''}>${m.e} ${m.name}</option>`).join('')}</select>`;
 }
-$('actFilters').addEventListener('click', e => { const b = e.target.closest('[data-ag]'); if (b){ actF.g = b.dataset.ag; renderList(); } });
 $('actFilters').addEventListener('change', e => {
-  if (e.target.id === 'aName') actF.name = e.target.value;
+  if (e.target.id === 'aName') actF.act = e.target.value;
   if (e.target.id === 'aMood') actF.mood = e.target.value;
   renderList();
 });
 
 function renderList(){
   for (const b of $('kindSeg').children) b.classList.toggle('on', b.dataset.k === listKind);
-  $('filters').classList.toggle('hidden', listKind !== 'all' && listKind !== 'diary');
-  $('actFilters').classList.toggle('hidden', listKind !== 'act');
-  if (listKind === 'act') paintActFilters();
+  $('filters').classList.toggle('hidden', listKind === 'look');
+  $('actFilters').classList.toggle('hidden', listKind === 'look');
+  if (listKind !== 'look'){ paintGroupFilters(); paintActFilters(); }
   const words = $('q').value.trim().toLowerCase().split(/\s+/).filter(Boolean);
   const from = $('lFrom').value, to = $('lTo').value;
   let items = listItems().filter(it => (!from || it.date >= from) && (!to || it.date <= to));
@@ -1367,8 +1524,10 @@ document.addEventListener('visibilitychange', () => {
 });
 
 /* ───── 시작 화면 ───── */
-let homeGroup = GROUP[prefs.homeGroup] ? prefs.homeGroup : 'daily';
+let homeGroup = prefs.homeGroup || 'daily';
 let editActs = false;
+/* 고른 그룹이 보관 · 삭제됐으면 첫 그룹으로 */
+const fixHomeGroup = () => { if (!liveGroups().some(g => g.id === homeGroup)) homeGroup = liveGroups()[0]?.id || ''; };
 
 function renderHome(){
   if (done && !db.sessions.some(s => s.id === done)) done = null;   // 다른 곳에서 지워졌으면
@@ -1383,19 +1542,20 @@ function renderHome(){
   $('tReady').classList.toggle('hidden', mode !== 'ready');
   $('tToggle').classList.toggle('hidden', mode !== 'timer');
   if (mode === 'ready'){
+    const a = actOf(ready.act.id) || ready.act;
     $('homeTimer').classList.remove('paused');
-    $('tGroup').textContent = GROUP[ready.group]?.name || '';
-    $('tName').textContent = ready.act.name;
+    $('tGroup').textContent = gName(a.groupId);
+    $('tName').textContent = a.name;
     $('tClock').classList.remove('hidden'); $('tBusy').classList.add('hidden');
     $('tClock').textContent = '00:00:00';
     $('tState').textContent = '「시작하기」를 누르면 시간이 흐르기 시작해요';
     $('tWake').textContent = '';
     $('qDoing').innerHTML = quoteHtml('doing');
   } else if (mode === 'timer'){
-    const paused = !timer.segStart, hide = P.hideTime();
+    const paused = !timer.segStart, hide = P.hideTime(), a = actOf(timer.activityId);
     $('homeTimer').classList.toggle('paused', paused);
-    $('tGroup').textContent = GROUP[timer.group]?.name || '';
-    $('tName').textContent = timer.name;
+    $('tGroup').textContent = gName(a ? a.groupId : timer.group);
+    $('tName').textContent = a ? a.name : timer.name;
     $('tClock').classList.toggle('hidden', hide);
     $('tBusy').classList.toggle('hidden', !hide);
     $('tBusyBig').textContent = paused ? '잠시 쉬는 중' : '진행 중';
@@ -1407,7 +1567,7 @@ function renderHome(){
     paintClock(); paintWake();
   } else if (mode === 'done'){
     const s = db.sessions.find(x => x.id === done);
-    $('dName').textContent = P.hideStats() || P.hideTime() ? `${s.name} · 기록됨` : `${s.name} · ${fmtDur(s.activeMs)}`;
+    $('dName').textContent = P.hideStats() || P.hideTime() ? `${sName(s)} · 기록됨` : `${sName(s)} · ${fmtDur(s.activeMs)}`;
     $('dAsk').classList.toggle('hidden', !P.askNote());
     if (P.askNote()) paintDraft(); else paintDoneBtn();
     $('qEnd').innerHTML = quoteHtml('end');
@@ -1415,7 +1575,7 @@ function renderHome(){
     $('qStart').innerHTML = quoteHtml('start');
     const rec = recentActs();
     $('recentBox').innerHTML = rec.length ? `<div class="sbh">최근에 해본 일</div><div class="recent">`
-      + rec.map(x => `<button data-rg="${x.group}" data-ra="${x.act.id}">${esc(x.act.name)}</button>`).join('') + `</div>` : '';
+      + rec.map(a => `<button data-ra="${a.id}">${esc(a.name)}</button>`).join('') + `</div>` : '';
     paintActs();
   }
   $('homeToday').innerHTML = sessHtml(today, '오늘 기록한 활동');
@@ -1425,44 +1585,85 @@ function renderHome(){
         <div class="row"><button class="btn primary sm" id="ckGo">시험해 봐요</button><button class="btn ghost sm" id="ckLater">나중에</button></div></section>` : '';
 }
 
-/* 최근에 해본 일 — 마친 순서대로 3개. 목록에서 지운 활동은 뺍니다 */
+/* 최근에 해본 일 — 마친 순서대로 3개. 목록에서 뺀 활동 · 보관한 그룹의 활동은 뺍니다 */
 function recentActs(){
   const out = [], seen = new Set();
   for (const s of [...db.sessions].sort((a, b) => b.end - a.end)){
-    const act = (db.activities[s.group] || []).find(x => x.id === s.activityId);
-    if (!act || seen.has(s.group + act.id)) continue;
-    seen.add(s.group + act.id);
-    out.push({ group:s.group, act });
+    const a = sAct(s);
+    if (!a || a.removed || groupOf(a.groupId)?.archived || seen.has(a.id)) continue;
+    seen.add(a.id); out.push(a);
     if (out.length === 3) break;
   }
   return out;
 }
 $('recentBox').addEventListener('click', e => {
   const b = e.target.closest('[data-ra]'); if (!b) return;
-  const act = (db.activities[b.dataset.rg] || []).find(x => x.id === b.dataset.ra);
-  if (act) pickAct(act, b.dataset.rg);
+  const a = actOf(b.dataset.ra);
+  if (a) pickAct(a, a.groupId);
 });
 
 function paintActs(){
-  for (const b of $('groupSeg').children) b.classList.toggle('on', b.dataset.g === homeGroup);
-  const list = db.activities[homeGroup];
+  fixHomeGroup();
+  const gs = liveGroups();
+  $('groupSeg').innerHTML = gs.map(g => `<button data-g="${g.id}" class="${g.id === homeGroup ? 'on' : ''}">${gDot(g.id)}${esc(g.name)}</button>`).join('');
+  $('groupSeg').style.flexWrap = gs.length > 3 ? 'wrap' : '';
+  const list = actsIn(homeGroup);
   $('actGrid').classList.toggle('editing', editActs);
   $('editActs').textContent = editActs ? '편집 끝' : '목록 편집';
-  $('actGrid').innerHTML = (editActs
+  $('actGrid').innerHTML = !homeGroup ? '<div class="empty" style="grid-column:1/-1">「그룹 관리」에서 그룹을 먼저 만들어 주세요.</div>' : (editActs
     ? list.map((a, i) => `<div class="act"><span class="nm">${esc(a.name)}</span><span class="ctl">
         <button data-up="${a.id}" ${i === 0 ? 'disabled' : ''} aria-label="위로">↑</button>
         <button data-down="${a.id}" ${i === list.length - 1 ? 'disabled' : ''} aria-label="아래로">↓</button>
-        <button data-ren="${a.id}">이름</button><button data-rm="${a.id}">삭제</button></span></div>`).join('')
+        <button data-ren="${a.id}">이름</button><button data-rm="${a.id}">빼기</button></span></div>`).join('')
     : list.map(a => `<button class="act" data-act="${a.id}">${esc(a.name)}</button>`).join(''))
-    + `<button class="act add" data-add="1">＋ 활동 추가</button>`;
+    + (homeGroup ? `<button class="act add" data-add="1">＋ 활동 추가</button>` : '');
 }
 
-/* 활동 목록 바꾸기 — 저장 못 하면 원래대로 */
-function changeActs(fn){
-  const before = JSON.stringify(db.activities);
-  fn(db.activities[homeGroup]);
-  if (!persist()) db.activities = JSON.parse(before);
+/* ───── 그룹 · 활동 바꾸기 — 시작 화면 · 기록 쓰기 · 설정이 모두 이 함수들을 씁니다 ─────
+   저장에 실패하면 바꾸기 전으로 되돌립니다 */
+function commit(fn){
+  const snap = JSON.stringify(db);
+  const r = fn();
+  if (r === false) return false;
+  if (!persist()){ db = JSON.parse(snap); renderAll(); return false; }
   renderAll();
+  return r === undefined ? true : r;
+}
+const dupAct = (gid, name, exceptId) => actsIn(gid).some(a => a.name === name && a.id !== exceptId);
+function addAct(gid, name){
+  if (!groupOf(gid)){ toast('그룹을 먼저 골라주세요.', true); return null; }
+  if (dupAct(gid, name)){ toast('이 그룹에 이미 있는 이름이에요.', true); return null; }
+  const id = newId();
+  return commit(() => { db.acts.push({ id, name, groupId:gid, removed:false }); }) ? id : null;
+}
+function renameAct(id, name){
+  const a = actOf(id); if (!a) return false;
+  if (dupAct(a.groupId, name, id)){ toast('이 그룹에 이미 있는 이름이에요.', true); return false; }
+  return commit(() => { actOf(id).name = name; });   // id 그대로 → 지난 기록도 새 이름으로 보입니다
+}
+/* 같은 그룹 안에서 위 · 아래로 */
+function moveAct(id, dir){
+  return commit(() => {
+    const a = actOf(id), sib = db.acts.filter(x => x.groupId === a.groupId && !x.removed);
+    const j = sib.indexOf(a) + dir; if (j < 0 || j >= sib.length) return false;
+    const i1 = db.acts.indexOf(a), i2 = db.acts.indexOf(sib[j]);
+    [db.acts[i1], db.acts[i2]] = [db.acts[i2], db.acts[i1]];
+  });
+}
+function setActGroup(id, gid){
+  const a = actOf(id); if (!a || !groupOf(gid) || a.groupId === gid) return false;
+  if (dupAct(gid, a.name, id)){ toast('옮길 그룹에 같은 이름이 있어요. 이름을 먼저 바꿔주세요.', true); renderAll(); return false; }
+  return commit(() => { const x = actOf(id); x.groupId = gid; db.acts.splice(db.acts.indexOf(x), 1); db.acts.push(x); });
+}
+async function removeAct(id){
+  const a = actOf(id); if (!a) return;
+  const ok = await ask(`「${a.name}」을 목록에서 뺄까요?`, '지금까지 남긴 이 활동의 기록은 그대로 남고, 지난 기록에서는 계속 이 이름으로 보여요.', '설정 「그룹 및 활동 관리」에서 다시 되살릴 수 있어요.', '빼기', true);
+  if (ok) commit(() => { actOf(id).removed = true; });
+}
+function restoreAct(id){
+  const a = actOf(id); if (!a) return;
+  if (dupAct(a.groupId, a.name, id)){ toast('같은 그룹에 같은 이름이 있어요. 그 활동 이름을 먼저 바꿔주세요.', true); return; }
+  commit(() => { actOf(id).removed = false; });
 }
 
 $('groupSeg').addEventListener('click', e => {
@@ -1470,30 +1671,23 @@ $('groupSeg').addEventListener('click', e => {
   homeGroup = b.dataset.g; prefs.homeGroup = homeGroup; savePrefs(); paintActs();
 });
 $('editActs').onclick = () => { editActs = !editActs; paintActs(); };
-$('actGrid').addEventListener('click', async e => {
+$('toManage').onclick = () => { switchTab('set'); $('manage').scrollIntoView({ block:'start' }); };
+$('actGrid').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
-  const list = db.activities[homeGroup];
-  if (b.dataset.act){ const a = list.find(x => x.id === b.dataset.act); if (a) pickAct(a, homeGroup); return; }
-  if (b.dataset.add) return openName(null);
-  if (b.dataset.ren) return openName(b.dataset.ren);
-  const id = b.dataset.up || b.dataset.down;
-  if (id) return changeActs(l => {
-    const i = l.findIndex(x => x.id === id), j = b.dataset.up ? i - 1 : i + 1;
-    if (i >= 0 && j >= 0 && j < l.length) [l[i], l[j]] = [l[j], l[i]];
-  });
-  if (b.dataset.rm){
-    const a = list.find(x => x.id === b.dataset.rm); if (!a) return;
-    const ok = await ask(`「${a.name}」을 목록에서 뺄까요?`, '지금까지 남긴 이 활동의 기록은 그대로 남습니다.', '', '빼기', true);
-    if (ok) changeActs(l => { const i = l.findIndex(x => x.id === a.id); if (i >= 0) l.splice(i, 1); });
-  }
+  if (b.dataset.act){ const a = actOf(b.dataset.act); if (a) pickAct(a, a.groupId); return; }
+  if (b.dataset.add){ const gid = homeGroup; return openName(`${gName(gid)}에 활동 추가`, '', name => !!addAct(gid, name)); }
+  if (b.dataset.ren){ const a = actOf(b.dataset.ren); return openName('활동 이름 바꾸기', a.name, name => renameAct(a.id, name)); }
+  if (b.dataset.up) return moveAct(b.dataset.up, -1);
+  if (b.dataset.down) return moveAct(b.dataset.down, 1);
+  if (b.dataset.rm) return removeAct(b.dataset.rm);
 });
 
-let nmTarget = null;   // 이름 바꿀 활동 id (새로 추가면 null)
-function openName(id){
-  const a = id && db.activities[homeGroup].find(x => x.id === id);
-  nmTarget = a ? a.id : null;
-  $('nmTitle').textContent = a ? '활동 이름 바꾸기' : `${GROUP[homeGroup].name}에 활동 추가`;
-  $('nmInput').value = a ? a.name : '';
+/* 이름 입력 시트 — 활동 · 그룹 추가와 이름 바꾸기에 같이 씁니다 */
+let nmOnSave = null;
+function openName(title, value, onSave){
+  nmOnSave = onSave;
+  $('nmTitle').textContent = title;
+  $('nmInput').value = value || '';
   $('nmScrim').classList.remove('hidden');
   $('nmInput').focus();
 }
@@ -1501,11 +1695,7 @@ const closeName = () => $('nmScrim').classList.add('hidden');
 function saveName(){
   const name = $('nmInput').value.trim().replace(/\s+/g, ' ');
   if (!name){ toast('이름을 적어주세요.', true); return; }
-  if (db.activities[homeGroup].some(x => x.name === name && x.id !== nmTarget)){ toast('이미 있는 이름이에요.', true); return; }
-  changeActs(l => {
-    const a = nmTarget && l.find(x => x.id === nmTarget);
-    if (a) a.name = name; else l.push({ id:newId(), name });
-  });
+  if (nmOnSave && nmOnSave(name) === false) return;   // 겹치는 이름이면 시트를 열어 둡니다
   closeName();
 }
 $('nmSave').onclick = saveName;
@@ -1519,12 +1709,14 @@ function sessHtml(date, title){
   const list = db.sessions.filter(s => s.date === date).sort((a, b) => a.start - b.start);
   if (!list.length) return '';
   let h = `<section class="card sessbox"><div class="sbh">${esc(title)}</div>`;
-  for (const g of GROUPS){
-    const gs = list.filter(s => s.group === g.id);
+  /* 그룹 순서대로, 같은 활동(id)끼리 한 줄 — 이름이 같아도 id 가 다르면 따로 */
+  for (const gid of [...db.groups.map(g => g.id), '']){
+    const gs = list.filter(s => sGroupId(s) === gid);
     if (!gs.length) continue;
-    h += `<div class="sg">${g.name}</div>`;
-    for (const name of [...new Set(gs.map(s => s.name))]){
-      const ss = gs.filter(s => s.name === name);
+    h += `<div class="sg">${gDot(gid)}${esc(gName(gid))}</div>`;
+    for (const key of [...new Set(gs.map(sKey))]){
+      const ss = gs.filter(s => sKey(s) === key);
+      const name = sName(ss[0]);
       const tot = ss.reduce((a, s) => a + s.activeMs, 0);
       const moods = [...new Set(ss.flatMap(s => s.mood || []))];
       h += `<details class="sa"><summary><span class="nm">${esc(name)}${moods.length ? ` <span style="font-size:13px">${moods.map(m => MOOD[m].e).join('')}</span>` : ''}</span><span class="dur">${P.hideStats() ? '' : `${fmtDur(tot)}${ss.length > 1 ? ` · ${ss.length}번` : ''}`}</span></summary>`
@@ -1552,7 +1744,7 @@ for (const id of ['homeToday', 'daySess']){
 
 async function deleteSess(id){
   const s = db.sessions.find(x => x.id === id); if (!s) return false;
-  const ok = await ask('이 활동 기록을 삭제할까요?', `${fmtDay(s.date)} · ${s.name} · ${fmtDur(s.activeMs)}`, '삭제하면 되돌릴 수 없습니다.', '삭제', true);
+  const ok = await ask('이 활동 기록을 삭제할까요?', `${fmtDay(s.date)} · ${sName(s)} · ${fmtDur(s.activeMs)}`, '삭제하면 되돌릴 수 없습니다.', '삭제', true);
   if (!ok) return false;
   const idx = db.sessions.indexOf(s);
   db.sessions.splice(idx, 1);
@@ -1561,13 +1753,29 @@ async function deleteSess(id){
   return true;
 }
 
-let seId = null, seGroupV = 'daily', seSnap = null;
-function paintSeGroup(){ for (const b of $('seGroup').children) b.classList.toggle('on', b.dataset.g === seGroupV); }
-$('seGroup').addEventListener('click', e => { const b = e.target.closest('[data-g]'); if (b){ seGroupV = b.dataset.g; paintSeGroup(); } });
+/* 그룹 칩 + 활동 고르기. 기록 당시 이름(s.name)은 바꾸지 않고, 연결(activityId · group)만 바꿉니다 */
+let seId = null, seGroupV = '', seActV = '', seSnap = null;
+function paintSeGroup(){
+  const s = db.sessions.find(x => x.id === seId);
+  $('seGroups').innerHTML = db.groups.filter(g => !g.archived || g.id === seGroupV)
+    .map(g => `<button class="fbtn${g.id === seGroupV ? ' on' : ''}" data-sg="${g.id}">${gDot(g.id)}${esc(g.name)}</button>`).join('');
+  const acts = db.acts.filter(a => a.groupId === seGroupV && (!a.removed || a.id === seActV));
+  $('seAct').innerHTML = `<option value="">(활동 없이 · 기록 당시 이름 「${esc(s.name)}」로 보기)</option>`
+    + acts.map(a => `<option value="${a.id}"${a.id === seActV ? ' selected' : ''}>${esc(a.name)}${a.removed ? ' (뺀 활동)' : ''}</option>`).join('');
+  $('seAct').value = acts.some(a => a.id === seActV) ? seActV : '';
+  const cur = actOf($('seAct').value);
+  $('seOrig').classList.toggle('hidden', !cur || cur.name === s.name);
+  $('seOrig').textContent = `기록 당시 이름: ${s.name}`;
+}
+$('seGroups').addEventListener('click', e => {
+  const b = e.target.closest('[data-sg]'); if (!b) return;
+  if (seGroupV !== b.dataset.sg){ seGroupV = b.dataset.sg; seActV = ''; }
+  paintSeGroup();
+});
+$('seAct').addEventListener('change', () => { seActV = $('seAct').value; paintSeGroup(); });
 function openSess(id){
   const s = db.sessions.find(x => x.id === id); if (!s) return;
-  seId = id; seGroupV = s.group;
-  $('seName').value = s.name;
+  seId = id; seGroupV = sGroupId(s); seActV = sAct(s) ? s.activityId : '';
   $('seDate').value = s.date;
   $('seStart').value = hm(s.start);
   $('seEnd').value = hm(s.end);
@@ -1595,13 +1803,16 @@ $('seMoods').addEventListener('click', e => {
 const closeSess = () => $('seScrim').classList.add('hidden');
 function saveSess(){
   const s = db.sessions.find(x => x.id === seId); if (!s) return closeSess();
-  const name = $('seName').value.trim(), date = $('seDate').value, st = $('seStart').value, en = $('seEnd').value;
+  const date = $('seDate').value, st = $('seStart').value, en = $('seEnd').value;
   const min = Number($('seMin').value);
-  if (!name){ toast('활동 이름을 적어주세요.', true); return; }
   if (!DATE_RE.test(date) || !/^\d\d:\d\d/.test(st) || !/^\d\d:\d\d/.test(en)){ toast('날짜와 시각을 확인해주세요.', true); return; }
   if ($('seMin').value === '' || !Number.isFinite(min) || min < 0){ toast('활동 시간을 확인해주세요.', true); return; }
   const before = JSON.parse(JSON.stringify(s));
-  s.name = name; s.group = seGroupV;
+  /* 활동을 고르면 그 활동으로 연결(그룹은 활동을 따라감, 기록 당시 그룹 값은 그대로).
+     「활동 없이」면 고른 그룹에 둡니다. 원래 어디에도 안 이어진 예전 id 는 지우지 않고 남깁니다 */
+  const v = $('seAct').value;
+  if (v) s.activityId = v;
+  else { if (actOf(s.activityId)) s.activityId = ''; s.group = seGroupV; }
   /* 손대지 않은 칸은 초 단위 원래 값을 그대로 둡니다 */
   if (date !== seSnap.date || st !== seSnap.start || en !== seSnap.end){
     /* 고친 시각만 「분:00초」로, 그대로 둔 시각은 원래 초 · 밀리초를 지킵니다 */
@@ -1708,15 +1919,15 @@ function renderWeek(){
   const rs = db.records.filter(r => inWeek(r.date)).sort(sortRecs);
   let h = '';
   /* 활동별 — 몇 번 · 실제 활동 시간 · 한 줄 기록 */
-  const keys = [...new Set(ss.map(s => s.group + '\u0000' + s.name))];
+  const keys = [...new Set(ss.map(sKey))];   // 같은 활동 id 끼리 — 이름을 바꿔도 한 묶음
   if (keys.length){
     h += `<div class="sbh" style="margin:4px 2px 8px">실제로 해본 활동</div>`;
     for (const k of keys){
-      const [g, name] = k.split('\u0000');
-      const xs = ss.filter(s => s.group === g && s.name === name);
+      const xs = ss.filter(s => sKey(s) === k);
+      const name = sName(xs[0]), g = sGroupId(xs[0]);
       const notes = xs.flatMap(s => noteList(s).map(n => ({ date:s.date, ...n })));
       const moods = MOODS.filter(m => xs.some(s => (s.mood || []).includes(m.id)));
-      h += `<section class="card wact"><div class="hd"><span class="nm">${esc(name)}</span><span class="num">${GROUP[g]?.name || ''}</span></div>`
+      h += `<section class="card wact"><div class="hd"><span class="nm">${esc(name)}</span><span class="num">${gDot(g)}${esc(gName(g))}</span></div>`
         + (P.hideStats() ? '' : `<div class="num">총 ${xs.length}회 · 실제 활동 ${fmtDur(xs.reduce((a, s) => a + s.activeMs, 0))}</div>`)
         + (moods.length ? `<div class="mtags">${moods.map(m => `<span>${m.e} ${m.name}</span>`).join('')}</div>` : '')
         + (notes.length ? `<ul>${notes.map(n => `<li><small>${fmtMd(n.date)} · ${n.name}</small>${esc(n.v)}</li>`).join('')}</ul>` : '')
@@ -1888,8 +2099,141 @@ function renderComfort(){
     : '<p style="margin:0">문장 옆 ♡ 를 누르면 여기에 모여요.</p>';
 }
 
+/* ───── 그룹 및 활동 관리 (설정) ─────
+   시작 화면 「목록 편집」과 같은 함수(addAct · renameAct · moveAct · removeAct …)를 씁니다 */
+let mgPal = null;   // 색을 고르는 중인 그룹 id
+const dupGroup = (name, except) => db.groups.some(g => g.name === name && g.id !== except);
+function addGroup(name){
+  if (dupGroup(name)){ toast('이미 있는 그룹 이름이에요.', true); return false; }
+  const used = db.groups.map(g => g.color);
+  const color = (COLORS.find(c => !used.includes(c.id)) || COLORS[0]).id;
+  return commit(() => { db.groups.push({ id:newId(), name, color, archived:false }); });
+}
+function renameGroup(id, name){
+  if (dupGroup(name, id)){ toast('이미 있는 그룹 이름이에요.', true); return false; }
+  return commit(() => { groupOf(id).name = name; });   // id 그대로 → 지난 기록도 새 이름으로
+}
+function moveGroup(id, dir){
+  return commit(() => {
+    const live = liveGroups(), g = groupOf(id), j = live.indexOf(g) + dir;
+    if (j < 0 || j >= live.length) return false;
+    const i1 = db.groups.indexOf(g), i2 = db.groups.indexOf(live[j]);
+    [db.groups[i1], db.groups[i2]] = [db.groups[i2], db.groups[i1]];
+  });
+}
+function archiveGroup(id){
+  if (liveGroups().length <= 1){ toast('보관하지 않은 그룹이 하나는 있어야 해요.', true); return false; }
+  return commit(() => { groupOf(id).archived = true; });
+}
+/* 그룹에 이어진 것 — 활동(뺀 것 포함) · 수동 일기 · 타이머 기록 */
+function groupLinks(gid){
+  return { acts: db.acts.filter(a => a.groupId === gid).length,
+    n: db.records.filter(r => rGroupId(r) === gid || r.groupId === gid).length
+      + db.sessions.filter(s => sGroupId(s) === gid || s.group === gid).length };
+}
+let gdId = null;
+async function deleteGroup(gid){
+  const g = groupOf(gid); if (!g) return;
+  const L = groupLinks(gid);
+  if (!L.n && !L.acts){
+    if (!g.archived && liveGroups().length <= 1){ toast('보관하지 않은 그룹이 하나는 있어야 해요.', true); return; }
+    const ok = await ask(`「${g.name}」 그룹을 지울까요?`, '이 그룹에는 활동도 기록도 없어요.', '', '지우기', true);
+    if (ok) commit(() => { db.groups.splice(db.groups.indexOf(groupOf(gid)), 1); });
+    return;
+  }
+  /* 기록이 이어진 그룹은 바로 지우지 않고 「보관」이나 「다른 그룹으로 옮긴 뒤 지우기」를 고르게 합니다 */
+  gdId = gid;
+  $('gdTitle').textContent = `「${g.name}」 그룹에 기록이 있어요`;
+  $('gdMsg').textContent = `기록 ${L.n}건 · 활동 ${L.acts}개가 이 그룹에 이어져 있어요.\n기록을 지키려면 보관하거나, 활동과 기록을 다른 그룹으로 옮긴 뒤 지워주세요.`;
+  const others = db.groups.filter(x => x.id !== gid);
+  $('gdTo').innerHTML = others.map(x => `<option value="${x.id}">${esc(x.name)}${x.archived ? ' (보관)' : ''}</option>`).join('');
+  $('gdMove').disabled = !others.length;
+  $('gdArchive').classList.toggle('hidden', g.archived);
+  $('gdScrim').classList.remove('hidden');
+}
+const closeGd = () => $('gdScrim').classList.add('hidden');
+$('gdCancel').onclick = closeGd;
+$('gdArchive').onclick = () => { if (archiveGroup(gdId) !== false) closeGd(); };
+$('gdMove').onclick = () => {
+  const from = gdId, to = $('gdTo').value; if (!groupOf(to)) return;
+  const clash = db.acts.filter(a => a.groupId === from && !a.removed && dupAct(to, a.name, a.id)).map(a => a.name);
+  if (clash.length){ toast(`옮길 그룹에 같은 이름의 활동이 있어요: ${clash.join(', ')}. 이름을 먼저 바꿔주세요.`, true); return; }
+  if (!groupOf(from).archived && groupOf(to).archived && liveGroups().length <= 1){ toast('보관하지 않은 그룹이 하나는 있어야 해요.', true); return; }
+  const ok = commit(() => {
+    for (const a of db.acts) if (a.groupId === from) a.groupId = to;
+    for (const r of db.records) if (r.groupId === from) r.groupId = to;
+    for (const s of db.sessions) if (s.group === from) s.group = to;
+    db.groups.splice(db.groups.indexOf(groupOf(from)), 1);
+  });
+  if (ok){ closeGd(); toast('옮기고 지웠어요. 기록은 그대로예요.'); }
+};
+$('gdScrim').addEventListener('click', e => { if (e.target.id === 'gdScrim') closeGd(); });
+
+/* 활동과 이어지지 않은 예전 타이머 기록 중, 같은 그룹에 이름이 같은 활동이 「딱 하나」 있는 것 — 자동으로 잇지 않고 보여주기만 */
+function orphanMatches(){
+  const out = [];
+  for (const s of db.sessions){
+    if (sAct(s)) continue;
+    const c = db.acts.filter(a => a.groupId === s.group && a.name === s.name);
+    if (c.length === 1) out.push({ s, a:c[0] });
+  }
+  return out;
+}
+
+function renderManage(){
+  const live = liveGroups(), arch = db.groups.filter(g => g.archived);
+  const moveSel = a => `<select data-amove="${a.id}" aria-label="${esc(a.name)} 다른 그룹으로"><option value="">옮기기</option>`
+    + live.filter(g => g.id !== a.groupId).map(g => `<option value="${g.id}">→ ${esc(g.name)}</option>`).join('') + `</select>`;
+  let h = live.map((g, i) => {
+    const acts = actsIn(g.id), gone = db.acts.filter(a => a.groupId === g.id && a.removed);
+    return `<div class="mg"><div class="mgh"><button class="cdot" style="background:${colorHex(g.color)}" data-gcolor="${g.id}" aria-label="${esc(g.name)} 색 바꾸기"></button><b>${esc(g.name)}</b>
+      <span class="ctl2"><button data-gup="${g.id}" ${i === 0 ? 'disabled' : ''} aria-label="위로">↑</button><button data-gdown="${g.id}" ${i === live.length - 1 ? 'disabled' : ''} aria-label="아래로">↓</button><button data-gren="${g.id}">이름</button><button data-garch="${g.id}">보관</button><button data-gdel="${g.id}">삭제</button></span></div>`
+      + (mgPal === g.id ? `<div class="pal">${COLORS.map(c => `<button data-gc="${g.id}" data-c="${c.id}" class="${c.id === g.color ? 'on' : ''}" style="background:${c.hex}" aria-label="${c.name}"></button>`).join('')}</div>` : '')
+      + `<div class="mga">${acts.map((a, j) => `<div class="ar"><span>${esc(a.name)}</span><span class="ctl2"><button data-aup="${a.id}" ${j === 0 ? 'disabled' : ''} aria-label="위로">↑</button><button data-adown="${a.id}" ${j === acts.length - 1 ? 'disabled' : ''} aria-label="아래로">↓</button><button data-aren="${a.id}">이름</button><button data-arm="${a.id}">빼기</button></span>${live.length > 1 ? moveSel(a) : ''}</div>`).join('')}
+        <button class="linkbtn" data-aadd="${g.id}" style="padding-left:0">＋ 활동 추가</button>
+        ${gone.length ? `<div class="gone">뺀 활동: ${gone.map(a => `${esc(a.name)} <button data-aback="${a.id}">되살리기</button>`).join(' · ')}</div>` : ''}</div></div>`;
+  }).join('');
+  if (arch.length) h += `<div class="mg"><div class="sbh">보관한 그룹 — 시작 화면에서만 숨겨져요. 지난 기록은 그대로 보여요.</div>`
+    + arch.map(g => `<div class="mgh" style="margin-top:6px">${gDot(g.id)}<b style="font-weight:500">${esc(g.name)}</b><span class="ctl2"><button data-gunarch="${g.id}">되살리기</button><button data-gdel="${g.id}">삭제</button></span></div>`).join('') + `</div>`;
+  $('mgList').innerHTML = h;
+  const om = orphanMatches();
+  $('mgOrphan').innerHTML = om.length ? `<div class="note" style="margin:12px 0 0"><p>활동과 이어지지 않은 예전 타이머 기록이 ${om.length}건 있어요. 같은 그룹에 이름이 같은 활동이 있어서, 확인하면 이어 줄 수 있어요.</p><button class="x" id="orLink">확인하기</button></div>` : '';
+}
+$('mgList').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  const d = b.dataset;
+  if (d.gcolor){ mgPal = mgPal === d.gcolor ? null : d.gcolor; return renderManage(); }
+  if (d.gc){ mgPal = null; return commit(() => { groupOf(d.gc).color = d.c; }); }
+  if (d.gup) return moveGroup(d.gup, -1);
+  if (d.gdown) return moveGroup(d.gdown, 1);
+  if (d.gren) return openName('그룹 이름 바꾸기', groupOf(d.gren).name, name => renameGroup(d.gren, name));
+  if (d.garch) return archiveGroup(d.garch);
+  if (d.gunarch) return commit(() => { groupOf(d.gunarch).archived = false; });
+  if (d.gdel) return deleteGroup(d.gdel);
+  if (d.aup) return moveAct(d.aup, -1);
+  if (d.adown) return moveAct(d.adown, 1);
+  if (d.aren) return openName('활동 이름 바꾸기', actOf(d.aren).name, name => renameAct(d.aren, name));
+  if (d.arm) return removeAct(d.arm);
+  if (d.aback) return restoreAct(d.aback);
+  if (d.aadd) return openName(`${gName(d.aadd)}에 활동 추가`, '', name => !!addAct(d.aadd, name));
+});
+$('mgList').addEventListener('change', e => {
+  const s = e.target.closest('[data-amove]'); if (s && s.value) setActGroup(s.dataset.amove, s.value);
+});
+$('gAdd').onclick = () => openName('그룹 추가', '', addGroup);
+$('mgOrphan').addEventListener('click', async e => {
+  if (!e.target.closest('#orLink')) return;
+  const om = orphanMatches(); if (!om.length) return;
+  const by = {};
+  for (const { a } of om) by[a.id] = (by[a.id] || 0) + 1;
+  const list = Object.entries(by).map(([id, n]) => `${actOf(id).name} ${n}건 → ${gName(actOf(id).groupId)} · ${actOf(id).name}`).join('\n');
+  const ok = await ask('이 기록들을 활동에 이을까요?', list, '기록 당시 이름과 시간은 그대로 두고, 활동 연결만 더해요. 이으면 이름을 바꿔도 같이 따라가요.', '잇기', false);
+  if (ok) commit(() => { for (const { s, a } of om) db.sessions.find(x => x.id === s.id).activityId = a.id; });
+});
+
 /* ───── 백업 · 복원 ───── */
 function renderSet(){
+  renderManage();
   renderComfort();
   $('sCount').textContent = `일기 ${db.records.length}개 · 타이머 ${db.sessions.length}개`;
   let bytes = 0; try { bytes = (localStorage.getItem(KEY) || '').length * 2; } catch(e){}
@@ -1905,8 +2249,8 @@ function renderSet(){
 function exportBackup(){
   const n = new Date();
   const name = `my-record-backup-${ymd(n).replace(/-/g,'')}-${pad(n.getHours())}${pad(n.getMinutes())}.json`;
-  const data = { app:'나의 기록', version:4, exportedAt: n.toISOString(),
-    records: db.records, sessions: db.sessions, activities: db.activities,
+  const data = { app:'나의 기록', version:5, exportedAt: n.toISOString(),
+    records: db.records, sessions: db.sessions, groups: db.groups, acts: db.acts,
     reviews: db.reviews, checks: db.checks, savedQuotes: db.savedQuotes, checkStart: db.checkStart };
   const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type:'application/json' }));
   const a = document.createElement('a'); a.href = url; a.download = name;
@@ -1928,9 +2272,13 @@ function cleanRecords(data){
     if (seen.has(id)) id = newId();
     seen.add(id);
     const created = Number(r.createdAt) || Date.now();
-    out.push({ id, date: r.date, category: CAT[r.category] ? r.category : 'etc',
+    const o = { id, date: r.date,
       did: String(r.did ?? ''), learned: String(r.learned ?? ''), next: String(r.next ?? ''),
-      createdAt: created, updatedAt: Number(r.updatedAt) || created });
+      createdAt: created, updatedAt: Number(r.updatedAt) || created };
+    if (typeof r.category === 'string' && r.category) o.category = r.category;   // 옛 분류는 그대로 보관
+    if (str(r.groupId)) o.groupId = r.groupId;
+    if (str(r.actId)) o.actId = r.actId;
+    out.push(o);
   }
   return out;
 }
@@ -1945,7 +2293,7 @@ function cleanSessions(list){
     if (seen.has(id)) id = newId();
     seen.add(id);
     const o = { id, activityId: String(s.activityId ?? ''), name: String(s.name ?? '').trim() || '활동',
-      group: GROUP[s.group] ? s.group : 'daily', date: s.date, start, end, activeMs: act,
+      group: str(s.group) || 'daily', date: s.date, start, end, activeMs: act,
       pauses: Array.isArray(s.pauses) ? s.pauses.filter(p => p && Number.isFinite(Number(p.start)))
         .map(p => ({ start: Number(p.start), end: Number(p.end) || Number(p.start) })) : [],
       createdAt: Number(s.createdAt) || end, updatedAt: Number(s.updatedAt) || end };
@@ -1968,19 +2316,31 @@ const cleanChecks = list => !Array.isArray(list) ? null : list
     createdAt:Number(c.createdAt) || 0, updatedAt:Number(c.updatedAt) || 0 }));
 const cleanQuotes = list => !Array.isArray(list) ? null : list
   .filter(q => q && str(q.text)).map(q => ({ text:q.text, stage:str(q.stage), savedAt:Number(q.savedAt) || 0 }));
-/* 예전 백업도 받습니다 — 백업에 없는 칸(활동 목록 · 돌아보기 · 점검 · 모은 문장)은 지금 것을 그대로 둡니다 */
+/* 예전 백업도 받습니다 — 백업에 없는 칸(돌아보기 · 점검 · 모은 문장)은 지금 것을 그대로 둡니다 */
 function cleanBackup(data){
   const records = cleanRecords(data); if (!records) return null;
   const obj = data && !Array.isArray(data) ? data : {};
   const sessions = obj.sessions === undefined ? [] : cleanSessions(obj.sessions);
   if (!sessions) return null;
-  return { records, sessions, activities: validActs(obj.activities) ? obj.activities : null,
+  const groups = validGroups(obj.groups) ? obj.groups.map(g => ({ id:g.id, name:g.name, color:str(g.color) || 'grey', archived:!!g.archived })) : null;
+  const acts = groups && validActList(obj.acts) ? obj.acts.map(a => ({ id:a.id, name:a.name, groupId:a.groupId, removed:!!a.removed })) : null;
+  return { records, sessions, groups, acts, activities: validActs(obj.activities) ? obj.activities : null,
     reviews: cleanReviews(obj.reviews), checks: cleanChecks(obj.checks), savedQuotes: cleanQuotes(obj.savedQuotes),
     checkStart: 'checkStart' in obj ? (DATE_RE.test(obj.checkStart || '') ? obj.checkStart : null) : undefined };
 }
-const dbFrom = bk => migrate({ records: bk.records, sessions: bk.sessions,
-  activities: bk.activities || db.activities, reviews: bk.reviews || db.reviews, checks: bk.checks || db.checks,
-  savedQuotes: bk.savedQuotes || db.savedQuotes, checkStart: bk.checkStart === undefined ? db.checkStart : bk.checkStart });
+/* 분류: v5 백업이면 백업의 그룹 · 활동 그대로.
+   예전 백업(그룹 없음)이면 지금 그룹 · 활동을 지키고, 백업에만 있는 예전 활동(id)을 덧붙입니다 — 이름 바꾼 것 · 새로 만든 것이 사라지지 않게 */
+function dbFrom(bk){
+  let groups = bk.groups, acts = bk.acts;
+  if (!groups || !acts){
+    groups = JSON.parse(JSON.stringify(db.groups));
+    acts = JSON.parse(JSON.stringify(db.acts));
+    for (const a of bk.activities ? actsFromLegacy(bk.activities) : []) if (!acts.some(x => x.id === a.id)) acts.push(a);
+  }
+  return migrate({ records: bk.records, sessions: bk.sessions, groups, acts,
+    reviews: bk.reviews || db.reviews, checks: bk.checks || db.checks,
+    savedQuotes: bk.savedQuotes || db.savedQuotes, checkStart: bk.checkStart === undefined ? db.checkStart : bk.checkStart });
+}
 
 function keepBefore(reason){
   try {
@@ -2009,7 +2369,9 @@ $('importFile').addEventListener('change', async e => {
   }
   const old = db; db = dbFrom(bk); loadFailed = false;
   if (!persist()){ db = old; return; }
-  renderAll(); toast(`일기 ${bk.records.length}개 · 타이머 기록 ${bk.sessions.length}개를 복원했습니다`);
+  /* 복원 뒤 연결 검사 — 이어질 활동이 없는 기록은 기록 당시 이름 그대로 보여줍니다 */
+  const loose = db.sessions.filter(s => s.activityId && !sAct(s)).length + db.records.filter(r => r.actId && !rAct(r)).length;
+  renderAll(); toast(`일기 ${bk.records.length}개 · 타이머 기록 ${bk.sessions.length}개를 복원했습니다${loose ? ` (활동과 이어지지 않은 기록 ${loose}건은 기록 당시 이름으로 보여요)` : ''}`);
 });
 
 $('undoBtn').onclick = async () => {
