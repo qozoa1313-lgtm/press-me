@@ -14,12 +14,15 @@ https://qozoa1313-lgtm.github.io/press-me/record/
 ## 이미 정한 것 (바꾸지 말 것)
 - 영어 사이트(press-me/english)와 같은 방식: press-me 저장소 하위 폴더, HTML 한 장
 - 기록은 브라우저 localStorage 에만 저장. 이름은 myrecord.v1.data / .prefs / .before / .timer
-- data 안(version 3): records(수동 일기) · sessions(타이머 기록, note=한 줄 기록) · activities · reviews(7일 돌아보기 답) · checks(14일 점검 답) · savedQuotes · checkStart
+- data 안(version 4): records(수동 일기) · sessions(타이머 기록, mood=기분 id 여러 개, notes={felt,learned,hard,next}) · activities · reviews(7일 돌아보기 답) · checks(14일 점검 답) · savedQuotes · checkStart
 - 예전 자료는 열 때 빈 칸만 덧붙임(migrate). records 내용은 손대지 않음. 예전 백업 복원 시 백업에 없는 칸은 지금 것 유지
 - 기본 활동 id 고정(d1~d4, l1~l4) — 「최근에 해본 일」이 같은 활동을 찾게
 - prefs(기기별, 백업 안 됨): hideTime · hideStats · showQuotes · askNote · quotes(문장 뽑기 기록 14일) · checkLater · checkHidden
 - 14일 점검: 1일 차 = checkStart 또는 가장 이른 타이머 날짜. 날짜(현지) 기준 15일 차부터 시작 화면에 작은 카드. 점검 1번 하면 다시 안 띄움. 점수 없음, 답에 맞는 참고 안내 3종
-- 화면 켜짐 유지는 「진행 중」에만. 쉬는 중·끝나면 풂
+- 화면 켜짐 유지는 「진행 중」에만. 쉬는 중·끝나면 풂. 실패해도 타이머 계산과 무관
+- 활동 고르기 ≠ 시작: 고르면 준비 화면(00:00:00, 저장 없음), 「시작하기」 누른 시각이 start
+- 쉼 = end − start − activeMs (밀리초). 화면은 분 버림이라 「시작~종료 분 차이」와 「활동+쉼 분」이 최대 2분대 어긋나 보일 수 있음 → 기록 수정 화면 「저장된 원본(초 단위)」 줄로 확인
+- v3 한 줄 기록(note)은 열 때 notes.learned 로 옮김(글자 그대로, 다음 저장 때 반영)
 - 진행 중 타이머는 myrecord.v1.timer 에만. 시작·쉬기·이어하기 시각으로 계산(초 세기 아님). 「여기까지」 때 타이머 id 로 중복 저장 막음
 - 타이머 기록은 시작한 날짜에 들어감. 활동 목록에서 지워도 과거 기록은 남음(이름을 기록에 복사해 둠)
 - 타이머가 켜져 있는 동안 화면 켜짐 유지(Wake Lock) — 지원 안 하는 브라우저는 안내만
@@ -36,4 +39,4 @@ https://qozoa1313-lgtm.github.io/press-me/record/
 
 ## 아직 확인 못 한 것
 - 실제 갤럭시 휴대폰(삼성 인터넷·크롬)에서의 동작 · 화면 켜짐 유지 — 2026-10-26 기준 PC 크롬 휴대폰 크기 흉내 + 가짜 시계 + 가짜 화면 켜짐 장치로만 시험
-- 시험 파일은 저장소 밖(임시 폴더)에 있음: test_record.py(39) · test_timer.py(52) · test_final.py(85)
+- 시험 파일은 저장소 밖(임시 폴더)에 있음: test_record.py(39) · test_timer.py(52) · test_final.py(85) · test_v4.py(50)

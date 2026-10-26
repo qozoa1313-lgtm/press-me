@@ -175,12 +175,36 @@ input,textarea{font:inherit;color:inherit}
 .tbusy .big{font-size:26px;font-weight:700;color:var(--sage-ink)}
 .tbusy .sub{font-size:14px;color:var(--soft);margin-top:4px}
 .timer .tg2{margin-top:2px}
-.done{padding:22px 18px 18px}
-.done .dk{font-size:13px;color:var(--soft)}
-.done .dn{font-size:19px;font-weight:700;margin:2px 0 4px}
-.done .btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
-.done .btn{height:50px}
-.sa .note1{font-size:13px;color:var(--ink);padding:0 0 4px 14px;margin:-4px 0 6px 2px;border-left:2px solid var(--line);white-space:pre-wrap}
+/* 마무리 화면 — 제목 · 기분 · 경험 */
+.done{padding:20px 18px 18px}
+.dhead{display:flex;align-items:flex-start;gap:10px}
+.dhead > div{flex:1}
+.dt{font-size:21px;font-weight:700;margin:0;letter-spacing:-.01em}
+.dsub{font-size:13px;color:var(--soft);margin-top:2px}
+.dcheck{width:26px;height:26px;color:var(--sage);flex:none;margin-top:2px}
+.done hr{border:none;border-top:1px solid var(--line);margin:16px 0}
+.dq{font-size:15px;font-weight:700;margin:0 0 10px}
+.moods{display:flex;flex-wrap:wrap;gap:8px}
+.mood{display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:var(--card);font-size:14px;color:var(--ink)}
+.mood.on{background:var(--sage-bg);border-color:var(--sage);color:var(--sage-ink);font-weight:600}
+.dhint{font-size:13px;color:var(--soft);margin-top:10px}
+.ntabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.ntab{height:36px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:var(--card);font-size:14px;color:var(--soft)}
+.ntab.on{background:var(--ink);border-color:var(--ink);color:var(--bg);font-weight:600}
+.ntab.has:not(.on)::after{content:' •';color:var(--sage)}
+.done .btn.wide{height:52px;margin-top:14px}
+/* 타이머 기록 한 건 */
+.sone{padding:8px 0 10px 12px;border-left:2px solid var(--line);margin:2px 0 8px 2px}
+.sone .top1{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--soft)}
+.sone .top1 span{flex:1}
+.sone .top1 button{font-size:13px;color:var(--soft);padding:4px 8px;border-radius:8px}
+.sone .top1 button:hover{background:var(--sunk);color:var(--ink)}
+.sone .tm{font-size:13px;color:var(--soft)}
+.mtags{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:13px;margin-top:4px}
+.nline{font-size:14px;margin-top:4px;white-space:pre-wrap}
+.nline b{font-size:12px;color:var(--soft);font-weight:600;margin-right:6px}
+.exact{font-size:12px;color:var(--soft);background:var(--sunk);border-radius:10px;padding:8px 10px;margin-top:12px;font-variant-numeric:tabular-nums;line-height:1.7}
+.sel-in{height:34px;border:1px solid var(--line);border-radius:999px;background:var(--card);padding:0 12px;font-size:13px;color:var(--ink);max-width:100%}
 /* 안내 카드 (14일 점검) */
 .ckcard{padding:16px;margin-top:14px}
 .ckcard h3{font-size:15px;margin:0 0 2px}
@@ -318,25 +342,33 @@ textarea::placeholder,.search input::placeholder{color:var(--faint)}
       <div class="tbusy hidden" id="tBusy"><div class="big" id="tBusyBig">진행 중</div><div class="sub" id="tBusySub">지금은 이 일에 집중하는 시간이에요.</div></div>
       <div class="st" id="tState"></div>
       <button class="linkbtn tg2" id="tToggle">시간 숨기기</button>
-      <div class="btns">
+      <div class="btns" id="tRun">
         <button class="btn ghost" id="tPause">잠깐 쉬기</button>
         <button class="btn primary" id="tStop">오늘은 여기까지</button>
+      </div>
+      <div id="tReady" class="hidden">
+        <button class="btn primary wide" id="tGo" style="height:58px;font-size:17px;border-radius:16px;margin-top:18px">시작하기</button>
+        <button class="linkbtn" id="tBack" style="margin-top:10px">‹ 다른 활동 고르기</button>
       </div>
       <div class="wake" id="tWake"></div>
     </section>
     <div id="qDoing" class="hidden" style="margin-top:14px"></div>
     <section class="card done hidden" id="homeDone">
-      <div class="dk">오늘은 여기까지</div>
-      <div class="dn" id="dName"></div>
-      <div id="dAsk">
-        <label class="flab" for="dNote">오늘 알게 된 것이 있나요?<small>적지 않아도 돼요</small></label>
-        <textarea id="dNote" placeholder="예: 아직 효과는 모르겠다."></textarea>
-        <div class="btns">
-          <button class="btn ghost" id="dSkip">그냥 마치기</button>
-          <button class="btn primary" id="dSave">기록 남기기</button>
-        </div>
+      <div class="dhead">
+        <div><h2 class="dt">오늘은 여기까지 🌿</h2><div class="dsub" id="dName"></div></div>
+        <svg class="dcheck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="저장됨"><circle cx="12" cy="12" r="9.5"/><path d="M8 12.3l2.7 2.7L16 9.6"/></svg>
       </div>
-      <button class="btn ghost wide hidden" id="dHome" style="margin-top:12px">시작 화면으로</button>
+      <div id="dAsk">
+        <hr>
+        <div class="dq">마치고 나니 어떤 기분인가요?</div>
+        <div class="moods" id="dMoods"></div>
+        <div class="dhint">여러 개 선택할 수 있어요. 선택하지 않아도 괜찮아요.</div>
+        <hr>
+        <div class="dq">오늘의 경험을 남겨볼까요?</div>
+        <div class="ntabs" id="dTabs"></div>
+        <textarea id="dNote" aria-label="경험 기록"></textarea>
+      </div>
+      <button class="btn primary wide" id="dSave">그냥 마치기</button>
     </section>
     <div id="qEnd" class="hidden" style="margin-top:14px"></div>
     <div id="homeToday" style="margin-top:20px"></div>
@@ -408,6 +440,7 @@ textarea::placeholder,.search input::placeholder{color:var(--faint)}
       <button class="clr hidden" id="qClr">지우기</button>
     </label>
     <div class="filters" id="filters"></div>
+    <div class="filters hidden" id="actFilters"></div>
     <div class="two" style="margin:4px 0 2px">
       <input type="date" id="lFrom" class="date-in txt-in" aria-label="시작 날짜">
       <input type="date" id="lTo" class="date-in txt-in" aria-label="끝 날짜">
@@ -430,7 +463,7 @@ textarea::placeholder,.search input::placeholder{color:var(--faint)}
       <label class="tgl"><span>타이머 시간 숨기기<small>진행 중에 숫자 대신 「진행 중」만 보여요</small></span><input type="checkbox" id="pHideTime"></label>
       <label class="tgl"><span>요약 통계 숨기기<small>오늘 · 7일 합계 시간과 횟수를 숨겨요</small></span><input type="checkbox" id="pHideStats"></label>
       <label class="tgl"><span>좋은 문장 보기<small>단계마다 하루 한 문장</small></span><input type="checkbox" id="pShowQuotes"></label>
-      <label class="tgl"><span>활동 후 한 줄 질문<small>마친 뒤 「오늘 알게 된 것」 칸을 보여줘요</small></span><input type="checkbox" id="pAskNote"></label>
+      <label class="tgl"><span>활동 후 기분 · 경험 질문<small>마친 뒤 기분과 경험을 남기는 칸을 보여줘요</small></span><input type="checkbox" id="pAskNote"></label>
     </section>
 
     <section class="card sec" id="checkSec">
@@ -575,8 +608,10 @@ textarea::placeholder,.search input::placeholder{color:var(--faint)}
     </div>
     <label class="flab" for="seMin">실제 활동 시간<small>분 · 쉰 시간은 뺀 시간</small></label>
     <input type="number" id="seMin" class="date-in txt-in" min="0" step="1" inputmode="numeric">
-    <label class="flab" for="seNote">한 줄 기록<small>선택</small></label>
-    <textarea id="seNote" placeholder="예: 방법이 생각보다 복잡했다."></textarea>
+    <div class="exact" id="seExact"></div>
+    <div class="flab">기분<small>여러 개 · 선택</small></div>
+    <div class="moods" id="seMoods"></div>
+    <div id="seNotes"></div>
     <div class="foot">
       <button class="btn danger" id="seDel">삭제</button>
       <span class="grow"></span>
@@ -694,6 +729,26 @@ const defaultActs = () => ({
   daily:   ['밥 먹기','청소','설거지','빨래'].map((name, i) => ({ id:`d${i+1}`, name })),
   levelup: ['영어 (한 문장)','영어 (프렌즈)','면접 연습','바이브코딩'].map((name, i) => ({ id:`l${i+1}`, name })),
 });
+/* 기분 — 점수나 좋고 나쁨 없이 이름만 */
+const MOODS = [
+  { id:'good',    e:'😊', name:'좋음' },
+  { id:'proud',   e:'🥹', name:'뿌듯함' },
+  { id:'calm',    e:'😌', name:'평온함' },
+  { id:'meh',     e:'😐', name:'무덤덤함' },
+  { id:'stuck',   e:'😣', name:'답답함' },
+  { id:'anxious', e:'😟', name:'불안함' },
+  { id:'tired',   e:'😮‍💨', name:'지침' },
+];
+const MOOD = Object.fromEntries(MOODS.map(m => [m.id, m]));
+const moodText = id => `${MOOD[id].e} ${MOOD[id].name}`;
+/* 경험 기록 네 가지 */
+const NOTE_TYPES = [
+  { id:'felt',    name:'느낀 점',      ph:'예: 궁금한 걸 직접 물어보고 나니 기분이 좋았다.' },
+  { id:'learned', name:'알게 된 점',   ph:'예: 한국어 뜻만 보고 말하는 게 생각보다 어려웠다.' },
+  { id:'hard',    name:'어려웠던 점',  ph:'예: 중간에 자꾸 집중이 흐트러졌다.' },
+  { id:'next',    name:'다음에 해볼 것', ph:'예: 다음엔 10분만 먼저 해보자.' },
+];
+const noteList = s => NOTE_TYPES.filter(t => s.notes && s.notes[t.id]).map(t => ({ ...t, v:s.notes[t.id] }));
 const validActs = a => !!a && GROUPS.every(g => Array.isArray(a[g.id])
   && a[g.id].every(x => x && typeof x.id === 'string' && typeof x.name === 'string'));
 
@@ -701,15 +756,27 @@ const validActs = a => !!a && GROUPS.every(g => Array.isArray(a[g.id])
 let loadFailed = false;
 const emptyDb = () => migrate({ records:[] });
 /* 예전 자료에 새 칸만 덧붙입니다. records · sessions 안의 내용은 손대지 않습니다
-   v1: records / v2: + sessions · activities / v3: + reviews(7일 돌아보기) · checks(14일 점검) · savedQuotes · checkStart */
+   v1: records / v2: + sessions · activities / v3: + reviews(7일 돌아보기) · checks(14일 점검) · savedQuotes · checkStart
+   v4: 타이머 기록에 mood(기분 여러 개) · notes(느낀 점 · 알게 된 점 · 어려웠던 점 · 다음에 해볼 것)
+       v3 의 한 줄 기록(note, 「오늘 알게 된 것」 질문의 답)은 글자 그대로 notes.learned 로 옮깁니다. 시간 값은 손대지 않습니다 */
 function migrate(d){
   if (!Array.isArray(d.sessions)) d.sessions = [];
+  for (const s of d.sessions){
+    if (!s || typeof s !== 'object') continue;
+    if (typeof s.note === 'string'){
+      if (s.note.trim() && !(s.notes && s.notes.learned)) s.notes = { ...(s.notes || {}), learned: s.note.trim() };
+      delete s.note;
+    }
+    if (!Array.isArray(s.mood)) s.mood = [];
+    s.mood = s.mood.filter(m => MOOD[m]);
+    if (!s.notes || typeof s.notes !== 'object') s.notes = {};
+  }
   if (!validActs(d.activities)) d.activities = defaultActs();
   if (!Array.isArray(d.reviews)) d.reviews = [];
   if (!Array.isArray(d.checks)) d.checks = [];
   if (!Array.isArray(d.savedQuotes)) d.savedQuotes = [];
   if (!DATE_RE.test(d.checkStart || '')) d.checkStart = null;
-  d.version = 3;
+  d.version = 4;
   return d;
 }
 function readDb(){
@@ -998,10 +1065,14 @@ function listItems(){
   if (catOn) return out;   // 카테고리는 일기에만 있습니다
   if (listKind === 'all' || listKind === 'act'){
     for (const s of db.sessions){
-      out.push({ date:s.date, t:s.start, hay:[s.name, s.note, GROUP[s.group]?.name, '활동'],
+      if (listKind === 'act' && ((actF.g && s.group !== actF.g) || (actF.name && s.name !== actF.name) || (actF.mood && !(s.mood || []).includes(actF.mood)))) continue;
+      const notes = noteList(s);
+      out.push({ date:s.date, t:s.start, hay:[s.name, GROUP[s.group]?.name, '활동', ...notes.map(n => n.v), ...(s.mood || []).map(m => MOOD[m].name)],
         html: () => `<button class="card item" data-sopen="${s.id}">
           <div class="head"><span class="chip">${esc(s.name)}</span><span>${GROUP[s.group]?.name || ''} · ${fmtHm(s.start)}${P.hideStats() ? '' : ` · ${fmtDur(s.activeMs)}`}</span></div>
-          ${s.note ? `<div class="sum" style="${openAll ? '-webkit-line-clamp:unset' : ''}">${esc(s.note)}</div>` : ''}</button>` });
+          ${(s.mood || []).length ? `<div class="mtags">${s.mood.map(m => `<span>${moodText(m)}</span>`).join('')}</div>` : ''}
+          ${openAll ? notes.map(n => `<div class="nline"><b>${n.name}</b>${esc(n.v)}</div>`).join('')
+            : notes.length ? `<div class="sum"><b style="font-size:12px;color:var(--soft);margin-right:6px">${notes[0].name}</b>${esc(notes[0].v)}</div>` : ''}</button>` });
     }
   }
   if (listKind === 'all' || listKind === 'look'){
@@ -1022,9 +1093,28 @@ function listItems(){
   return out;
 }
 
+/* 활동 거르기 — 일상/레벨업 · 활동 이름 · 기분 */
+const actF = { g:'', name:'', mood:'' };
+function paintActFilters(){
+  const names = [...new Set(db.sessions.filter(s => !actF.g || s.group === actF.g).map(s => s.name))].sort();
+  if (actF.name && !names.includes(actF.name)) actF.name = '';
+  $('actFilters').innerHTML = [['', '전체'], ...GROUPS.map(g => [g.id, g.name])]
+      .map(([v, l]) => `<button class="fbtn${actF.g === v ? ' on' : ''}" data-ag="${v}">${l}</button>`).join('')
+    + `<select class="sel-in" id="aName" aria-label="활동별"><option value="">모든 활동</option>${names.map(n => `<option${n === actF.name ? ' selected' : ''}>${esc(n)}</option>`).join('')}</select>`
+    + `<select class="sel-in" id="aMood" aria-label="기분별"><option value="">모든 기분</option>${MOODS.map(m => `<option value="${m.id}"${m.id === actF.mood ? ' selected' : ''}>${m.e} ${m.name}</option>`).join('')}</select>`;
+}
+$('actFilters').addEventListener('click', e => { const b = e.target.closest('[data-ag]'); if (b){ actF.g = b.dataset.ag; renderList(); } });
+$('actFilters').addEventListener('change', e => {
+  if (e.target.id === 'aName') actF.name = e.target.value;
+  if (e.target.id === 'aMood') actF.mood = e.target.value;
+  renderList();
+});
+
 function renderList(){
   for (const b of $('kindSeg').children) b.classList.toggle('on', b.dataset.k === listKind);
   $('filters').classList.toggle('hidden', listKind !== 'all' && listKind !== 'diary');
+  $('actFilters').classList.toggle('hidden', listKind !== 'act');
+  if (listKind === 'act') paintActFilters();
   const words = $('q').value.trim().toLowerCase().split(/\s+/).filter(Boolean);
   const from = $('lFrom').value, to = $('lTo').value;
   let items = listItems().filter(it => (!from || it.date >= from) && (!to || it.date <= to));
@@ -1114,7 +1204,12 @@ const fmtDur = ms => {
 };
 const fmtHm = t => { const d = new Date(t), h = d.getHours(); return `${h < 12 ? '오전' : '오후'} ${h % 12 || 12}:${pad(d.getMinutes())}`; };
 const hm = t => { const d = new Date(t); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+/* 쉰 시간 = 전체 − 활동. 저장된 밀리초 값으로 계산하므로 「전체 = 활동 + 쉼」이 늘 정확히 맞습니다.
+   화면에서 분으로 줄일 때만 버림이 생깁니다 — 정확한 값은 기록 수정 화면의 초 단위 줄에서 봅니다 */
 const pauseMs = s => Math.max(0, s.end - s.start - s.activeMs);
+const fmtHms = t => { const d = new Date(t); return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`; };
+const fmtDurS = ms => { const s = Math.round(ms / 1000), h = Math.floor(s / 3600), m = Math.floor(s / 60) % 60;
+  return `${h ? `${h}시간 ` : ''}${h || m ? `${m}분 ` : ''}${s % 60}초`; };
 
 /* ───── 타이머 ─────
    초를 하나씩 세지 않고, 시작·쉬기·이어하기 시각을 저장해 두고 그때그때 계산합니다.
@@ -1134,14 +1229,24 @@ function saveTimer(){
 }
 const activeMs = (t, now = Date.now()) => t.accMs + (t.segStart ? Math.max(0, now - t.segStart) : 0);
 
+/* 활동을 고르면 「준비」 상태 — 시간은 아직 흐르지 않고 아무것도 저장하지 않습니다 */
+let ready = null;   // { act, group }
+function pickAct(act, group){
+  if (readTimer()){ timer = readTimer(); syncWake(); renderAll(); toast('이미 진행 중인 활동이 있어요'); return; }
+  done = null; ready = { act, group };
+  renderAll(); scrollTo(0, 0);
+}
+/* 「시작하기」를 누른 순간이 시작 시각입니다 */
 function startTimer(act, group){
   timer = readTimer();   // 다른 창에서 이미 켰을 수 있음 — 동시에 두 개는 켜지 않습니다
-  if (timer){ syncWake(); renderAll(); toast('이미 진행 중인 활동이 있어요'); return; }
+  if (timer){ ready = null; syncWake(); renderAll(); toast('이미 진행 중인 활동이 있어요'); return; }
   const now = Date.now();
-  done = null;
+  done = null; ready = null;
   timer = { id:newId(), activityId:act.id, name:act.name, group, start:now, segStart:now, accMs:0, pauses:[] };
   saveTimer(); syncWake(); renderAll(); scrollTo(0, 0);
 }
+$('tGo').onclick = () => { if (ready) startTimer(ready.act, ready.group); };
+$('tBack').onclick = () => { ready = null; renderAll(); };
 function pauseTimer(){
   timer = readTimer() || timer;
   if (!timer || !timer.segStart) return renderAll();
@@ -1171,33 +1276,61 @@ function finishTimer(){
     db.sessions.push({ id:t.id, activityId:t.activityId, name:t.name, group:t.group,
       date: ymd(new Date(t.start)), start:t.start, end:now, activeMs:ms,
       pauses: t.pauses.map(p => ({ start:p.start, end:p.end ?? now })),
-      createdAt:now, updatedAt:now });
+      mood:[], notes:{}, createdAt:now, updatedAt:now });
     if (!persist()){ db.sessions.pop(); return; }   // 저장 못 하면 타이머를 그대로 둡니다
   }
   timer = null; saveTimer(); syncWake();
-  /* 저장은 이미 끝났습니다. 마무리 화면은 한 줄을 「덧붙일지」만 묻습니다 */
-  done = t.id; $('dNote').value = '';
+  /* 저장은 이미 끝났습니다. 마무리 화면은 기분 · 경험을 「덧붙일지」만 묻습니다 */
+  done = t.id; draft = { mood:[], notes:{}, tab:'felt' };
   renderAll(); scrollTo(0, 0);
 }
 $('tPause').onclick = () => (timer && timer.segStart ? pauseTimer() : resumeTimer());
 $('tStop').onclick = finishTimer;
 $('tToggle').onclick = () => { prefs.hideTime = !P.hideTime(); savePrefs(); renderAll(); };
 
-/* 마무리 화면 */
-let done = null;   // 방금 저장한 타이머 기록 id
-function closeDone(){ done = null; renderAll(); }
-$('dSkip').onclick = closeDone;
-$('dHome').onclick = closeDone;
+/* 마무리 화면 — 기분 여러 개 + 경험 네 칸(탭으로 바꿔 가며 써도 각 칸 내용은 남아 있음) */
+let done = null;    // 방금 저장한 타이머 기록 id
+let draft = { mood:[], notes:{}, tab:'felt' };
+const draftHas = () => draft.mood.length > 0 || NOTE_TYPES.some(t => (draft.notes[t.id] || '').trim());
+const moodChips = (sel, attr) => MOODS.map(m => `<button class="mood${sel.includes(m.id) ? ' on' : ''}" ${attr}="${m.id}" aria-pressed="${sel.includes(m.id)}">${m.e} ${m.name}</button>`).join('');
+function paintDraft(){
+  $('dMoods').innerHTML = moodChips(draft.mood, 'data-m');
+  $('dTabs').innerHTML = NOTE_TYPES.map(t => `<button class="ntab${draft.tab === t.id ? ' on' : ''}${(draft.notes[t.id] || '').trim() ? ' has' : ''}" data-nt="${t.id}">${t.name}</button>`).join('');
+  const t = NOTE_TYPES.find(x => x.id === draft.tab);
+  $('dNote').placeholder = t.ph;
+  $('dNote').value = draft.notes[t.id] || '';
+  paintDoneBtn();
+}
+function paintDoneBtn(){ $('dSave').textContent = !P.askNote() ? '시작 화면으로' : draftHas() ? '기록 남기기' : '그냥 마치기'; }
+$('dMoods').addEventListener('click', e => {
+  const b = e.target.closest('[data-m]'); if (!b) return;
+  const i = draft.mood.indexOf(b.dataset.m);
+  if (i >= 0) draft.mood.splice(i, 1); else draft.mood.push(b.dataset.m);
+  paintDraft();
+});
+$('dTabs').addEventListener('click', e => {
+  const b = e.target.closest('[data-nt]'); if (!b) return;
+  draft.tab = b.dataset.nt; paintDraft(); $('dNote').focus();
+});
+$('dNote').addEventListener('input', () => {
+  draft.notes[draft.tab] = $('dNote').value;
+  const has = !!$('dNote').value.trim();
+  $('dTabs').querySelector(`[data-nt="${draft.tab}"]`).classList.toggle('has', has);
+  paintDoneBtn();
+});
 $('dSave').onclick = () => {
-  const note = $('dNote').value.trim();
   const s = db.sessions.find(x => x.id === done);
-  if (note && s){
-    const before = s.note;
-    s.note = note; s.updatedAt = Date.now();   // 같은 기록에 덮어쓰므로 두 번 눌러도 하나
-    if (!persist()){ s.note = before; return; }
+  if (s && P.askNote() && draftHas()){
+    const before = { mood:s.mood, notes:s.notes };
+    /* 같은 기록 하나에 합쳐 넣으므로 두 번 눌러도 하나 */
+    s.mood = [...new Set([...(s.mood || []), ...draft.mood])];
+    s.notes = { ...(s.notes || {}) };
+    for (const t of NOTE_TYPES){ const v = (draft.notes[t.id] || '').trim(); if (v) s.notes[t.id] = v; }
+    s.updatedAt = Date.now();
+    if (!persist()){ Object.assign(s, before); return; }
     toast('남겼어요');
   }
-  closeDone();
+  done = null; renderAll();
 };
 
 /* 타이머가 「진행 중」인 동안만 휴대폰 화면이 꺼지지 않게 — 쉬는 동안은 풀어서 배터리를 아낍니다 */
@@ -1239,13 +1372,26 @@ let editActs = false;
 
 function renderHome(){
   if (done && !db.sessions.some(s => s.id === done)) done = null;   // 다른 곳에서 지워졌으면
-  const mode = timer ? 'timer' : done ? 'done' : 'pick';
+  if (timer) ready = null;
+  const mode = timer ? 'timer' : ready ? 'ready' : done ? 'done' : 'pick';
   $('homePick').classList.toggle('hidden', mode !== 'pick');
-  $('homeTimer').classList.toggle('hidden', mode !== 'timer');
-  $('qDoing').classList.toggle('hidden', mode !== 'timer');
+  $('homeTimer').classList.toggle('hidden', mode !== 'timer' && mode !== 'ready');
+  $('qDoing').classList.toggle('hidden', mode !== 'timer' && mode !== 'ready');
   $('homeDone').classList.toggle('hidden', mode !== 'done');
   $('qEnd').classList.toggle('hidden', mode !== 'done');
-  if (mode === 'timer'){
+  $('tRun').classList.toggle('hidden', mode !== 'timer');
+  $('tReady').classList.toggle('hidden', mode !== 'ready');
+  $('tToggle').classList.toggle('hidden', mode !== 'timer');
+  if (mode === 'ready'){
+    $('homeTimer').classList.remove('paused');
+    $('tGroup').textContent = GROUP[ready.group]?.name || '';
+    $('tName').textContent = ready.act.name;
+    $('tClock').classList.remove('hidden'); $('tBusy').classList.add('hidden');
+    $('tClock').textContent = '00:00:00';
+    $('tState').textContent = '「시작하기」를 누르면 시간이 흐르기 시작해요';
+    $('tWake').textContent = '';
+    $('qDoing').innerHTML = quoteHtml('doing');
+  } else if (mode === 'timer'){
     const paused = !timer.segStart, hide = P.hideTime();
     $('homeTimer').classList.toggle('paused', paused);
     $('tGroup').textContent = GROUP[timer.group]?.name || '';
@@ -1261,9 +1407,9 @@ function renderHome(){
     paintClock(); paintWake();
   } else if (mode === 'done'){
     const s = db.sessions.find(x => x.id === done);
-    $('dName').textContent = `${s.name} · 기록됨`;
+    $('dName').textContent = P.hideStats() || P.hideTime() ? `${s.name} · 기록됨` : `${s.name} · ${fmtDur(s.activeMs)}`;
     $('dAsk').classList.toggle('hidden', !P.askNote());
-    $('dHome').classList.toggle('hidden', P.askNote());
+    if (P.askNote()) paintDraft(); else paintDoneBtn();
     $('qEnd').innerHTML = quoteHtml('end');
   } else {
     $('qStart').innerHTML = quoteHtml('start');
@@ -1294,7 +1440,7 @@ function recentActs(){
 $('recentBox').addEventListener('click', e => {
   const b = e.target.closest('[data-ra]'); if (!b) return;
   const act = (db.activities[b.dataset.rg] || []).find(x => x.id === b.dataset.ra);
-  if (act) startTimer(act, b.dataset.rg);
+  if (act) pickAct(act, b.dataset.rg);
 });
 
 function paintActs(){
@@ -1327,7 +1473,7 @@ $('editActs').onclick = () => { editActs = !editActs; paintActs(); };
 $('actGrid').addEventListener('click', async e => {
   const b = e.target.closest('button'); if (!b) return;
   const list = db.activities[homeGroup];
-  if (b.dataset.act){ const a = list.find(x => x.id === b.dataset.act); if (a) startTimer(a, homeGroup); return; }
+  if (b.dataset.act){ const a = list.find(x => x.id === b.dataset.act); if (a) pickAct(a, homeGroup); return; }
   if (b.dataset.add) return openName(null);
   if (b.dataset.ren) return openName(b.dataset.ren);
   const id = b.dataset.up || b.dataset.down;
@@ -1380,14 +1526,22 @@ function sessHtml(date, title){
     for (const name of [...new Set(gs.map(s => s.name))]){
       const ss = gs.filter(s => s.name === name);
       const tot = ss.reduce((a, s) => a + s.activeMs, 0);
-      h += `<details class="sa"><summary><span class="nm">${esc(name)}</span><span class="dur">${P.hideStats() ? '' : `${fmtDur(tot)}${ss.length > 1 ? ` · ${ss.length}번` : ''}`}</span></summary>`
-        + ss.map(s => `<div class="si"><span class="t">${fmtHm(s.start)} – ${fmtHm(s.end)} · ${fmtDur(s.activeMs)}${pauseMs(s) >= 60000 ? ` (쉼 ${fmtDur(pauseMs(s))})` : ''}</span>`
-          + `<button data-sedit="${s.id}">수정</button><button data-sdel="${s.id}">삭제</button></div>`
-          + (s.note ? `<div class="note1">${esc(s.note)}</div>` : '')).join('')
-        + `</details>`;
+      const moods = [...new Set(ss.flatMap(s => s.mood || []))];
+      h += `<details class="sa"><summary><span class="nm">${esc(name)}${moods.length ? ` <span style="font-size:13px">${moods.map(m => MOOD[m].e).join('')}</span>` : ''}</span><span class="dur">${P.hideStats() ? '' : `${fmtDur(tot)}${ss.length > 1 ? ` · ${ss.length}번` : ''}`}</span></summary>`
+        + ss.map(sessOne).join('') + `</details>`;
     }
   }
   return h + `</section>`;
+}
+/* 타이머 기록 한 건 — 적은 것만 보여주고 빈 칸은 그리지 않습니다 */
+function sessOne(s){
+  const p = pauseMs(s);
+  return `<div class="sone">
+    <div class="top1"><span>${fmtHm(s.start)} – ${fmtHm(s.end)}</span><button data-sedit="${s.id}">수정</button><button data-sdel="${s.id}">삭제</button></div>
+    <div class="tm">활동 ${fmtDur(s.activeMs)}${p >= 1000 ? ` · 쉼 ${fmtDur(p)}` : ''}</div>
+    ${(s.mood || []).length ? `<div class="mtags">${s.mood.map(m => `<span>${moodText(m)}</span>`).join('')}</div>` : ''}
+    ${noteList(s).map(n => `<div class="nline"><b>${n.name}</b>${esc(n.v)}</div>`).join('')}
+  </div>`;
 }
 for (const id of ['homeToday', 'daySess']){
   $(id).addEventListener('click', e => {
@@ -1418,11 +1572,26 @@ function openSess(id){
   $('seStart').value = hm(s.start);
   $('seEnd').value = hm(s.end);
   $('seMin').value = String(Math.round(s.activeMs / 60000));
-  $('seNote').value = s.note || '';
   seSnap = { date:s.date, start:$('seStart').value, end:$('seEnd').value, min:$('seMin').value };
+  /* 저장된 원본(초 단위) — 「전체 = 활동 + 쉼」을 직접 확인할 수 있게 */
+  const pz = (s.pauses || []).reduce((a, p) => a + Math.max(0, p.end - p.start), 0);
+  $('seExact').innerHTML = `저장된 원본 (초 단위)<br>시작 ${fmtHms(s.start)} · 종료 ${fmtHms(s.end)}<br>`
+    + `전체 ${fmtDurS(s.end - s.start)} = 활동 ${fmtDurS(s.activeMs)} + 쉼 ${fmtDurS(pauseMs(s))}`
+    + ((s.pauses || []).length ? `<br>쉬기 ${s.pauses.length}번 · 합계 ${fmtDurS(pz)}` : '');
+  seMood = [...(s.mood || [])];
+  $('seMoods').innerHTML = moodChips(seMood, 'data-sm');
+  $('seNotes').innerHTML = NOTE_TYPES.map(t => `<label class="flab" for="seN_${t.id}">${t.name}<small>선택</small></label>`
+    + `<textarea id="seN_${t.id}" placeholder="${t.ph}">${esc(s.notes?.[t.id] || '')}</textarea>`).join('');
   paintSeGroup();
   $('seScrim').classList.remove('hidden');
 }
+let seMood = [];
+$('seMoods').addEventListener('click', e => {
+  const b = e.target.closest('[data-sm]'); if (!b) return;
+  const i = seMood.indexOf(b.dataset.sm);
+  if (i >= 0) seMood.splice(i, 1); else seMood.push(b.dataset.sm);
+  $('seMoods').innerHTML = moodChips(seMood, 'data-sm');
+});
 const closeSess = () => $('seScrim').classList.add('hidden');
 function saveSess(){
   const s = db.sessions.find(x => x.id === seId); if (!s) return closeSess();
@@ -1431,19 +1600,27 @@ function saveSess(){
   if (!name){ toast('활동 이름을 적어주세요.', true); return; }
   if (!DATE_RE.test(date) || !/^\d\d:\d\d/.test(st) || !/^\d\d:\d\d/.test(en)){ toast('날짜와 시각을 확인해주세요.', true); return; }
   if ($('seMin').value === '' || !Number.isFinite(min) || min < 0){ toast('활동 시간을 확인해주세요.', true); return; }
-  const before = { ...s };
+  const before = JSON.parse(JSON.stringify(s));
   s.name = name; s.group = seGroupV;
   /* 손대지 않은 칸은 초 단위 원래 값을 그대로 둡니다 */
   if (date !== seSnap.date || st !== seSnap.start || en !== seSnap.end){
-    const at = (d, t) => { const [h, m] = t.split(':').map(Number); const x = parseYmd(d); x.setHours(h, m, 0, 0); return x.getTime(); };
-    s.date = date; s.start = at(date, st); s.end = at(date, en);
+    /* 고친 시각만 「분:00초」로, 그대로 둔 시각은 원래 초 · 밀리초를 지킵니다 */
+    const at = (d, t, orig, origT) => {
+      const [h, m] = t.split(':').map(Number), o = new Date(orig), x = parseYmd(d);
+      x.setHours(h, m, t === origT ? o.getSeconds() : 0, t === origT ? o.getMilliseconds() : 0);
+      return x.getTime();
+    };
+    s.date = date; s.start = at(date, st, before.start, seSnap.start); s.end = at(date, en, before.end, seSnap.end);
     if (s.end < s.start) s.end += 86400000;   // 자정을 넘긴 활동
   }
   if ($('seMin').value !== seSnap.min) s.activeMs = Math.round(min * 60000);
-  const note = $('seNote').value.trim();
-  if (note) s.note = note; else delete s.note;
+  const undo = () => { for (const k of Object.keys(s)) delete s[k]; Object.assign(s, before); };
+  if (s.activeMs > s.end - s.start){ undo(); toast('실제 활동 시간이 시작~종료 사이보다 길어요. 시각이나 시간을 확인해주세요.', true); return; }
+  s.mood = seMood.slice();
+  s.notes = {};
+  for (const t of NOTE_TYPES){ const v = $(`seN_${t.id}`).value.trim(); if (v) s.notes[t.id] = v; }
   s.updatedAt = Date.now();
-  if (!persist()){ for (const k of Object.keys(s)) delete s[k]; Object.assign(s, before); return; }
+  if (!persist()){ undo(); return; }
   closeSess(); renderAll(); toast('고쳤습니다');
 }
 $('seSave').onclick = saveSess;
@@ -1537,10 +1714,12 @@ function renderWeek(){
     for (const k of keys){
       const [g, name] = k.split('\u0000');
       const xs = ss.filter(s => s.group === g && s.name === name);
-      const notes = xs.filter(s => s.note);
+      const notes = xs.flatMap(s => noteList(s).map(n => ({ date:s.date, ...n })));
+      const moods = MOODS.filter(m => xs.some(s => (s.mood || []).includes(m.id)));
       h += `<section class="card wact"><div class="hd"><span class="nm">${esc(name)}</span><span class="num">${GROUP[g]?.name || ''}</span></div>`
         + (P.hideStats() ? '' : `<div class="num">총 ${xs.length}회 · 실제 활동 ${fmtDur(xs.reduce((a, s) => a + s.activeMs, 0))}</div>`)
-        + (notes.length ? `<ul>${notes.map(s => `<li><small>${fmtMd(s.date)}</small>${esc(s.note)}</li>`).join('')}</ul>` : '')
+        + (moods.length ? `<div class="mtags">${moods.map(m => `<span>${m.e} ${m.name}</span>`).join('')}</div>` : '')
+        + (notes.length ? `<ul>${notes.map(n => `<li><small>${fmtMd(n.date)} · ${n.name}</small>${esc(n.v)}</li>`).join('')}</ul>` : '')
         + `</section>`;
     }
   }
@@ -1726,7 +1905,7 @@ function renderSet(){
 function exportBackup(){
   const n = new Date();
   const name = `my-record-backup-${ymd(n).replace(/-/g,'')}-${pad(n.getHours())}${pad(n.getMinutes())}.json`;
-  const data = { app:'나의 기록', version:3, exportedAt: n.toISOString(),
+  const data = { app:'나의 기록', version:4, exportedAt: n.toISOString(),
     records: db.records, sessions: db.sessions, activities: db.activities,
     reviews: db.reviews, checks: db.checks, savedQuotes: db.savedQuotes, checkStart: db.checkStart };
   const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type:'application/json' }));
@@ -1770,7 +1949,10 @@ function cleanSessions(list){
       pauses: Array.isArray(s.pauses) ? s.pauses.filter(p => p && Number.isFinite(Number(p.start)))
         .map(p => ({ start: Number(p.start), end: Number(p.end) || Number(p.start) })) : [],
       createdAt: Number(s.createdAt) || end, updatedAt: Number(s.updatedAt) || end };
-    if (typeof s.note === 'string' && s.note.trim()) o.note = s.note.trim();
+    if (typeof s.note === 'string' && s.note.trim()) o.note = s.note.trim();   // v3 한 줄 기록 → migrate 가 notes.learned 로
+    o.mood = Array.isArray(s.mood) ? s.mood.filter(m => MOOD[m]) : [];
+    o.notes = {};
+    if (s.notes && typeof s.notes === 'object') for (const t of NOTE_TYPES) if (typeof s.notes[t.id] === 'string' && s.notes[t.id].trim()) o.notes[t.id] = s.notes[t.id].trim();
     out.push(o);
   }
   return out;
