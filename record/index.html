@@ -195,7 +195,8 @@ input,textarea{font:inherit;color:inherit}
 .done .btn.wide{height:52px;margin-top:14px}
 /* 타이머 기록 한 건 */
 .sone{padding:8px 0 10px 12px;border-left:2px solid var(--line);margin:2px 0 8px 2px}
-.sone .top1{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--soft)}
+.sone .top1{display:flex;align-items:flex-start;gap:6px;font-size:13px;color:var(--soft)}
+.sone .top1 span{padding-top:4px;line-height:1.7}
 .sone .top1 span{flex:1}
 .sone .top1 button{font-size:13px;color:var(--soft);padding:4px 8px;border-radius:8px}
 .sone .top1 button:hover{background:var(--sunk);color:var(--ink)}
@@ -1726,11 +1727,27 @@ function sessHtml(date, title){
   return h + `</section>`;
 }
 /* 타이머 기록 한 건 — 적은 것만 보여주고 빈 칸은 그리지 않습니다 */
+/* 실제로 켜져 있던 구간 — 시작 · 쉬기 · 이어하기 · 종료 시각으로 나눕니다.
+   시각을 손으로 고친 기록처럼 구간 합이 실제 활동 시간과 맞지 않으면 null (그때는 시작~종료 한 줄로) */
+function segments(s){
+  const ps = (s.pauses || []).filter(p => p.end >= p.start).sort((a, b) => a.start - b.start);
+  const out = []; let cur = s.start;
+  for (const p of ps){
+    if (p.start < cur || p.end > s.end) return null;
+    out.push([cur, p.start]); cur = p.end;
+  }
+  out.push([cur, s.end]);
+  if (Math.abs(out.reduce((a, [x, y]) => a + y - x, 0) - s.activeMs) > 1000) return null;
+  return out.filter(([x, y]) => y - x >= 1000);   // 누르자마자 쉰 1초 미만 구간은 빼기
+}
 function sessOne(s){
-  const p = pauseMs(s);
+  const p = pauseMs(s), seg = segments(s);
+  const lines = seg && seg.length
+    ? seg.map(([x, y]) => `${fmtHm(x)} ~ ${fmtHm(y)} (${fmtDur(y - x)})`).join('<br>')
+    : `${fmtHm(s.start)} ~ ${fmtHm(s.end)}`;
   return `<div class="sone">
-    <div class="top1"><span>${fmtHm(s.start)} – ${fmtHm(s.end)}</span><button data-sedit="${s.id}">수정</button><button data-sdel="${s.id}">삭제</button></div>
-    <div class="tm">활동 ${fmtDur(s.activeMs)}${p >= 1000 ? ` · 쉼 ${fmtDur(p)}` : ''}</div>
+    <div class="top1"><span>${lines}</span><button data-sedit="${s.id}">수정</button><button data-sdel="${s.id}">삭제</button></div>
+    <div class="tm">총 ${fmtDur(s.activeMs)}${p >= 1000 ? ` · 쉼 ${fmtDur(p)}` : ''}</div>
     ${(s.mood || []).length ? `<div class="mtags">${s.mood.map(m => `<span>${moodText(m)}</span>`).join('')}</div>` : ''}
     ${noteList(s).map(n => `<div class="nline"><b>${n.name}</b>${esc(n.v)}</div>`).join('')}
   </div>`;
@@ -1785,7 +1802,8 @@ function openSess(id){
   const pz = (s.pauses || []).reduce((a, p) => a + Math.max(0, p.end - p.start), 0);
   $('seExact').innerHTML = `저장된 원본 (초 단위)<br>시작 ${fmtHms(s.start)} · 종료 ${fmtHms(s.end)}<br>`
     + `전체 ${fmtDurS(s.end - s.start)} = 활동 ${fmtDurS(s.activeMs)} + 쉼 ${fmtDurS(pauseMs(s))}`
-    + ((s.pauses || []).length ? `<br>쉬기 ${s.pauses.length}번 · 합계 ${fmtDurS(pz)}` : '');
+    + ((s.pauses || []).length ? `<br>쉬기 ${s.pauses.length}번 · 합계 ${fmtDurS(pz)}` : '')
+    + (segments(s) || []).map(([x, y], i) => `<br>구간 ${i + 1}: ${fmtHms(x)} ~ ${fmtHms(y)} (${fmtDurS(y - x)})`).join('');
   seMood = [...(s.mood || [])];
   $('seMoods').innerHTML = moodChips(seMood, 'data-sm');
   $('seNotes').innerHTML = NOTE_TYPES.map(t => `<label class="flab" for="seN_${t.id}">${t.name}<small>선택</small></label>`
