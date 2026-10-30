@@ -178,6 +178,27 @@ input,textarea{font:inherit;color:inherit}
 .timg{margin:12px auto 4px;max-width:100%}
 .timg img{display:block;max-width:100%;max-height:52vh;margin:0 auto;border-radius:14px;object-fit:contain}
 .timer.paused .timg img{opacity:.45}
+.preason{margin-top:10px}
+.tmore{display:flex;justify-content:center;gap:6px;margin-top:10px}
+.memo{margin-top:8px;padding:8px 10px;border-radius:12px;background:var(--sunk)}
+.memo .mh{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--soft)}
+.memo .mh span{flex:1}
+.memo .mh button{font-size:12px;color:var(--soft);padding:3px 8px;border-radius:8px}
+.memo .mt{font-size:14px;margin-top:3px;white-space:pre-wrap}
+.memo .mc{font-size:13px;color:var(--soft);margin-top:3px;white-space:pre-wrap}
+.memo .mc b{font-weight:600;margin-right:6px}
+.preline{font-size:12px;color:var(--faint)}
+.focus{position:fixed;inset:0;z-index:15;background:#141614;color:#f1f1ec;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;padding:calc(48px + env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom));overflow:auto}
+.focus .fx{position:absolute;top:calc(8px + env(safe-area-inset-top));right:10px;color:#b9bbb4;font-size:13px;padding:8px 10px;border-radius:10px}
+.focus .fimg{max-width:100%;max-height:52vh;border-radius:16px;object-fit:contain}
+.focus .fname{font-size:14px;color:#b9bbb4}
+.focus .fclock{font-size:48px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.1}
+.focus.paused .fclock{color:#77796f}
+.focus .fbtns{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:6px}
+.focus .fbtns button{height:36px;padding:0 14px;border-radius:18px;font-size:13px;background:rgba(255,255,255,.12);color:#eee}
+.focus .freason{width:100%;display:flex;justify-content:center}
+.focus .date-in{max-width:320px;background:rgba(255,255,255,.08);color:#eee;border-color:rgba(255,255,255,.2)}
+.imgnote{font-size:12px;color:var(--faint);margin-top:2px}
 .imgbar{display:flex;justify-content:center;gap:4px;margin-top:6px}
 /* 마무리 화면 — 제목 · 기분 · 경험 */
 .done{padding:20px 18px 18px}
@@ -366,10 +387,11 @@ textarea::placeholder,.search input::placeholder{color:var(--faint)}
       <div class="grp" id="tGroup"></div>
       <div class="tn" id="tName"></div>
       <div class="timg hidden" id="tImgBox"><img id="tImg" alt="고른 이미지"></div>
-      <input type="file" accept="image/*" id="tFile" hidden>
+      <input type="file" accept="image/*" id="tFile" multiple hidden>
       <div class="clock" id="tClock" role="timer">00:00:00</div>
       <div class="tbusy hidden" id="tBusy"><div class="big" id="tBusyBig">진행 중</div><div class="sub" id="tBusySub">지금은 이 일에 집중하는 시간이에요.</div></div>
       <div class="st" id="tState"></div>
+      <div class="preason hidden" id="tReasonBox"><input id="tReason" class="date-in txt-in" maxlength="100" data-reason placeholder="쉬는 이유 (적지 않아도 돼요)" aria-label="쉬는 이유"></div>
       <button class="linkbtn tg2" id="tToggle">시간 숨기기</button>
       <div class="btns" id="tRun">
         <button class="btn ghost" id="tPause">잠깐 쉬기</button>
@@ -379,6 +401,8 @@ textarea::placeholder,.search input::placeholder{color:var(--faint)}
         <button class="btn primary wide" id="tGo" style="height:58px;font-size:17px;border-radius:16px;margin-top:18px">시작하기</button>
         <button class="linkbtn" id="tBack" style="margin-top:10px">‹ 다른 활동 고르기</button>
       </div>
+      <div class="tmore hidden" id="tMore"><button class="btn ghost sm" id="tMemo">🐰 메모</button><button class="btn ghost sm" id="tFull">전체화면</button></div>
+      <div class="imgnote hidden" id="tImgNote"></div>
       <div class="imgbar hidden" id="tImgBar"><button class="linkbtn" id="tImgPick">이미지 넣기</button><button class="linkbtn hidden" id="tImgDel">이미지 빼기</button></div>
       <div class="wake" id="tWake"></div>
     </section>
@@ -626,6 +650,41 @@ textarea::placeholder,.search input::placeholder{color:var(--faint)}
       <button class="btn ghost" id="dtCal">캘린더에서 보기</button>
       <button class="btn primary" id="dtEdit">수정</button>
     </div>
+  </div>
+</div>
+
+<!-- 우사기 메모 — 적는 동안에도 타이머는 그대로 흐름 -->
+<div class="scrim hidden" id="mmScrim">
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="mmTitle">
+    <div class="sh">
+      <h2 id="mmTitle">🐰 우사기 메모</h2>
+      <button class="iconbtn" id="mmClose" aria-label="닫기">✕</button>
+    </div>
+    <div class="hint" id="mmWhen" style="text-align:left;margin-top:0"></div>
+    <label class="flab" for="mmText">떠오른 생각</label>
+    <textarea id="mmText" maxlength="2000" placeholder="예) 발견! 출입문 위 방음판에 스토퍼가 필요할 것 같다"></textarea>
+    <label class="flab" for="mmCheck">검토할 내용<small>선택 · 전하기 전에 확인할 것</small></label>
+    <textarea id="mmCheck" maxlength="2000" placeholder="예) 도면에 그려보고 치수 확인한 뒤 부장님께 전달"></textarea>
+    <div class="hint" style="text-align:left">적는 동안에도 시간은 그대로 흘러요.</div>
+    <div class="foot">
+      <span class="grow"></span>
+      <button class="btn ghost" id="mmCancel">취소</button>
+      <button class="btn primary" id="mmSave">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 전체화면 — 사진 · 시간 · 작은 버튼만 -->
+<div class="focus hidden" id="focus" role="dialog" aria-label="전체화면">
+  <button class="fx" id="fExit">✕ 나가기</button>
+  <img class="fimg hidden" id="fImg" alt="고른 이미지">
+  <div class="fname" id="fName"></div>
+  <div class="fclock" id="fClock"></div>
+  <div class="freason hidden" id="fReasonBox"><input id="fReason" class="date-in txt-in" maxlength="100" data-reason placeholder="쉬는 이유 (적지 않아도 돼요)" aria-label="쉬는 이유"></div>
+  <div class="fbtns">
+    <button id="fMemo">🐰 메모</button>
+    <button id="fPause">잠깐 쉬기</button>
+    <button id="fStop">여기까지</button>
   </div>
 </div>
 
@@ -1413,10 +1472,10 @@ function startTimer(act, group){
 /* 누르는 순간 시간이 흐르고, 곧바로 이미지 고르기 창이 열립니다. 안 고르고 닫아도 시간은 그대로 흐릅니다 */
 $('tGo').onclick = () => { if (!ready) return; startTimer(ready.act, ready.group); if (timer) $('tFile').click(); };
 
-/* 진행 중 이미지 — 기록에는 넣지 않고, 「여기까지」를 누를 때까지만 보여줍니다.
-   새로고침해도 남도록 이 기기의 IndexedDB(브라우저 안 파일 보관함)에 한 장만 둡니다 */
-const IMG_DB = 'myrecord.v1.img';
-let img = null;   // { id: 타이머 id, url }
+/* 진행 중 이미지 — 최대 5장. 기록에는 넣지 않고, 「여기까지」를 누를 때까지만 보여줍니다.
+   새로고침해도 남도록 이 기기의 IndexedDB(브라우저 안 파일 보관함)에 한 묶음만 둡니다 */
+const IMG_DB = 'myrecord.v1.img', IMG_MAX = 5;
+let img = null;   // { id: 타이머 id, urls, idx, slot }
 function imgStore(mode, fn){
   return new Promise((res, rej) => {
     if (!('indexedDB' in window)) return rej(new Error('no idb'));
@@ -1431,16 +1490,49 @@ function imgStore(mode, fn){
     };
   });
 }
-function showImg(id, blob){
-  if (img) URL.revokeObjectURL(img.url);
-  img = blob ? { id, url: URL.createObjectURL(blob) } : null;
+/* 사진이 바뀌는 간격 = 내 집중 시간(「잠깐 쉬기」 없이 이어서 한 한 덩어리)의 중간값 ÷ 2.
+   같은 활동 기록이 3개 이상이면 그 활동만, 아니면 전체 기록. 덩어리가 3개 미만이면 10분. 3~30분 사이로 맞춤 */
+function imgEvery(actId){
+  const own = db.sessions.filter(s => s.activityId === actId);
+  const list = own.length >= 3 ? own : db.sessions;
+  const lens = [];
+  for (const s of list){ const seg = segments(s); if (seg && seg.length) seg.forEach(([x, y]) => lens.push(y - x)); else if (s.activeMs > 0) lens.push(s.activeMs); }
+  if (lens.length < 3) return { ms: 10 * 60000, focus: 0 };
+  lens.sort((a, b) => a - b);
+  const m = lens.length % 2 ? lens[(lens.length - 1) / 2] : (lens[lens.length / 2 - 1] + lens[lens.length / 2]) / 2;
+  const raw = Math.round(m / 2 / 60000), half = Math.min(30, Math.max(3, raw));
+  return { ms: half * 60000, focus: Math.round(m / 60000), fit: half !== raw };
+}
+let every = null;   // { id: 타이머 id, ms, focus } — 타이머마다 한 번만 계산
+const everyFor = t => (every && every.id === t.id) ? every : (every = { id: t.id, ...imgEvery(t.activityId) });
+function showImg(id, blobs){
+  if (img) img.urls.forEach(u => URL.revokeObjectURL(u));
+  img = blobs && blobs.length ? { id, urls: blobs.map(b => URL.createObjectURL(b)), idx: Math.floor(Math.random() * blobs.length), slot: null } : null;
   paintImg();
+}
+/* 집중한 시간(쉬는 동안은 안 셈)이 간격을 넘을 때마다, 방금 것과 다른 사진으로 무작위로 바꿉니다 */
+function rotateImg(){
+  if (!timer || !img || img.id !== timer.id || img.urls.length < 2) return;
+  const slot = Math.floor(activeMs(timer) / everyFor(timer).ms);
+  if (img.slot === null){ img.slot = slot; return; }
+  if (slot === img.slot) return;
+  img.slot = slot;
+  let n; do n = Math.floor(Math.random() * img.urls.length); while (n === img.idx);
+  img.idx = n; paintImg();
 }
 function paintImg(){
   const on = !!(timer && img && img.id === timer.id);
+  if (on && img.slot === null) rotateImg();
   $('tImgBox').classList.toggle('hidden', !on);
-  if (on && $('tImg').getAttribute('src') !== img.url) $('tImg').src = img.url;
+  const url = on ? img.urls[img.idx] : null;
+  if (url && $('tImg').getAttribute('src') !== url) $('tImg').src = url;
   if (!on) $('tImg').removeAttribute('src');
+  const multi = on && img.urls.length > 1, ev = multi ? everyFor(timer) : null;
+  $('tImgNote').classList.toggle('hidden', !multi);
+  if (multi) $('tImgNote').textContent = ev.focus
+    ? `사진 ${img.urls.length}장 · ${ev.ms / 60000}분마다 바뀌어요 (최근 집중 ${ev.focus}분${ev.fit ? ' · 3~30분 사이로 맞춤' : '의 절반'})`
+    : `사진 ${img.urls.length}장 · ${ev.ms / 60000}분마다 바뀌어요 (기록이 쌓이면 내 집중 시간에 맞춰져요)`;
+  if (focusOn) paintFocus();
   $('tImgPick').textContent = on ? '이미지 바꾸기' : '이미지 넣기';
   $('tImgDel').classList.toggle('hidden', !on);
 }
@@ -1450,16 +1542,20 @@ async function loadImg(){
   if (img && img.id === timer.id) return paintImg();
   try {
     const rec = await imgStore('readonly', st => st.get('cur'));
-    if (rec && timer && rec.id === timer.id) showImg(rec.id, rec.blob); else paintImg();
+    if (rec && timer && rec.id === timer.id) showImg(rec.id, rec.blobs || (rec.blob ? [rec.blob] : [])); else paintImg();
   } catch(e){ paintImg(); }
 }
 $('tFile').onchange = async () => {
-  const f = $('tFile').files[0]; $('tFile').value = '';
-  if (!f || !timer) return;
-  if (!/^image\//.test(f.type)) return toast('이미지 파일만 넣을 수 있어요', true);
+  let fs = [...$('tFile').files]; $('tFile').value = '';
+  if (!fs.length || !timer) return;
+  const bad = fs.some(f => !/^image\//.test(f.type));
+  fs = fs.filter(f => /^image\//.test(f.type));
+  if (!fs.length) return toast('이미지 파일만 넣을 수 있어요', true);
+  if (fs.length > IMG_MAX){ fs = fs.slice(0, IMG_MAX); toast(`사진은 ${IMG_MAX}장까지예요. 앞의 ${IMG_MAX}장만 넣었어요`); }
+  else if (bad) toast('이미지가 아닌 파일은 뺐어요');
   const id = timer.id;
-  showImg(id, f);
-  try { await imgStore('readwrite', st => { st.clear(); st.put({ id, blob: f }, 'cur'); }); }
+  showImg(id, fs);
+  try { await imgStore('readwrite', st => { st.clear(); st.put({ id, blobs: fs }, 'cur'); }); }
   catch(e){ toast('이미지를 보관하지 못했어요. 새로고침하면 이미지만 사라질 수 있어요', true); }
 };
 $('tImgPick').onclick = () => { if (timer) $('tFile').click(); };
@@ -1493,17 +1589,102 @@ function finishTimer(){
   if (!db.sessions.some(s => s.id === t.id)){
     db.sessions.push({ id:t.id, activityId:t.activityId, name:t.name, group:t.group,
       date: ymd(new Date(t.start)), start:t.start, end:now, activeMs:ms,
-      pauses: t.pauses.map(p => ({ start:p.start, end:p.end ?? now })),
+      pauses: t.pauses.map(p => ({ start:p.start, end:p.end ?? now, ...(p.reason ? { reason:p.reason } : {}) })),
+      ...(t.memos && t.memos.length ? { memos: t.memos } : {}),
       mood:[], notes:{}, createdAt:now, updatedAt:now });
     if (!persist()){ db.sessions.pop(); return; }   // 저장 못 하면 타이머를 그대로 둡니다
   }
-  timer = null; saveTimer(); syncWake(); clearImg();
+  timer = null; saveTimer(); syncWake(); clearImg(); closeFocus();
   /* 저장은 이미 끝났습니다. 마무리 화면은 기분 · 경험을 「덧붙일지」만 묻습니다 */
   done = t.id; draft = { mood:[], notes:{}, tab:'felt' };
   renderAll(); scrollTo(0, 0);
 }
 $('tPause').onclick = () => (timer && timer.segStart ? pauseTimer() : resumeTimer());
 $('tStop').onclick = finishTimer;
+
+/* 쉬는 이유 — 쉬는 동안에만 칸이 보이고, 적지 않아도 됩니다. 마지막 쉼에 붙여 둡니다 */
+function setReason(v){
+  timer = readTimer() || timer;
+  const p = timer && timer.pauses[timer.pauses.length - 1];
+  if (!timer || timer.segStart || !p || p.end != null) return;
+  v = v.trim();
+  if (v) p.reason = v; else delete p.reason;
+  saveTimer();
+}
+document.querySelectorAll('[data-reason]').forEach(el => el.addEventListener('input', () => setReason(el.value)));
+function paintReason(){
+  const p = timer && !timer.segStart ? timer.pauses[timer.pauses.length - 1] : null;
+  for (const [box, inp] of [['tReasonBox', 'tReason'], ['fReasonBox', 'fReason']]){
+    $(box).classList.toggle('hidden', !p);
+    if (p && document.activeElement !== $(inp)) $(inp).value = p.reason || '';
+  }
+}
+
+/* 우사기 메모 — 타이머는 멈추지 않습니다. 연 순간의 시각 · 집중 시간을 남깁니다 */
+let memoAt = null;   // { at, activeMs }
+const memoWhen = m => `${fmtHm(m.at)} · 집중 ${m.activeMs < 60000 ? '1분 안' : fmtDur(m.activeMs) + '째'}`;
+function openMemo(){
+  timer = readTimer() || timer; if (!timer) return;
+  const now = Date.now();
+  memoAt = { at: now, activeMs: activeMs(timer, now) };
+  $('mmWhen').textContent = memoWhen(memoAt);
+  $('mmText').value = ''; $('mmCheck').value = '';
+  $('mmScrim').classList.remove('hidden'); $('mmText').focus();
+}
+const closeMemo = () => { $('mmScrim').classList.add('hidden'); memoAt = null; };
+function saveMemo(){
+  const text = $('mmText').value.trim(), check = $('mmCheck').value.trim();
+  if (!text && !check){ toast('떠오른 생각을 적어주세요', true); return; }
+  const t = readTimer() || timer;
+  if (!t || !memoAt){ toast('진행 중인 활동이 없어 메모를 남기지 못했어요', true); return; }
+  timer = t;
+  (timer.memos ||= []).push({ id: newId(), at: memoAt.at, activeMs: memoAt.activeMs, text, ...(check ? { check } : {}) });
+  saveTimer(); closeMemo(); toast('메모를 남겼어요');
+}
+$('tMemo').onclick = openMemo; $('fMemo').onclick = openMemo;
+$('mmSave').onclick = saveMemo; $('mmCancel').onclick = closeMemo; $('mmClose').onclick = closeMemo;
+$('mmScrim').addEventListener('click', e => { if (e.target.id === 'mmScrim') closeMemo(); });
+addEventListener('keydown', e => { if (e.key === 'Escape' && !$('mmScrim').classList.contains('hidden')){ e.stopImmediatePropagation(); closeMemo(); } }, true);
+const memoCopyText = m => `🐰 우사기 메모\n${memoWhen(m)}\n${m.text || ''}${m.check ? `\n\n검토할 내용\n${m.check}` : ''}`.trim();
+async function copyText(txt){
+  try { await navigator.clipboard.writeText(txt); return true; }
+  catch(e){
+    const ta = document.createElement('textarea'); ta.value = txt; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    let ok = false; try { ok = document.execCommand('copy'); } catch(_){}
+    ta.remove(); return ok;
+  }
+}
+
+/* 전체화면 — 사진 · 시간 · 작은 버튼만. ✕ 나 폰의 뒤로가기로 언제든 나갑니다 */
+let focusOn = false;
+function openFocus(){
+  if (!timer) return;
+  focusOn = true; paintFocus();
+  const el = document.documentElement;
+  if (el.requestFullscreen) el.requestFullscreen({ navigationUI: 'hide' }).catch(() => {});
+}
+function closeFocus(){
+  const was = focusOn; focusOn = false; paintFocus();
+  if (was && document.fullscreenElement) document.exitFullscreen().catch(() => {});
+}
+document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && focusOn){ focusOn = false; paintFocus(); } });
+function paintFocus(){
+  if (focusOn && !timer){ closeFocus(); return; }
+  $('focus').classList.toggle('hidden', !focusOn);
+  if (!focusOn) return;
+  const paused = !timer.segStart, a = actOf(timer.activityId);
+  $('focus').classList.toggle('paused', paused);
+  $('fName').textContent = a ? a.name : timer.name;
+  $('fClock').textContent = P.hideTime() ? (paused ? '잠시 쉬는 중' : '진행 중') : fmtClock(activeMs(timer));
+  $('fPause').textContent = paused ? '이어서 하기' : '잠깐 쉬기';
+  const url = img && img.id === timer.id ? img.urls[img.idx] : null;
+  $('fImg').classList.toggle('hidden', !url);
+  if (url && $('fImg').getAttribute('src') !== url) $('fImg').src = url;
+}
+$('tFull').onclick = openFocus; $('fExit').onclick = closeFocus;
+$('fPause').onclick = () => (timer && timer.segStart ? pauseTimer() : resumeTimer());
+$('fStop').onclick = finishTimer;
 $('tToggle').onclick = () => { prefs.hideTime = !P.hideTime(); savePrefs(); renderAll(); };
 
 /* 마무리 화면 — 기분 여러 개 + 경험 네 칸(탭으로 바꿔 가며 써도 각 칸 내용은 남아 있음) */
@@ -1573,7 +1754,7 @@ function paintWake(){
 }
 
 /* 화면 시계 — 0.25초마다 실제 시각으로 다시 계산 */
-function paintClock(){ if (timer) $('tClock').textContent = fmtClock(activeMs(timer)); }
+function paintClock(){ if (timer){ $('tClock').textContent = fmtClock(activeMs(timer)); rotateImg(); if (focusOn) paintFocus(); } }
 setInterval(() => {
   if (timer && tab === 'home') paintClock();
   const t = ymd(new Date());
@@ -1603,7 +1784,8 @@ function renderHome(){
   $('tReady').classList.toggle('hidden', mode !== 'ready');
   $('tToggle').classList.toggle('hidden', mode !== 'timer');
   $('tImgBar').classList.toggle('hidden', mode !== 'timer');
-  paintImg();
+  $('tMore').classList.toggle('hidden', mode !== 'timer');
+  paintImg(); paintReason(); paintFocus();
   if (mode === 'ready'){
     const a = actOf(ready.act.id) || ready.act;
     $('homeTimer').classList.remove('paused');
@@ -1804,20 +1986,29 @@ function segments(s){
 }
 function sessOne(s){
   const p = pauseMs(s), seg = segments(s);
+  const why = (s.pauses || []).filter(q => q.reason);
+  const after = y => { const q = why.find(q => q.start === y); return q ? `<br><span class="preline">쉼 · ${esc(q.reason)}</span>` : ''; };
   const lines = seg && seg.length
-    ? seg.map(([x, y]) => `${fmtHm(x)} ~ ${fmtHm(y)} (${fmtDur(y - x)})`).join('<br>')
-    : `${fmtHm(s.start)} ~ ${fmtHm(s.end)}`;
+    ? seg.map(([x, y]) => `${fmtHm(x)} ~ ${fmtHm(y)} (${fmtDur(y - x)})${after(y)}`).join('<br>')
+    : `${fmtHm(s.start)} ~ ${fmtHm(s.end)}${why.length ? `<br><span class="preline">쉰 이유 · ${why.map(q => esc(q.reason)).join(' · ')}</span>` : ''}`;
   return `<div class="sone">
     <div class="top1"><span>${lines}</span><button data-sedit="${s.id}">수정</button><button data-sdel="${s.id}">삭제</button></div>
     <div class="tm">총 ${fmtDur(s.activeMs)}${p >= 1000 ? ` · 쉼 ${fmtDur(p)}` : ''}</div>
     ${(s.mood || []).length ? `<div class="mtags">${s.mood.map(m => `<span>${moodText(m)}</span>`).join('')}</div>` : ''}
     ${noteList(s).map(n => `<div class="nline"><b>${n.name}</b>${esc(n.v)}</div>`).join('')}
+    ${(s.memos || []).map(m => `<div class="memo"><div class="mh"><span>🐰 ${memoWhen(m)}</span><button data-mcopy="${s.id}|${m.id}">복사</button></div>${m.text ? `<div class="mt">${esc(m.text)}</div>` : ''}${m.check ? `<div class="mc"><b>검토할 내용</b>${esc(m.check)}</div>` : ''}</div>`).join('')}
   </div>`;
 }
 for (const id of ['homeToday', 'daySess']){
   $(id).addEventListener('click', e => {
     const ed = e.target.closest('[data-sedit]'); if (ed) return openSess(ed.dataset.sedit);
     const dl = e.target.closest('[data-sdel]'); if (dl) return deleteSess(dl.dataset.sdel);
+    const cp = e.target.closest('[data-mcopy]');
+    if (cp){
+      const [sid, mid] = cp.dataset.mcopy.split('|');
+      const m = (db.sessions.find(x => x.id === sid)?.memos || []).find(x => x.id === mid);
+      if (m) copyText(memoCopyText(m)).then(ok => toast(ok ? '메모를 복사했어요' : '복사하지 못했어요', !ok));
+    }
   });
 }
 
