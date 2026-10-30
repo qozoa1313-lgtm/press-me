@@ -42,6 +42,7 @@ https://qozoa1313-lgtm.github.io/press-me/record/
 - 말풍선 자동 표시: 시작 1번 · 간격(기본 10~15분 무작위, 집중 시간 기준) · 사진 바뀔 때 · 쉬다 이어 할 때. 자동끼리 최소 5분(실제 시계). 쉬는 중 · 사진 없음 · 다른 탭 · 화면 꺼짐 · 창(scrim) 열림이면 안 뜸. 돌아왔을 때 밀린 차례는 건너뜀. 새로고침 뒤엔 바로 안 띄움
 - 말풍선 설정은 prefs(bubOn · bubMood · bubPos · bubEvery · bubSec · bubOnImg · bubBag=셔플백). 기기별, 백업 안 됨
 - 저장한 문장: db.savedBubbles[{id,msgId,text,mood,date,savedAt,act,actId,activeMs}] — 백업에 들어가도록 db 안 별도 칸(요청은 별도 키였으나 백업 누락을 막으려고 바꿈). 활동 기록 · 통계와 무관. 모아보기 상단 「기록 / 저장한 문장」
+- 사진 자르기: 사진을 고르면 한 장씩 자르기 화면. 틀 비율 = 이 폰 전체화면 사진칸(주소창이 사라진 만큼 더함). 결과 = 사진칸 × 화면 배율(긴 쪽 최대 2400px) JPEG. 「자르지 않고 넣기」·Esc = 원본. 갤러리 원본은 안 건드림
 - 이미지 크기: 칸 안에서 비율 그대로 최대(원본 해상도 × 기기 배율까지만). 전체화면은 사진칸(남는 높이) + 아래 시간 · 버튼, 세로 스크롤 없음
 - 같은 github.io 주소의 다른 사이트(oneline.v1, maestro.v3)와 저장공간을 같이 씀 → localStorage.clear() 금지, 내 이름만 지울 것
 - 저장값을 못 읽으면 덮어쓰지 않고 저장을 막음
@@ -56,5 +57,5 @@ https://qozoa1313-lgtm.github.io/press-me/record/
 
 ## 아직 확인 못 한 것
 - 실제 갤럭시 휴대폰(삼성 인터넷·크롬)에서의 동작 · 화면 켜짐 유지 — 2026-10-26 기준 PC 크롬 휴대폰 크기 흉내 + 가짜 시계 + 가짜 화면 켜짐 장치로만 시험
-- 시험 파일은 저장소 밖(임시 폴더)에 있음: test_record.py(39) · test_timer.py(52) · test_final.py(85) · test_v4.py(50) · test_v5.py(61) · test_seg.py(10) · test_img.py(17) · test_img2.py(17) · test_v6.py(33) · test_bub.py(69)
+- 시험 파일은 저장소 밖(임시 폴더)에 있음: test_record.py(39) · test_timer.py(52) · test_final.py(85) · test_v4.py(50) · test_v5.py(61) · test_seg.py(10) · test_img.py(17) · test_img2.py(17) · test_v6.py(33) · test_bub.py(69) · test_crop.py(29)
 - 2026-10-30: test_v4 의 「무작위 30번 + 새로고침」 구간에서 시험 브라우저가 죽음. 바꾸기 전 버전(3f44c6d)도 똑같이 죽어서 이미지 기능 탓은 아님. 원인 못 찾음, 그 구간 시험은 이번에 못 돌림

@@ -194,6 +194,14 @@ input,textarea{font:inherit;color:inherit}
 .bub .bsaved{font-size:11px;color:#9b8a68;opacity:0;transition:opacity .3s;margin-right:2px}
 .bub .bsaved.on{opacity:1}
 @media (prefers-reduced-motion: reduce){.bub,.bub .bsaved{transition:none}}
+/* 사진 자르기 — 틀 = 이 폰 전체화면 사진칸 비율 */
+#cpScrim{align-items:center;background:rgba(10,12,10,.82)}
+.sheet.cpsheet{background:#1b1d1b;color:#eee;border-radius:22px}
+.sheet.cpsheet .sh h2{color:#eee}
+.sheet.cpsheet .hint{color:#a9aba4}
+.cpbox{position:relative;overflow:hidden;margin:4px auto 0;border-radius:14px;touch-action:none;background:#000;cursor:grab;outline:2px solid rgba(255,255,255,.85);outline-offset:0}
+.cpbox img{position:absolute;left:0;top:0;transform-origin:0 0;user-select:none;-webkit-user-drag:none;max-width:none;max-height:none;pointer-events:none}
+#cpZoom{width:100%;margin-top:12px;accent-color:#9fb89f}
 .bubrow{display:flex;justify-content:center;align-items:center;gap:6px;margin-top:6px}
 .bsel{height:34px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);padding:0 8px;font-size:13px}
 .bubready .seg button{font-size:13px}
@@ -730,6 +738,21 @@ textarea::placeholder,.search input::placeholder{color:var(--faint)}
       <span class="grow"></span>
       <button class="btn ghost" id="mmCancel">취소</button>
       <button class="btn primary" id="mmSave">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 사진 자르기 -->
+<div class="scrim hidden" id="cpScrim">
+  <div class="sheet cpsheet" role="dialog" aria-modal="true" aria-labelledby="cpTitle">
+    <div class="sh"><h2 id="cpTitle">사진 자르기</h2></div>
+    <div class="cpbox" id="cpBox"><img id="cpImg" alt="자를 사진" draggable="false"></div>
+    <input type="range" id="cpZoom" min="1" max="4" step="0.01" value="1" aria-label="확대">
+    <div class="hint" style="text-align:left">손가락으로 옮기고, 두 손가락으로 벌려 확대해요. 틀은 이 폰 전체화면에 꼭 맞는 비율이에요.</div>
+    <div class="foot">
+      <button class="btn ghost" id="cpOrig">자르지 않고 넣기</button>
+      <span class="grow"></span>
+      <button class="btn primary" id="cpOk">이대로 넣기</button>
     </div>
   </div>
 </div>
@@ -1667,11 +1690,113 @@ $('tFile').onchange = async () => {
   if (fs.length > IMG_MAX){ fs = fs.slice(0, IMG_MAX); toast(`사진은 ${IMG_MAX}장까지예요. 앞의 ${IMG_MAX}장만 넣었어요`); }
   else if (bad) toast('이미지가 아닌 파일은 뺐어요');
   const id = timer.id;
+  fs = await cropAll(fs);   // 한 장씩 자르기 (자르지 않고 넣기도 가능)
+  if (!timer || timer.id !== id) return;
   showImg(id, fs);
   try { await imgStore('readwrite', st => { st.clear(); st.put({ id, blobs: fs }, 'cur'); }); }
   catch(e){ toast('이미지를 보관하지 못했어요. 새로고침하면 이미지만 사라질 수 있어요', true); }
 };
 $('tImgPick').onclick = () => { if (timer) $('tFile').click(); };
+
+/* ───── 사진 자르기 ─────
+   틀 비율 = 이 폰에서 전체화면을 켰을 때 사진칸의 가로:세로. 갤러리 원본은 그대로, 잘린 사본만 씁니다 */
+function phoneStage(){
+  const f = $('focus'), cls = f.className, nm = $('fName').textContent, ck = $('fClock').textContent;
+  if (!focusOn){
+    f.classList.remove('hidden', 'noimg'); f.style.visibility = 'hidden';
+    if (!nm) $('fName').textContent = '활동';
+    if (!ck) $('fClock').textContent = '00:00:00';
+  }
+  let w = $('fStage').clientWidth, h = $('fStage').clientHeight;
+  if (!focusOn){ f.className = cls; f.style.visibility = ''; $('fName').textContent = nm; $('fClock').textContent = ck; }
+  /* 전체화면이 되면 주소창 · 아래 막대가 사라져 사진칸이 그만큼 길어집니다 */
+  if (!document.fullscreenElement && document.documentElement.requestFullscreen && screen.height > innerHeight) h += screen.height - innerHeight;
+  if (!w || !h){ w = innerWidth; h = innerHeight; }
+  return { w, h };
+}
+let crop = null;   // { file, url, nw, nh, bw, bh, smin, s, tx, ty, st, resolve, ptrs }
+async function cropAll(files){
+  const out = [];
+  for (let i = 0; i < files.length; i++) out.push(await openCrop(files[i], i, files.length));
+  return out;
+}
+function openCrop(file, i, n){
+  return new Promise(resolve => {
+    const url = URL.createObjectURL(file), im = $('cpImg');
+    im.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
+    im.onload = () => {
+      im.onload = im.onerror = null;
+      const st = phoneStage(), r = st.w / st.h;
+      const availW = Math.min(innerWidth - 64, 460), availH = innerHeight * 0.56;
+      const bh = Math.round(Math.min(availH, availW / r)), bw = Math.round(bh * r);
+      $('cpBox').style.width = bw + 'px'; $('cpBox').style.height = bh + 'px';
+      const nw = im.naturalWidth, nh = im.naturalHeight, smin = Math.max(bw / nw, bh / nh);
+      im.style.width = nw + 'px'; im.style.height = nh + 'px';
+      crop = { file, url, nw, nh, bw, bh, smin, s: smin, tx: (bw - nw * smin) / 2, ty: (bh - nh * smin) / 2, st, resolve, ptrs: new Map() };
+      $('cpTitle').textContent = n > 1 ? `사진 자르기 ${i + 1}/${n}` : '사진 자르기';
+      paintCrop();
+      $('cpScrim').classList.remove('hidden');
+    };
+    im.src = url;
+  });
+}
+function paintCrop(){
+  const c = crop;
+  $('cpImg').style.transform = `translate(${c.tx}px, ${c.ty}px) scale(${c.s})`;
+  $('cpZoom').value = String(c.s / c.smin);
+}
+function clampCrop(){   // 틀 안에 빈칸이 생기지 않게
+  const c = crop;
+  c.s = Math.min(Math.max(c.s, c.smin), c.smin * 4);
+  c.tx = Math.min(0, Math.max(c.bw - c.nw * c.s, c.tx));
+  c.ty = Math.min(0, Math.max(c.bh - c.nh * c.s, c.ty));
+}
+function zoomAt(s2, px, py){
+  const c = crop; s2 = Math.min(Math.max(s2, c.smin), c.smin * 4);
+  c.tx = px - (px - c.tx) * s2 / c.s; c.ty = py - (py - c.ty) * s2 / c.s; c.s = s2;
+  clampCrop(); paintCrop();
+}
+const boxXY = e => { const r = $('cpBox').getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
+$('cpBox').addEventListener('pointerdown', e => {
+  if (!crop) return;
+  try { $('cpBox').setPointerCapture(e.pointerId); } catch(_){}
+  crop.ptrs.set(e.pointerId, boxXY(e));
+});
+$('cpBox').addEventListener('pointermove', e => {
+  if (!crop || !crop.ptrs.has(e.pointerId)) return;
+  const prev = crop.ptrs.get(e.pointerId), cur = boxXY(e);
+  crop.ptrs.set(e.pointerId, cur);
+  if (crop.ptrs.size === 1){ crop.tx += cur[0] - prev[0]; crop.ty += cur[1] - prev[1]; clampCrop(); paintCrop(); return; }
+  /* 두 손가락: 벌린 만큼 확대, 가운데가 움직인 만큼 이동 */
+  const o = [...crop.ptrs].find(([k]) => k !== e.pointerId)[1];
+  const d0 = Math.hypot(prev[0] - o[0], prev[1] - o[1]), d1 = Math.hypot(cur[0] - o[0], cur[1] - o[1]);
+  crop.tx += (cur[0] - prev[0]) / 2; crop.ty += (cur[1] - prev[1]) / 2;
+  if (d0 > 0) zoomAt(crop.s * d1 / d0, (cur[0] + o[0]) / 2, (cur[1] + o[1]) / 2); else { clampCrop(); paintCrop(); }
+});
+for (const ev of ['pointerup', 'pointercancel']) $('cpBox').addEventListener(ev, e => { if (crop) crop.ptrs.delete(e.pointerId); });
+$('cpBox').addEventListener('wheel', e => {
+  if (!crop) return; e.preventDefault();
+  const [x, y] = boxXY(e); zoomAt(crop.s * (e.deltaY < 0 ? 1.1 : 1 / 1.1), x, y);
+}, { passive: false });
+$('cpZoom').addEventListener('input', () => { if (crop) zoomAt(crop.smin * Number($('cpZoom').value), crop.bw / 2, crop.bh / 2); });
+function endCrop(v){
+  const c = crop; if (!c) return;
+  crop = null; $('cpScrim').classList.add('hidden'); $('cpImg').removeAttribute('src'); URL.revokeObjectURL(c.url);
+  c.resolve(v);
+}
+$('cpOrig').onclick = () => { if (crop) endCrop(crop.file); };
+/* 잘라서 만드는 크기 = 전체화면 사진칸 × 화면 배율(긴 쪽 최대 2400px) */
+$('cpOk').onclick = () => {
+  const c = crop; if (!c) return;
+  const dpr = window.devicePixelRatio || 1;
+  let W = Math.round(c.st.w * dpr), H = Math.round(c.st.h * dpr);
+  const k = Math.min(1, 2400 / Math.max(W, H)); W = Math.round(W * k); H = Math.round(H * k);
+  const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+  const g = cv.getContext('2d'); g.fillStyle = '#141614'; g.fillRect(0, 0, W, H); g.imageSmoothingQuality = 'high';
+  g.drawImage($('cpImg'), -c.tx / c.s, -c.ty / c.s, c.bw / c.s, c.bh / c.s, 0, 0, W, H);
+  cv.toBlob(b => endCrop(b || c.file), 'image/jpeg', 0.92);
+};
+addEventListener('keydown', e => { if (e.key === 'Escape' && crop){ e.stopImmediatePropagation(); endCrop(crop.file); } }, true);
 
 /* ───── 이미지 위 말풍선 ─────
    타이머 값은 읽기만 하고 따로 돕니다. 간격은 집중한 시간(쉼 제외)으로 셉니다.
@@ -1723,7 +1848,7 @@ function bubTick(){
   const a = activeMs(timer), running = !!timer.segStart;
   const resumed = running && !bubSch.wasRunning; bubSch.wasRunning = running;
   if (bubBlocked()) return;
-  if (bubSch.startPending){ bubSch.startPending = false; if (a < 2 * 60000) return bubAuto(a, true); }
+  if (bubSch.startPending){ bubSch.startPending = false; return bubAuto(a, true); }   // 사진이 처음 뜨면 (자르느라 늦어져도)
   if (resumed || a >= bubSch.next) bubAuto(a);
 }
 function bubAuto(a, force){
