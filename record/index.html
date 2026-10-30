@@ -196,14 +196,6 @@ input,textarea{font:inherit;color:inherit}
 .bub .bsaved{font-size:11px;color:#8a7a58;background:#fffdf6;border-radius:10px;padding:3px 8px;box-shadow:0 1px 4px rgba(0,0,0,.2);opacity:0;transition:opacity .3s}
 .bub .bsaved.on{opacity:1}
 @media (prefers-reduced-motion: reduce){.bub,.bub .bsaved{transition:none}}
-/* 사진 자르기 — 틀 = 이 폰 전체화면 사진칸 비율 */
-#cpScrim{align-items:center;background:rgba(10,12,10,.82)}
-.sheet.cpsheet{background:#1b1d1b;color:#eee;border-radius:22px}
-.sheet.cpsheet .sh h2{color:#eee}
-.sheet.cpsheet .hint{color:#a9aba4}
-.cpbox{position:relative;overflow:hidden;margin:4px auto 0;border-radius:14px;touch-action:none;background:#000;cursor:grab;outline:2px solid rgba(255,255,255,.85);outline-offset:0}
-.cpbox img{position:absolute;left:0;top:0;transform-origin:0 0;user-select:none;-webkit-user-drag:none;max-width:none;max-height:none;pointer-events:none}
-#cpZoom{width:100%;margin-top:12px;accent-color:#9fb89f}
 .bubrow{display:flex;justify-content:center;align-items:center;gap:6px;margin-top:6px}
 .bsel{height:34px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);padding:0 8px;font-size:13px}
 .bubready .seg button{font-size:13px}
@@ -241,6 +233,25 @@ input,textarea{font:inherit;color:inherit}
 .focus .fbtns{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:2px}
 .focus .fbtns button{height:36px;padding:0 14px;border-radius:18px;font-size:13px;background:rgba(255,255,255,.12);color:#eee}
 .focus .freason{width:100%;display:flex;justify-content:center}
+.focus .fstage{position:relative}
+.timg{position:relative}
+/* 가로 보기 — 사진과 시간만. 버튼은 오른쪽 서랍에 숨김 */
+.focus .fclockL,.focus .fhandle,.focus .landonly{display:none}
+.focus.land{padding:calc(8px + env(safe-area-inset-top)) calc(8px + env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) calc(8px + env(safe-area-inset-left))}
+.focus.land .fx{display:none}
+.focus.land .fstage{flex:1 1 0}
+.focus.land .fclockL{display:block;position:absolute;left:calc(14px + env(safe-area-inset-left));bottom:calc(12px + env(safe-area-inset-bottom));z-index:3;font-size:28px;font-weight:600;font-variant-numeric:tabular-nums;color:#fff;background:rgba(0,0,0,.42);padding:4px 14px;border-radius:14px;line-height:1.3}
+.focus.land.paused .fclockL{color:#bdbfb7}
+.focus.land .fhandle{display:grid;place-items:center;position:absolute;right:0;top:50%;transform:translateY(-50%);z-index:4;width:28px;height:84px;border-radius:14px 0 0 14px;background:rgba(255,255,255,.16);color:#eee;font-size:18px}
+.focus.land .fbottom{position:absolute;top:0;right:0;bottom:0;z-index:5;width:min(240px,46%);padding:calc(16px + env(safe-area-inset-top)) calc(14px + env(safe-area-inset-right)) 16px 14px;background:rgba(20,22,20,.94);box-shadow:-6px 0 20px rgba(0,0,0,.35);justify-content:center;transform:translateX(105%);transition:transform .25s ease;overflow:auto}
+.focus.land.drawer .fbottom{transform:none}
+.focus.land .fbottom .fclock{display:none}
+.focus.land .fbtns{flex-direction:column;align-items:stretch;width:100%}
+.focus.land .landonly{display:block}
+.focus.land.noimg .fstage{display:flex}
+/* 방향 고정이 안 되는 브라우저 — 화면 내용을 돌려서 보여줌 */
+.focus.rot{inset:auto;left:0;top:0;transform-origin:0 0;transform:rotate(90deg) translateY(-100%)}
+@media (prefers-reduced-motion: reduce){.focus.land .fbottom{transition:none}}
 .focus .date-in{max-width:320px;background:rgba(255,255,255,.08);color:#eee;border-color:rgba(255,255,255,.2)}
 .imgnote{font-size:12px;color:var(--faint);margin-top:2px}
 .imgbar{display:flex;justify-content:center;gap:4px;margin-top:6px}
@@ -744,24 +755,11 @@ textarea::placeholder,.search input::placeholder{color:var(--faint)}
   </div>
 </div>
 
-<!-- 사진 자르기 -->
-<div class="scrim hidden" id="cpScrim">
-  <div class="sheet cpsheet" role="dialog" aria-modal="true" aria-labelledby="cpTitle">
-    <div class="sh"><h2 id="cpTitle">사진 자르기</h2></div>
-    <div class="cpbox" id="cpBox"><img id="cpImg" alt="자를 사진" draggable="false"></div>
-    <input type="range" id="cpZoom" min="1" max="4" step="0.01" value="1" aria-label="확대">
-    <div class="hint" style="text-align:left">손가락으로 옮기고, 두 손가락으로 벌려 확대해요. 틀은 이 폰 전체화면에 꼭 맞는 비율이에요.</div>
-    <div class="foot">
-      <button class="btn ghost" id="cpOrig">자르지 않고 넣기</button>
-      <span class="grow"></span>
-      <button class="btn primary" id="cpOk">이대로 넣기</button>
-    </div>
-  </div>
-</div>
-
 <!-- 전체화면 — 사진 · 시간 · 작은 버튼만 -->
 <div class="focus hidden" id="focus" role="dialog" aria-label="전체화면">
   <button class="fx" id="fExit">✕ 나가기</button>
+  <div class="fclockL" id="fClockL"></div>
+  <button class="fhandle" id="fHandle" aria-label="버튼 보기">‹</button>
   <div class="fstage" id="fStage"><div class="pic" id="fPic"><img class="fimg" id="fImg" alt="고른 이미지"><div class="bub" id="fBub" hidden role="status" aria-live="polite"><div class="bbtns"><span class="bsaved">저장됨</span><button class="bsave" aria-label="이 문장 저장" aria-pressed="false"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M7 3.8h10a1.2 1.2 0 0 1 1.2 1.2v15.2L12 16.3l-6.2 3.9V5A1.2 1.2 0 0 1 7 3.8z"/></svg></button><button class="bx" aria-label="말풍선 닫기">✕</button></div><p class="bt"></p></div></div></div>
   <div class="fbottom">
     <div class="fname" id="fName"></div>
@@ -772,6 +770,8 @@ textarea::placeholder,.search input::placeholder{color:var(--faint)}
       <button id="fBubNext" class="hidden" aria-label="말풍선 한마디 보기">💬</button>
       <button id="fPause">잠깐 쉬기</button>
       <button id="fStop">여기까지</button>
+      <button id="fLand">가로로</button>
+      <button id="fExit2" class="landonly">나가기</button>
     </div>
   </div>
 </div>
@@ -1692,113 +1692,11 @@ $('tFile').onchange = async () => {
   if (fs.length > IMG_MAX){ fs = fs.slice(0, IMG_MAX); toast(`사진은 ${IMG_MAX}장까지예요. 앞의 ${IMG_MAX}장만 넣었어요`); }
   else if (bad) toast('이미지가 아닌 파일은 뺐어요');
   const id = timer.id;
-  fs = await cropAll(fs);   // 한 장씩 자르기 (자르지 않고 넣기도 가능)
-  if (!timer || timer.id !== id) return;
   showImg(id, fs);
   try { await imgStore('readwrite', st => { st.clear(); st.put({ id, blobs: fs }, 'cur'); }); }
   catch(e){ toast('이미지를 보관하지 못했어요. 새로고침하면 이미지만 사라질 수 있어요', true); }
 };
 $('tImgPick').onclick = () => { if (timer) $('tFile').click(); };
-
-/* ───── 사진 자르기 ─────
-   틀 비율 = 이 폰에서 전체화면을 켰을 때 사진칸의 가로:세로. 갤러리 원본은 그대로, 잘린 사본만 씁니다 */
-function phoneStage(){
-  const f = $('focus'), cls = f.className, nm = $('fName').textContent, ck = $('fClock').textContent;
-  if (!focusOn){
-    f.classList.remove('hidden', 'noimg'); f.style.visibility = 'hidden';
-    if (!nm) $('fName').textContent = '활동';
-    if (!ck) $('fClock').textContent = '00:00:00';
-  }
-  let w = $('fStage').clientWidth, h = $('fStage').clientHeight;
-  if (!focusOn){ f.className = cls; f.style.visibility = ''; $('fName').textContent = nm; $('fClock').textContent = ck; }
-  /* 전체화면이 되면 주소창 · 아래 막대가 사라져 사진칸이 그만큼 길어집니다 */
-  if (!document.fullscreenElement && document.documentElement.requestFullscreen && screen.height > innerHeight) h += screen.height - innerHeight;
-  if (!w || !h){ w = innerWidth; h = innerHeight; }
-  return { w, h };
-}
-let crop = null;   // { file, url, nw, nh, bw, bh, smin, s, tx, ty, st, resolve, ptrs }
-async function cropAll(files){
-  const out = [];
-  for (let i = 0; i < files.length; i++) out.push(await openCrop(files[i], i, files.length));
-  return out;
-}
-function openCrop(file, i, n){
-  return new Promise(resolve => {
-    const url = URL.createObjectURL(file), im = $('cpImg');
-    im.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
-    im.onload = () => {
-      im.onload = im.onerror = null;
-      const st = phoneStage(), r = st.w / st.h;
-      const availW = Math.min(innerWidth - 64, 460), availH = innerHeight * 0.56;
-      const bh = Math.round(Math.min(availH, availW / r)), bw = Math.round(bh * r);
-      $('cpBox').style.width = bw + 'px'; $('cpBox').style.height = bh + 'px';
-      const nw = im.naturalWidth, nh = im.naturalHeight, smin = Math.max(bw / nw, bh / nh);
-      im.style.width = nw + 'px'; im.style.height = nh + 'px';
-      crop = { file, url, nw, nh, bw, bh, smin, s: smin, tx: (bw - nw * smin) / 2, ty: (bh - nh * smin) / 2, st, resolve, ptrs: new Map() };
-      $('cpTitle').textContent = n > 1 ? `사진 자르기 ${i + 1}/${n}` : '사진 자르기';
-      paintCrop();
-      $('cpScrim').classList.remove('hidden');
-    };
-    im.src = url;
-  });
-}
-function paintCrop(){
-  const c = crop;
-  $('cpImg').style.transform = `translate(${c.tx}px, ${c.ty}px) scale(${c.s})`;
-  $('cpZoom').value = String(c.s / c.smin);
-}
-function clampCrop(){   // 틀 안에 빈칸이 생기지 않게
-  const c = crop;
-  c.s = Math.min(Math.max(c.s, c.smin), c.smin * 4);
-  c.tx = Math.min(0, Math.max(c.bw - c.nw * c.s, c.tx));
-  c.ty = Math.min(0, Math.max(c.bh - c.nh * c.s, c.ty));
-}
-function zoomAt(s2, px, py){
-  const c = crop; s2 = Math.min(Math.max(s2, c.smin), c.smin * 4);
-  c.tx = px - (px - c.tx) * s2 / c.s; c.ty = py - (py - c.ty) * s2 / c.s; c.s = s2;
-  clampCrop(); paintCrop();
-}
-const boxXY = e => { const r = $('cpBox').getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
-$('cpBox').addEventListener('pointerdown', e => {
-  if (!crop) return;
-  try { $('cpBox').setPointerCapture(e.pointerId); } catch(_){}
-  crop.ptrs.set(e.pointerId, boxXY(e));
-});
-$('cpBox').addEventListener('pointermove', e => {
-  if (!crop || !crop.ptrs.has(e.pointerId)) return;
-  const prev = crop.ptrs.get(e.pointerId), cur = boxXY(e);
-  crop.ptrs.set(e.pointerId, cur);
-  if (crop.ptrs.size === 1){ crop.tx += cur[0] - prev[0]; crop.ty += cur[1] - prev[1]; clampCrop(); paintCrop(); return; }
-  /* 두 손가락: 벌린 만큼 확대, 가운데가 움직인 만큼 이동 */
-  const o = [...crop.ptrs].find(([k]) => k !== e.pointerId)[1];
-  const d0 = Math.hypot(prev[0] - o[0], prev[1] - o[1]), d1 = Math.hypot(cur[0] - o[0], cur[1] - o[1]);
-  crop.tx += (cur[0] - prev[0]) / 2; crop.ty += (cur[1] - prev[1]) / 2;
-  if (d0 > 0) zoomAt(crop.s * d1 / d0, (cur[0] + o[0]) / 2, (cur[1] + o[1]) / 2); else { clampCrop(); paintCrop(); }
-});
-for (const ev of ['pointerup', 'pointercancel']) $('cpBox').addEventListener(ev, e => { if (crop) crop.ptrs.delete(e.pointerId); });
-$('cpBox').addEventListener('wheel', e => {
-  if (!crop) return; e.preventDefault();
-  const [x, y] = boxXY(e); zoomAt(crop.s * (e.deltaY < 0 ? 1.1 : 1 / 1.1), x, y);
-}, { passive: false });
-$('cpZoom').addEventListener('input', () => { if (crop) zoomAt(crop.smin * Number($('cpZoom').value), crop.bw / 2, crop.bh / 2); });
-function endCrop(v){
-  const c = crop; if (!c) return;
-  crop = null; $('cpScrim').classList.add('hidden'); $('cpImg').removeAttribute('src'); URL.revokeObjectURL(c.url);
-  c.resolve(v);
-}
-$('cpOrig').onclick = () => { if (crop) endCrop(crop.file); };
-/* 잘라서 만드는 크기 = 전체화면 사진칸 × 화면 배율(긴 쪽 최대 2400px) */
-$('cpOk').onclick = () => {
-  const c = crop; if (!c) return;
-  const dpr = window.devicePixelRatio || 1;
-  let W = Math.round(c.st.w * dpr), H = Math.round(c.st.h * dpr);
-  const k = Math.min(1, 2400 / Math.max(W, H)); W = Math.round(W * k); H = Math.round(H * k);
-  const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
-  const g = cv.getContext('2d'); g.fillStyle = '#141614'; g.fillRect(0, 0, W, H); g.imageSmoothingQuality = 'high';
-  g.drawImage($('cpImg'), -c.tx / c.s, -c.ty / c.s, c.bw / c.s, c.bh / c.s, 0, 0, W, H);
-  cv.toBlob(b => endCrop(b || c.file), 'image/jpeg', 0.92);
-};
-addEventListener('keydown', e => { if (e.key === 'Escape' && crop){ e.stopImmediatePropagation(); endCrop(crop.file); } }, true);
 
 /* ───── 이미지 위 말풍선 ─────
    타이머 값은 읽기만 하고 따로 돕니다. 간격은 집중한 시간(쉼 제외)으로 셉니다.
@@ -1899,8 +1797,8 @@ function fitBub(el, pic){
   if (el.hidden || !pic.clientWidth) return;
   const tx = el.querySelector('.bt');
   /* 폭 — 사진 폭을 넘어도 되지만 사진칸(화면) 밖으로는 안 나가게. 위치(왼 · 가운데 · 오른)에 따라 계산 */
-  const sr = pic.parentElement.getBoundingClientRect(), pr = pic.getBoundingClientRect(), side = BP.pos()[1];
-  const mw = side === 'c' ? sr.width - 20 : side === 'l' ? sr.right - pr.left - 20 : pr.right - sr.left - 20;
+  const sw = pic.parentElement.clientWidth, pl = pic.offsetLeft, pw = pic.offsetWidth, side = BP.pos()[1];
+  const mw = side === 'c' ? sw - 20 : side === 'l' ? sw - pl - 20 : pl + pw - 20;
   el.style.maxWidth = Math.max(160, Math.floor(mw)) + 'px';
   /* 한 줄이 먼저 — 들어갈 때까지 글자를 줄임(24 → 15px) */
   el.classList.add('one');
@@ -2102,10 +2000,11 @@ function openFocus(){
   if (el.requestFullscreen) el.requestFullscreen({ navigationUI: 'hide' }).catch(() => {});
 }
 function closeFocus(){
+  if (land) setLand(false);
   const was = focusOn; focusOn = false; paintFocus();
   if (was && document.fullscreenElement) document.exitFullscreen().catch(() => {});
 }
-document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && focusOn){ focusOn = false; paintFocus(); } });
+document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && focusOn){ if (land) setLand(false); focusOn = false; paintFocus(); } });
 function paintFocus(){
   if (focusOn && !timer){ closeFocus(); return; }
   $('focus').classList.toggle('hidden', !focusOn);
@@ -2113,14 +2012,47 @@ function paintFocus(){
   const paused = !timer.segStart, a = actOf(timer.activityId);
   $('focus').classList.toggle('paused', paused);
   $('fName').textContent = a ? a.name : timer.name;
-  $('fClock').textContent = P.hideTime() ? (paused ? '잠시 쉬는 중' : '진행 중') : fmtClock(activeMs(timer));
+  $('fClock').textContent = $('fClockL').textContent = P.hideTime() ? (paused ? '잠시 쉬는 중' : '진행 중') : fmtClock(activeMs(timer));
   $('fPause').textContent = paused ? '이어서 하기' : '잠깐 쉬기';
   const url = img && img.id === timer.id ? img.urls[img.idx] : null;
   $('focus').classList.toggle('noimg', !url);
   if (url && $('fImg').getAttribute('src') !== url) $('fImg').src = url;
   $('fBubNext').classList.toggle('hidden', !url || !BP.on());
 }
-$('tFull').onclick = openFocus; $('fExit').onclick = closeFocus;
+$('tFull').onclick = openFocus; $('fExit').onclick = closeFocus; $('fExit2').onclick = closeFocus;
+
+/* ───── 가로 보기 ─────
+   「가로로」: 전체화면에서 화면 방향을 가로로 고정(갤럭시 크롬 · 삼성 인터넷 지원).
+   고정이 안 되면 화면 내용을 90도 돌려서 보여줌. 자동 회전이 꺼져 있어도 쓰려고 만든 버튼 */
+let land = null;   // null | 'lock' | 'rot'
+async function setLand(on){
+  if (on){
+    land = 'rot';
+    try {
+      if (!document.fullscreenElement && document.documentElement.requestFullscreen) await document.documentElement.requestFullscreen({ navigationUI: 'hide' });
+      await screen.orientation.lock('landscape');
+      land = 'lock';
+    } catch(e){}
+  } else {
+    if (land === 'lock'){ try { screen.orientation.unlock(); } catch(e){} }
+    land = null;
+  }
+  paintLand();
+}
+function paintLand(){
+  const f = $('focus'), on = !!land && focusOn;
+  f.classList.toggle('land', on);
+  f.classList.toggle('rot', on && land === 'rot');
+  if (!on) f.classList.remove('drawer');
+  f.style.width = f.style.height = '';
+  if (on && land === 'rot'){ f.style.width = innerHeight + 'px'; f.style.height = innerWidth + 'px'; }
+  $('fLand').textContent = on ? '세로로' : '가로로';
+  fitPics();
+}
+$('fLand').onclick = () => { $('focus').classList.remove('drawer'); setLand(!land); };
+$('fHandle').onclick = () => $('focus').classList.toggle('drawer');
+$('fStage').addEventListener('click', e => { if (land && !e.target.closest('.bub')) $('focus').classList.remove('drawer'); });
+addEventListener('resize', () => { if (land) paintLand(); });
 $('fPause').onclick = () => (timer && timer.segStart ? pauseTimer() : resumeTimer());
 $('fStop').onclick = finishTimer;
 $('tToggle').onclick = () => { prefs.hideTime = !P.hideTime(); savePrefs(); renderAll(); };
