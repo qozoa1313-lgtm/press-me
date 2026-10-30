@@ -175,8 +175,38 @@ input,textarea{font:inherit;color:inherit}
 .tbusy .big{font-size:26px;font-weight:700;color:var(--sage-ink)}
 .tbusy .sub{font-size:14px;color:var(--soft);margin-top:4px}
 .timer .tg2{margin-top:2px}
-.timg{margin:12px auto 4px;max-width:100%}
-.timg img{display:block;max-width:100%;max-height:52vh;margin:0 auto;border-radius:14px;object-fit:contain}
+.timg{margin:12px auto 4px;max-width:100%;display:flex;justify-content:center}
+.pic{position:relative;max-width:100%}
+.pic img{display:block;width:100%;height:100%;object-fit:contain;border-radius:14px}
+.timg .pic:not([style]) img{width:auto;height:auto;max-width:100%;max-height:52vh}
+/* 이미지 위 말풍선 — 이미지 크기에 영향 없이 위에 겹쳐 뜹니다 */
+.bub{position:absolute;z-index:2;width:min(calc(100% - 20px),360px);min-width:min(220px,calc(100vw - 40px));box-sizing:border-box;padding:10px 12px 12px 16px;border-radius:18px;background:rgba(255,253,246,.95);color:#383834;box-shadow:0 6px 20px rgba(0,0,0,.22),0 1px 3px rgba(0,0,0,.12);font-family:"Pretendard","Pretendard Variable",-apple-system,BlinkMacSystemFont,system-ui,"Noto Sans KR","Noto Sans CJK KR","Apple SD Gothic Neo","Malgun Gothic","Hiragino Sans","Yu Gothic",sans-serif;font-weight:500;text-align:left;opacity:0;transition:opacity .45s ease;pointer-events:none}
+.bub.on{opacity:1;pointer-events:auto}
+.bub[hidden]{display:none}
+.bub.p-tl{top:10px;left:10px}.bub.p-tc{top:10px;left:50%;transform:translateX(-50%)}.bub.p-tr{top:10px;right:10px}
+.bub.p-bl{bottom:10px;left:10px}.bub.p-br{bottom:10px;right:10px}
+.bub .bt{margin:0;line-height:1.45;word-break:keep-all;overflow-wrap:anywhere;letter-spacing:-.01em}
+.bub .bbtns{float:right;display:flex;align-items:center;gap:0;margin:-4px -6px 0 8px}
+.bub .bbtns button{width:30px;height:30px;display:grid;place-items:center;border-radius:10px;color:#86867e;font-size:14px}
+.bub .bbtns button:hover{background:rgba(0,0,0,.06)}
+.bub .bsave.on{color:#b0813a}
+.bub .bsave.on svg{fill:currentColor}
+.bub .bsaved{font-size:11px;color:#9b8a68;opacity:0;transition:opacity .3s;margin-right:2px}
+.bub .bsaved.on{opacity:1}
+@media (prefers-reduced-motion: reduce){.bub,.bub .bsaved{transition:none}}
+.bubrow{display:flex;justify-content:center;align-items:center;gap:6px;margin-top:6px}
+.bsel{height:34px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);padding:0 8px;font-size:13px}
+.bubready .seg button{font-size:13px}
+.posgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.posgrid button{height:36px;border-radius:10px;border:1px solid var(--line);background:var(--card);font-size:13px;color:var(--soft)}
+.posgrid button.on{border-color:var(--sage);color:var(--ink);font-weight:600}
+.posgrid .bl{grid-column:1}.posgrid .br{grid-column:3}
+.bitem{padding:14px 16px;margin-bottom:8px}
+.bitem .btx{margin:0;font-size:16px;line-height:1.55;word-break:keep-all;overflow-wrap:anywhere;white-space:pre-wrap}
+.bitem .bmeta{display:flex;align-items:center;gap:6px;margin-top:8px;font-size:12px;color:var(--soft)}
+.bitem .bmeta span{flex:1}
+.bitem .bmeta button{font-size:12px;color:var(--soft);padding:4px 8px;border-radius:8px}
+.bitem .bmeta button:hover{background:var(--sunk)}
 .timer.paused .timg img{opacity:.45}
 .preason{margin-top:10px}
 .tmore{display:flex;justify-content:center;gap:6px;margin-top:10px}
@@ -188,13 +218,17 @@ input,textarea{font:inherit;color:inherit}
 .memo .mc{font-size:13px;color:var(--soft);margin-top:3px;white-space:pre-wrap}
 .memo .mc b{font-weight:600;margin-right:6px}
 .preline{font-size:12px;color:var(--faint)}
-.focus{position:fixed;inset:0;z-index:15;background:#141614;color:#f1f1ec;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;padding:calc(48px + env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom));overflow:auto}
+.focus{position:fixed;inset:0;z-index:15;background:#141614;color:#f1f1ec;display:flex;flex-direction:column;text-align:center;height:100vh;height:100dvh;box-sizing:border-box;padding:calc(44px + env(safe-area-inset-top)) 12px calc(14px + env(safe-area-inset-bottom));overflow:hidden}
+.focus .fstage{flex:1 1 0;min-height:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.focus.noimg{justify-content:center}
+.focus.noimg .fstage{display:none}
+.focus .fbottom{flex:none;display:flex;flex-direction:column;align-items:center;gap:6px;padding-top:10px}
 .focus .fx{position:absolute;top:calc(8px + env(safe-area-inset-top));right:10px;color:#b9bbb4;font-size:13px;padding:8px 10px;border-radius:10px}
-.focus .fimg{max-width:100%;max-height:52vh;border-radius:16px;object-fit:contain}
+.focus .pic img{border-radius:16px}
 .focus .fname{font-size:14px;color:#b9bbb4}
 .focus .fclock{font-size:48px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.1}
 .focus.paused .fclock{color:#77796f}
-.focus .fbtns{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:6px}
+.focus .fbtns{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:2px}
 .focus .fbtns button{height:36px;padding:0 14px;border-radius:18px;font-size:13px;background:rgba(255,255,255,.12);color:#eee}
 .focus .freason{width:100%;display:flex;justify-content:center}
 .focus .date-in{max-width:320px;background:rgba(255,255,255,.08);color:#eee;border-color:rgba(255,255,255,.2)}
@@ -386,7 +420,7 @@ textarea::placeholder,.search input::placeholder{color:var(--faint)}
     <section class="card timer hidden" id="homeTimer">
       <div class="grp" id="tGroup"></div>
       <div class="tn" id="tName"></div>
-      <div class="timg hidden" id="tImgBox"><img id="tImg" alt="고른 이미지"></div>
+      <div class="timg hidden" id="tImgBox"><div class="pic" id="tPic"><img id="tImg" alt="고른 이미지"><div class="bub" id="tBub" hidden role="status" aria-live="polite"><div class="bbtns"><span class="bsaved">저장됨</span><button class="bsave" aria-label="이 문장 저장" aria-pressed="false"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M7 3.8h10a1.2 1.2 0 0 1 1.2 1.2v15.2L12 16.3l-6.2 3.9V5A1.2 1.2 0 0 1 7 3.8z"/></svg></button><button class="bx" aria-label="말풍선 닫기">✕</button></div><p class="bt"></p></div></div></div>
       <input type="file" accept="image/*" id="tFile" multiple hidden>
       <div class="clock" id="tClock" role="timer">00:00:00</div>
       <div class="tbusy hidden" id="tBusy"><div class="big" id="tBusyBig">진행 중</div><div class="sub" id="tBusySub">지금은 이 일에 집중하는 시간이에요.</div></div>
@@ -398,11 +432,17 @@ textarea::placeholder,.search input::placeholder{color:var(--faint)}
         <button class="btn primary" id="tStop">오늘은 여기까지</button>
       </div>
       <div id="tReady" class="hidden">
+        <div class="bubready" id="bubReady">
+          <div class="flab" style="margin:16px 2px 6px">말풍선 분위기<small>사진 위에 가끔 뜨는 한마디</small></div>
+          <div class="seg" data-bmood></div>
+          <label class="tgl" style="border-top:none;padding-bottom:0"><span>말풍선 자동 표시<small>사진을 고르지 않으면 나오지 않아요</small></span><input type="checkbox" data-bon></label>
+        </div>
         <button class="btn primary wide" id="tGo" style="height:58px;font-size:17px;border-radius:16px;margin-top:18px">시작하기</button>
         <button class="linkbtn" id="tBack" style="margin-top:10px">‹ 다른 활동 고르기</button>
       </div>
       <div class="tmore hidden" id="tMore"><button class="btn ghost sm" id="tMemo">🐰 메모</button><button class="btn ghost sm" id="tFull">전체화면</button></div>
       <div class="imgnote hidden" id="tImgNote"></div>
+      <div class="bubrow hidden" id="tBubRow"><select id="tBMood" class="bsel" aria-label="말풍선 분위기"></select><button class="btn ghost sm" id="tBubNext">💬 한마디</button></div>
       <div class="imgbar hidden" id="tImgBar"><button class="linkbtn" id="tImgPick">이미지 넣기</button><button class="linkbtn hidden" id="tImgDel">이미지 빼기</button></div>
       <div class="wake" id="tWake"></div>
     </section>
@@ -482,6 +522,10 @@ textarea::placeholder,.search input::placeholder{color:var(--faint)}
   <!-- ───── 모아보기 ───── -->
   <main id="v-list" class="hidden">
     <div class="toprow"><button class="linkbtn" data-week="1">7일 돌아보기 ›</button></div>
+    <div class="seg" id="listMode" style="margin-bottom:8px">
+      <button data-m="rec" class="on">기록</button>
+      <button data-m="bub">저장한 문장</button>
+    </div>
     <div class="seg" id="kindSeg" style="margin-bottom:10px">
       <button data-k="all">전체</button>
       <button data-k="diary">수동 기록</button>
@@ -495,6 +539,7 @@ textarea::placeholder,.search input::placeholder{color:var(--faint)}
     </label>
     <div class="filters" id="filters"></div>
     <div class="filters hidden" id="actFilters"></div>
+    <div class="filters hidden" id="bubFilters"></div>
     <div class="two" style="margin:4px 0 2px">
       <input type="date" id="lFrom" class="date-in txt-in" aria-label="시작 날짜">
       <input type="date" id="lTo" class="date-in txt-in" aria-label="끝 날짜">
@@ -518,6 +563,21 @@ textarea::placeholder,.search input::placeholder{color:var(--faint)}
       <label class="tgl"><span>요약 통계 숨기기<small>오늘 · 7일 합계 시간과 횟수를 숨겨요</small></span><input type="checkbox" id="pHideStats"></label>
       <label class="tgl"><span>좋은 문장 보기<small>단계마다 하루 한 문장</small></span><input type="checkbox" id="pShowQuotes"></label>
       <label class="tgl"><span>활동 후 기분 · 경험 질문<small>마친 뒤 기분과 경험을 남기는 칸을 보여줘요</small></span><input type="checkbox" id="pAskNote"></label>
+    </section>
+
+    <section class="card sec" id="bubSec">
+      <h3>이미지 위 말풍선</h3>
+      <p>고른 사진 위에 짧은 문장이 가끔 떴다가 사라져요. 사진이 없거나 쉬는 동안에는 나오지 않아요.</p>
+      <label class="tgl"><span>말풍선 자동 표시</span><input type="checkbox" data-bon id="bOnSet"></label>
+      <label class="tgl"><span>사진이 바뀔 때도 표시<small>그래도 자동 표시끼리는 5분 넘게 띄워요</small></span><input type="checkbox" id="bOnImg"></label>
+      <div class="flab">분위기</div>
+      <div class="seg" data-bmood></div>
+      <div class="flab">표시 간격<small>집중한 시간 기준 · 쉬는 시간은 안 셈</small></div>
+      <div class="seg" id="bEverySeg"><button data-v="0">10~15분</button><button data-v="5">5분</button><button data-v="10">10분</button><button data-v="15">15분</button><button data-v="20">20분</button></div>
+      <div class="flab">보여주는 시간</div>
+      <div class="seg" id="bSecSeg"><button data-v="5">5초</button><button data-v="7">7초</button><button data-v="10">10초</button></div>
+      <div class="flab">위치<small>얼굴을 가리면 옮겨 보세요</small></div>
+      <div class="posgrid" id="bPosSeg"><button data-v="tl">왼쪽 위</button><button data-v="tc">가운데 위</button><button data-v="tr">오른쪽 위</button><button data-v="bl" class="bl">왼쪽 아래</button><button data-v="br" class="br">오른쪽 아래</button></div>
     </section>
 
     <section class="card sec" id="manage">
@@ -677,14 +737,17 @@ textarea::placeholder,.search input::placeholder{color:var(--faint)}
 <!-- 전체화면 — 사진 · 시간 · 작은 버튼만 -->
 <div class="focus hidden" id="focus" role="dialog" aria-label="전체화면">
   <button class="fx" id="fExit">✕ 나가기</button>
-  <img class="fimg hidden" id="fImg" alt="고른 이미지">
-  <div class="fname" id="fName"></div>
-  <div class="fclock" id="fClock"></div>
-  <div class="freason hidden" id="fReasonBox"><input id="fReason" class="date-in txt-in" maxlength="100" data-reason placeholder="쉬는 이유 (적지 않아도 돼요)" aria-label="쉬는 이유"></div>
-  <div class="fbtns">
-    <button id="fMemo">🐰 메모</button>
-    <button id="fPause">잠깐 쉬기</button>
-    <button id="fStop">여기까지</button>
+  <div class="fstage" id="fStage"><div class="pic" id="fPic"><img class="fimg" id="fImg" alt="고른 이미지"><div class="bub" id="fBub" hidden role="status" aria-live="polite"><div class="bbtns"><span class="bsaved">저장됨</span><button class="bsave" aria-label="이 문장 저장" aria-pressed="false"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M7 3.8h10a1.2 1.2 0 0 1 1.2 1.2v15.2L12 16.3l-6.2 3.9V5A1.2 1.2 0 0 1 7 3.8z"/></svg></button><button class="bx" aria-label="말풍선 닫기">✕</button></div><p class="bt"></p></div></div></div>
+  <div class="fbottom">
+    <div class="fname" id="fName"></div>
+    <div class="fclock" id="fClock"></div>
+    <div class="freason hidden" id="fReasonBox"><input id="fReason" class="date-in txt-in" maxlength="100" data-reason placeholder="쉬는 이유 (적지 않아도 돼요)" aria-label="쉬는 이유"></div>
+    <div class="fbtns">
+      <button id="fMemo">🐰 메모</button>
+      <button id="fBubNext" class="hidden" aria-label="말풍선 한마디 보기">💬</button>
+      <button id="fPause">잠깐 쉬기</button>
+      <button id="fStop">여기까지</button>
+    </div>
   </div>
 </div>
 
@@ -801,6 +864,7 @@ textarea::placeholder,.search input::placeholder{color:var(--faint)}
 <div class="toast hidden" id="toast" role="status"></div>
 
 <script src="quotes.js"></script>
+<script src="bubbles.js"></script>
 <script>
 'use strict';
 /* ───── 저장 이름 — 같은 주소의 다른 사이트(oneline.v1 · maestro.v3)와 겹치지 않게 ───── */
@@ -940,6 +1004,7 @@ function migrate(d){
   if (!Array.isArray(d.reviews)) d.reviews = [];
   if (!Array.isArray(d.checks)) d.checks = [];
   if (!Array.isArray(d.savedQuotes)) d.savedQuotes = [];
+  if (!Array.isArray(d.savedBubbles)) d.savedBubbles = [];   // 말풍선에서 저장한 문장 — 활동 기록 · 통계와 따로
   if (!DATE_RE.test(d.checkStart || '')) d.checkStart = null;
   d.version = 5;
   return d;
@@ -1248,6 +1313,34 @@ $('q').addEventListener('input', () => { $('qClr').classList.toggle('hidden', !$
 $('qClr').onclick = e => { e.preventDefault(); $('q').value = ''; $('qClr').classList.add('hidden'); renderList(); };
 $('sortBtn').onclick = () => { sortDesc = !sortDesc; renderList(); };
 $('openBtn').onclick = () => { openAll = !openAll; renderList(); };
+$('listMode').addEventListener('click', e => {
+  const b = e.target.closest('[data-m]'); if (!b) return;
+  listMode = b.dataset.m; renderList();
+});
+/* 저장한 문장 — 활동 기록과 섞지 않고 따로 보여줍니다 */
+function renderBubList(){
+  $('bubFilters').innerHTML = [['all', '전체'], ...BUBBLE_MOODS_SAFE.map(m => [m.id, m.name])]
+    .map(([id, n]) => `<button class="fbtn${bubMoodF === id ? ' on' : ''}" data-bm="${id}">${n}</button>`).join('');
+  const words = $('q').value.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  const from = $('lFrom').value, to = $('lTo').value;
+  let items = db.savedBubbles.filter(b => (bubMoodF === 'all' || b.mood === bubMoodF) && (!from || b.date >= from) && (!to || b.date <= to));
+  if (words.length) items = items.filter(b => { const h = [b.text, b.act, BUB_MOOD_NAME[b.mood], b.date].join(' ').toLowerCase(); return words.every(w => h.includes(w)); });
+  items.sort((a, b) => a.savedAt - b.savedAt);
+  if (sortDesc) items.reverse();
+  $('sortBtn').textContent = sortDesc ? '최신순' : '오래된순';
+  $('listCnt').textContent = `저장한 문장 ${items.length}개`;
+  if (!db.savedBubbles.length){ $('list').innerHTML = `<div class="empty">아직 저장한 문장이 없어요.<br>사진 위 말풍선의 책갈피를 누르면 여기에 모여요.</div>`; return; }
+  if (!items.length){ $('list').innerHTML = `<div class="empty">조건에 맞는 문장이 없습니다.</div>`; return; }
+  let h = '', last = '';
+  for (const b of items){
+    if (b.date !== last){ h += `<div class="dategrp">${esc(fmtFull(b.date))}</div>`; last = b.date; }
+    h += `<div class="card bitem"><p class="btx">${esc(b.text)}</p>
+      <div class="bmeta"><span>${esc(BUB_MOOD_NAME[b.mood] || '')} · ${fmtHm(b.savedAt)}${b.act ? ` · ${esc(b.act)}` : ''}${b.activeMs != null ? ` · 집중 ${b.activeMs < 60000 ? '1분 안' : fmtDur(b.activeMs) + '째'}` : ''}</span>
+      <button data-bcopy="${b.id}">복사</button><button data-bunsave="${b.id}">저장 취소</button></div></div>`;
+  }
+  $('list').innerHTML = h;
+}
+$('bubFilters').addEventListener('click', e => { const b = e.target.closest('[data-bm]'); if (!b) return; bubMoodF = b.dataset.bm; renderList(); });
 $('kindSeg').addEventListener('click', e => {
   const b = e.target.closest('[data-k]'); if (!b) return;
   listKind = b.dataset.k; renderList();
@@ -1334,7 +1427,14 @@ $('actFilters').addEventListener('change', e => {
   renderList();
 });
 
+let listMode = 'rec', bubMoodF = 'all';
 function renderList(){
+  const bm = listMode === 'bub';
+  for (const b of $('listMode').children) b.classList.toggle('on', b.dataset.m === listMode);
+  $('kindSeg').classList.toggle('hidden', bm);
+  $('openBtn').classList.toggle('hidden', bm);
+  $('bubFilters').classList.toggle('hidden', !bm);
+  if (bm){ $('filters').classList.add('hidden'); $('actFilters').classList.add('hidden'); return renderBubList(); }
   for (const b of $('kindSeg').children) b.classList.toggle('on', b.dataset.k === listKind);
   $('filters').classList.toggle('hidden', listKind === 'look');
   $('actFilters').classList.toggle('hidden', listKind === 'look');
@@ -1363,6 +1463,15 @@ function renderList(){
   $('list').innerHTML = h;
 }
 $('list').addEventListener('click', e => {
+  const bc = e.target.closest('[data-bcopy]');
+  if (bc){ const b = db.savedBubbles.find(x => x.id === bc.dataset.bcopy); if (b) copyText(b.text).then(ok => toast(ok ? '문장을 복사했어요' : '복사하지 못했어요', !ok)); return; }
+  const bu = e.target.closest('[data-bunsave]');
+  if (bu){
+    const i = db.savedBubbles.findIndex(x => x.id === bu.dataset.bunsave); if (i < 0) return;
+    const [gone] = db.savedBubbles.splice(i, 1);
+    if (!persist()){ db.savedBubbles.splice(i, 0, gone); return; }
+    toast('저장을 취소했어요'); renderList(); paintBubSaveAll(); return;
+  }
   const so = e.target.closest('[data-sopen]'); if (so) return openSess(so.dataset.sopen);
   const wo = e.target.closest('[data-wopen]'); if (wo) return openWeek(wo.dataset.wopen);
   const co = e.target.closest('[data-copen]'); if (co) return openCheck(co.dataset.copen);
@@ -1467,6 +1576,7 @@ function startTimer(act, group){
   const now = Date.now();
   done = null; ready = null;
   timer = { id:newId(), activityId:act.id, name:act.name, group, start:now, segStart:now, accMs:0, pauses:[] };
+  bubSchedFor(timer, true);   // 사진이 뜨면 첫 한마디
   saveTimer(); syncWake(); renderAll(); scrollTo(0, 0);
 }
 /* 누르는 순간 시간이 흐르고, 곧바로 이미지 고르기 창이 열립니다. 안 고르고 닫아도 시간은 그대로 흐릅니다 */
@@ -1519,6 +1629,7 @@ function rotateImg(){
   img.slot = slot;
   let n; do n = Math.floor(Math.random() * img.urls.length); while (n === img.idx);
   img.idx = n; paintImg();
+  if (BP.onImg() && bubSch && !bubBlocked()) bubAuto(activeMs(timer));   // 사진이 바뀔 때 (5분 간격 규칙은 지킴)
 }
 function paintImg(){
   const on = !!(timer && img && img.id === timer.id);
@@ -1533,6 +1644,8 @@ function paintImg(){
     ? `사진 ${img.urls.length}장 · ${ev.ms / 60000}분마다 바뀌어요 (최근 집중 ${ev.focus}분${ev.fit ? ' · 3~30분 사이로 맞춤' : '의 절반'})`
     : `사진 ${img.urls.length}장 · ${ev.ms / 60000}분마다 바뀌어요 (기록이 쌓이면 내 집중 시간에 맞춰져요)`;
   if (focusOn) paintFocus();
+  if (!on && bub) bubHide(true);
+  paintBubCtl();
   $('tImgPick').textContent = on ? '이미지 바꾸기' : '이미지 넣기';
   $('tImgDel').classList.toggle('hidden', !on);
 }
@@ -1559,6 +1672,195 @@ $('tFile').onchange = async () => {
   catch(e){ toast('이미지를 보관하지 못했어요. 새로고침하면 이미지만 사라질 수 있어요', true); }
 };
 $('tImgPick').onclick = () => { if (timer) $('tFile').click(); };
+
+/* ───── 이미지 위 말풍선 ─────
+   타이머 값은 읽기만 하고 따로 돕니다. 간격은 집중한 시간(쉼 제외)으로 셉니다.
+   자동 표시: 시작할 때 1번 · 10~15분(설정)마다 · 사진이 바뀔 때 · 쉬다 이어 할 때. 자동끼리는 최소 5분 띄움 */
+const BUBBLE_MOODS_SAFE = typeof BUBBLE_MOODS === 'object' ? BUBBLE_MOODS : [];
+const BUB = typeof BUBBLE_MESSAGES === 'object' ? BUBBLE_MESSAGES : {};
+const BUB_MOOD_NAME = Object.fromEntries(BUBBLE_MOODS_SAFE.map(m => [m.id, m.name]));
+const BUB_POS = { tl:1, tc:1, tr:1, bl:1, br:1 };
+const BP = {
+  on:    () => prefs.bubOn !== false,
+  mood:  () => BUB[prefs.bubMood] ? prefs.bubMood : 'general',
+  pos:   () => BUB_POS[prefs.bubPos] ? prefs.bubPos : 'tc',
+  every: () => [5, 10, 15, 20].includes(prefs.bubEvery) ? prefs.bubEvery : 0,   // 0 = 10~15분 사이 무작위
+  sec:   () => [5, 7, 10].includes(prefs.bubSec) ? prefs.bubSec : 7,
+  onImg: () => prefs.bubOnImg !== false,
+};
+const BUB_GAP_MIN = 5 * 60000;
+/* 셔플백 — 한 바퀴(50개)를 다 쓰기 전에는 겹치지 않고, 새 바퀴 첫 문구가 직전 문구와 같지 않게 합니다 */
+function bubPick(mood){
+  const list = BUB[mood] || []; if (!list.length) return null;
+  if (!prefs.bubBag || typeof prefs.bubBag !== 'object') prefs.bubBag = {};
+  let bag = prefs.bubBag[mood];
+  if (!bag || !Array.isArray(bag.left)) bag = prefs.bubBag[mood] = { left: [], last: '' };
+  bag.left = bag.left.filter(id => list.some(m => m[0] === id));
+  if (!bag.left.length){
+    const ids = list.map(m => m[0]);
+    for (let i = ids.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [ids[i], ids[j]] = [ids[j], ids[i]]; }
+    if (ids.length > 1 && ids[ids.length - 1] === bag.last) [ids[0], ids[ids.length - 1]] = [ids[ids.length - 1], ids[0]];
+    bag.left = ids;
+  }
+  const id = bag.left.pop(); bag.last = id; savePrefs();
+  return { id, text: list.find(m => m[0] === id)[1], mood };
+}
+let bub = null;          // 지금 떠 있는 문구 { id, text, mood }
+let bubHideT = null, bubHideAt = 0, bubHold = false;
+let bubSch = null;       // { tid, lastAt: 마지막 자동 표시 시각(실제 시계), next: 다음 자동 표시 집중 ms, wasRunning, startPending }
+let bubLoop = null;
+const bubVisible = () => !!(timer && img && img.id === timer.id);   // 사진이 떠 있을 때만
+const bubBlocked = () => !BP.on() || !timer || !timer.segStart || !bubVisible() || tab !== 'home' || document.hidden
+  || !!document.querySelector('.scrim:not(.hidden)');
+const bubGap = () => (BP.every() || (10 + Math.random() * 5)) * 60000;
+function bubSchedFor(t, fresh){
+  const a = activeMs(t);
+  bubSch = { tid: t.id, lastAt: fresh ? -Infinity : Date.now(), next: a + bubGap(), wasRunning: !!t.segStart, startPending: !!fresh };
+}
+function bubTick(){
+  if (!BP.on() || !timer) return syncBubLoop();
+  if (!bubSch || bubSch.tid !== timer.id) bubSchedFor(timer, false);   // 새로고침 뒤 — 바로 띄우지 않음
+  const a = activeMs(timer), running = !!timer.segStart;
+  const resumed = running && !bubSch.wasRunning; bubSch.wasRunning = running;
+  if (bubBlocked()) return;
+  if (bubSch.startPending){ bubSch.startPending = false; if (a < 2 * 60000) return bubAuto(a, true); }
+  if (resumed || a >= bubSch.next) bubAuto(a);
+}
+function bubAuto(a, force){
+  if (bubHold) return;   // 말풍선을 누르고 있는 동안은 바꾸지 않음
+  /* 자동 표시끼리 최소 5분 — 실제 시계로 셈(쉬는 시간 포함). 간격(10~15분)은 집중 시간으로 셈 */
+  const since = Date.now() - bubSch.lastAt;
+  if (!force && since < BUB_GAP_MIN){ if (a >= bubSch.next) bubSch.next = a + (BUB_GAP_MIN - since); return; }
+  bubSch.lastAt = Date.now(); bubSch.next = a + bubGap();
+  bubShow(bubPick(BP.mood()));
+}
+function syncBubLoop(){
+  const want = BP.on() && !!timer;
+  if (want && !bubLoop) bubLoop = setInterval(bubTick, 1000);
+  if (!want && bubLoop){ clearInterval(bubLoop); bubLoop = null; }
+  if (!want && bub) bubHide(true);
+}
+const bubEls = () => [[$('tBub'), $('tPic')], [$('fBub'), $('fPic')]];
+function bubShow(m){
+  if (!m || !bubVisible()) return;
+  bub = m;
+  for (const [el, pic] of bubEls()){
+    el.className = `bub p-${BP.pos()}`;
+    el.querySelector('.bt').textContent = m.text;
+    el.hidden = false;
+    paintBubSave(el);
+    fitBub(el, pic);
+    requestAnimationFrame(() => { if (bub === m) el.classList.add('on'); });
+  }
+  bubArm(BP.sec() * 1000);
+}
+function bubArm(ms){
+  clearTimeout(bubHideT); bubHideT = null; bubHideAt = Date.now() + ms;
+  if (!bubHold) bubHideT = setTimeout(() => bubHide(), ms);
+}
+function bubHide(now){
+  clearTimeout(bubHideT); bubHideT = null; bub = null; bubHold = false;
+  const quick = now || matchMedia('(prefers-reduced-motion: reduce)').matches;
+  for (const [el] of bubEls()){
+    el.classList.remove('on');
+    if (quick) el.hidden = true;
+    else setTimeout(() => { if (!bub) el.hidden = true; }, 460);
+  }
+}
+/* 글자 크기 — 길이로 시작값을 정하고, 실제 너비에서 줄 수 · 높이를 재며 줄입니다. 말줄임 없이 끝까지 보여줌 */
+function fitBub(el, pic){
+  if (el.hidden || !pic.clientWidth) return;
+  const tx = el.querySelector('.bt'), n = [...tx.textContent].length;
+  let s = n <= 25 ? 27 : n <= 45 ? 22 : n <= 70 ? 18 : 16;
+  const lo = n <= 25 ? 24 : n <= 45 ? 20 : n <= 70 ? 17 : 15;
+  if (pic.clientWidth < 300) s = Math.max(lo, s - 2);
+  const fits = max => { tx.style.fontSize = s + 'px'; return Math.round(tx.offsetHeight / (s * 1.45)) <= max && el.offsetHeight <= pic.clientHeight * 0.5; };
+  while (!fits(3) && s > lo) s--;
+  while (!fits(4) && s > 13) s--;
+  tx.style.fontSize = s + 'px';
+}
+/* 이미지 크기 — 쓸 수 있는 칸 안에서 비율 그대로 최대한 크게(원래 해상도보다 늘리지는 않음) */
+function fitPic(stage, pic, im, availH){
+  const nw = im.naturalWidth, nh = im.naturalHeight, w = stage.clientWidth;
+  if (!nw || !nh || !w || !availH) return;
+  const k = Math.min(w / nw, availH / nh, window.devicePixelRatio || 1);
+  pic.style.width = Math.floor(nw * k) + 'px'; pic.style.height = Math.floor(nh * k) + 'px';
+}
+function fitPics(){
+  fitPic($('tImgBox'), $('tPic'), $('tImg'), innerHeight * 0.52);
+  fitPic($('fStage'), $('fPic'), $('fImg'), $('fStage').clientHeight);
+}
+$('tImg').addEventListener('load', fitPics); $('fImg').addEventListener('load', fitPics);
+addEventListener('resize', fitPics);
+if ('ResizeObserver' in window){
+  new ResizeObserver(fitPics).observe($('tImgBox')); new ResizeObserver(fitPics).observe($('fStage'));
+  for (const [el, pic] of bubEls()) new ResizeObserver(() => fitBub(el, pic)).observe(pic);
+}
+/* 문장 저장 — 활동 기록 · 집중 통계와 상관없는 따로 된 목록. 같은 문구(id)는 한 번만 */
+const bubSaved = id => db.savedBubbles.some(x => x.msgId === id);
+function bubSave(){
+  if (!bub) return;
+  if (bubSaved(bub.id)){ flashSaved('이미 저장했어요'); return; }
+  const now = Date.now(), t = timer, a = t ? actOf(t.activityId) : null;
+  db.savedBubbles.push({ id: newId(), msgId: bub.id, text: bub.text, mood: bub.mood, date: ymd(new Date(now)), savedAt: now,
+    act: t ? (a ? a.name : t.name) : '', actId: t ? t.activityId : '', activeMs: t ? activeMs(t, now) : null });
+  if (!persist()){ db.savedBubbles.pop(); return; }
+  paintBubSaveAll(); flashSaved('저장됨');
+}
+function flashSaved(tx){
+  for (const [el] of bubEls()){ const s = el.querySelector('.bsaved'); s.textContent = tx; s.classList.add('on'); setTimeout(() => s.classList.remove('on'), 1500); }
+}
+function paintBubSave(el){
+  const on = !!bub && bubSaved(bub.id), b = el.querySelector('.bsave');
+  b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); b.setAttribute('aria-label', on ? '저장한 문장' : '이 문장 저장');
+}
+const paintBubSaveAll = () => { for (const [el] of bubEls()) paintBubSave(el); };
+for (const [el] of bubEls()){
+  el.addEventListener('click', e => {
+    if (e.target.closest('.bx')) return bubHide();   // 지금 것만 닫기 (기능은 그대로 켜져 있음)
+    if (e.target.closest('.bsave')){ bubSave(); bubArm(Math.max(bubHideAt - Date.now(), 3000)); }
+  });
+  el.addEventListener('pointerdown', () => { if (!bub) return; bubHold = true; clearTimeout(bubHideT); bubHideT = null; });
+  const up = () => { if (!bubHold) return; bubHold = false; if (bub) bubArm(Math.max(bubHideAt - Date.now(), 2500)); };
+  for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) el.addEventListener(ev, up);
+}
+/* 직접 보기 — 5분 규칙 없이 다음 문구 */
+const bubNext = () => { if (BP.on() && bubVisible()) bubShow(bubPick(BP.mood())); };
+$('tBubNext').onclick = bubNext; $('fBubNext').onclick = bubNext;
+/* 화면을 떠났다 돌아오면 밀린 차례는 건너뜀 — 한꺼번에 뜨지 않게 */
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState !== 'visible' || !bubSch || !timer) return;
+  const a = activeMs(timer); if (a >= bubSch.next) bubSch.next = a + bubGap();
+  bubSch.wasRunning = !!timer.segStart;
+});
+/* 분위기 · 켜고 끄기 · 간격 · 시간 · 위치 — 기기마다 기억(prefs) */
+function paintBubCtl(){
+  const mood = BP.mood();
+  for (const box of document.querySelectorAll('[data-bmood]'))
+    box.innerHTML = BUBBLE_MOODS_SAFE.map(m => `<button data-bmv="${m.id}" class="${m.id === mood ? 'on' : ''}">${m.name}</button>`).join('');
+  for (const c of document.querySelectorAll('[data-bon]')) c.checked = BP.on();
+  $('bOnImg').checked = BP.onImg();
+  if ($('tBMood').options.length !== BUBBLE_MOODS_SAFE.length)
+    $('tBMood').innerHTML = BUBBLE_MOODS_SAFE.map(m => `<option value="${m.id}">말풍선 · ${m.name}</option>`).join('');
+  $('tBMood').value = mood;
+  for (const b of $('bEverySeg').children) b.classList.toggle('on', Number(b.dataset.v) === BP.every());
+  for (const b of $('bSecSeg').children) b.classList.toggle('on', Number(b.dataset.v) === BP.sec());
+  for (const b of $('bPosSeg').children) b.classList.toggle('on', b.dataset.v === BP.pos());
+  $('tBubRow').classList.toggle('hidden', !(BP.on() && bubVisible()));
+  if (focusOn) $('fBubNext').classList.toggle('hidden', !(BP.on() && bubVisible()));
+}
+const setBub = (k, v) => { prefs[k] = v; savePrefs(); syncBubLoop(); paintBubCtl(); };
+document.addEventListener('click', e => { const b = e.target.closest('[data-bmv]'); if (b) setBub('bubMood', b.dataset.bmv); });
+for (const c of document.querySelectorAll('[data-bon]')) c.addEventListener('change', () => setBub('bubOn', c.checked));
+$('bOnImg').addEventListener('change', () => setBub('bubOnImg', $('bOnImg').checked));
+$('tBMood').addEventListener('change', () => setBub('bubMood', $('tBMood').value));
+$('bEverySeg').addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (b) setBub('bubEvery', Number(b.dataset.v)); });
+$('bSecSeg').addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (b) setBub('bubSec', Number(b.dataset.v)); });
+$('bPosSeg').addEventListener('click', e => {
+  const b = e.target.closest('[data-v]'); if (!b) return;
+  setBub('bubPos', b.dataset.v);
+  for (const [el] of bubEls()) for (const k of Object.keys(BUB_POS)) el.classList.toggle(`p-${k}`, k === b.dataset.v);
+});
 $('tImgDel').onclick = clearImg;
 $('tBack').onclick = () => { ready = null; renderAll(); };
 function pauseTimer(){
@@ -1594,7 +1896,7 @@ function finishTimer(){
       mood:[], notes:{}, createdAt:now, updatedAt:now });
     if (!persist()){ db.sessions.pop(); return; }   // 저장 못 하면 타이머를 그대로 둡니다
   }
-  timer = null; saveTimer(); syncWake(); clearImg(); closeFocus();
+  timer = null; saveTimer(); syncWake(); clearImg(); closeFocus(); bubHide(true); bubSch = null;
   /* 저장은 이미 끝났습니다. 마무리 화면은 기분 · 경험을 「덧붙일지」만 묻습니다 */
   done = t.id; draft = { mood:[], notes:{}, tab:'felt' };
   renderAll(); scrollTo(0, 0);
@@ -1679,8 +1981,9 @@ function paintFocus(){
   $('fClock').textContent = P.hideTime() ? (paused ? '잠시 쉬는 중' : '진행 중') : fmtClock(activeMs(timer));
   $('fPause').textContent = paused ? '이어서 하기' : '잠깐 쉬기';
   const url = img && img.id === timer.id ? img.urls[img.idx] : null;
-  $('fImg').classList.toggle('hidden', !url);
+  $('focus').classList.toggle('noimg', !url);
   if (url && $('fImg').getAttribute('src') !== url) $('fImg').src = url;
+  $('fBubNext').classList.toggle('hidden', !url || !BP.on());
 }
 $('tFull').onclick = openFocus; $('fExit').onclick = closeFocus;
 $('fPause').onclick = () => (timer && timer.segStart ? pauseTimer() : resumeTimer());
@@ -2522,7 +2825,7 @@ function exportBackup(){
   const name = `my-record-backup-${ymd(n).replace(/-/g,'')}-${pad(n.getHours())}${pad(n.getMinutes())}.json`;
   const data = { app:'나의 기록', version:5, exportedAt: n.toISOString(),
     records: db.records, sessions: db.sessions, groups: db.groups, acts: db.acts,
-    reviews: db.reviews, checks: db.checks, savedQuotes: db.savedQuotes, checkStart: db.checkStart };
+    reviews: db.reviews, checks: db.checks, savedQuotes: db.savedQuotes, savedBubbles: db.savedBubbles, checkStart: db.checkStart };
   const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type:'application/json' }));
   const a = document.createElement('a'); a.href = url; a.download = name;
   document.body.appendChild(a); a.click(); a.remove();
@@ -2566,10 +2869,15 @@ function cleanSessions(list){
     const o = { id, activityId: String(s.activityId ?? ''), name: String(s.name ?? '').trim() || '활동',
       group: str(s.group) || 'daily', date: s.date, start, end, activeMs: act,
       pauses: Array.isArray(s.pauses) ? s.pauses.filter(p => p && Number.isFinite(Number(p.start)))
-        .map(p => ({ start: Number(p.start), end: Number(p.end) || Number(p.start) })) : [],
+        .map(p => ({ start: Number(p.start), end: Number(p.end) || Number(p.start), ...(str(p.reason).trim() ? { reason: p.reason.trim() } : {}) })) : [],
       createdAt: Number(s.createdAt) || end, updatedAt: Number(s.updatedAt) || end };
     if (typeof s.note === 'string' && s.note.trim()) o.note = s.note.trim();   // v3 한 줄 기록 → migrate 가 notes.learned 로
     o.mood = Array.isArray(s.mood) ? s.mood.filter(m => MOOD[m]) : [];
+    if (Array.isArray(s.memos)){
+      const ms = s.memos.filter(m => m && Number.isFinite(Number(m.at)) && (str(m.text).trim() || str(m.check).trim()))
+        .map(m => ({ id: str(m.id) || newId(), at: Number(m.at), activeMs: Number(m.activeMs) || 0, text: str(m.text), ...(str(m.check).trim() ? { check: m.check } : {}) }));
+      if (ms.length) o.memos = ms;
+    }
     o.notes = {};
     if (s.notes && typeof s.notes === 'object') for (const t of NOTE_TYPES) if (typeof s.notes[t.id] === 'string' && s.notes[t.id].trim()) o.notes[t.id] = s.notes[t.id].trim();
     out.push(o);
@@ -2587,6 +2895,13 @@ const cleanChecks = list => !Array.isArray(list) ? null : list
     createdAt:Number(c.createdAt) || 0, updatedAt:Number(c.updatedAt) || 0 }));
 const cleanQuotes = list => !Array.isArray(list) ? null : list
   .filter(q => q && str(q.text)).map(q => ({ text:q.text, stage:str(q.stage), savedAt:Number(q.savedAt) || 0 }));
+const cleanBubbles = list => {
+  if (!Array.isArray(list)) return null;
+  const seen = new Set();
+  return list.filter(b => b && str(b.text) && str(b.msgId) && !seen.has(b.msgId) && seen.add(b.msgId))
+    .map(b => ({ id: str(b.id) || newId(), msgId: b.msgId, text: b.text, mood: str(b.mood), date: DATE_RE.test(b.date) ? b.date : ymd(new Date(Number(b.savedAt) || 0)),
+      savedAt: Number(b.savedAt) || 0, act: str(b.act), actId: str(b.actId), activeMs: Number.isFinite(b.activeMs) ? b.activeMs : null }));
+};
 /* 예전 백업도 받습니다 — 백업에 없는 칸(돌아보기 · 점검 · 모은 문장)은 지금 것을 그대로 둡니다 */
 function cleanBackup(data){
   const records = cleanRecords(data); if (!records) return null;
@@ -2596,7 +2911,7 @@ function cleanBackup(data){
   const groups = validGroups(obj.groups) ? obj.groups.map(g => ({ id:g.id, name:g.name, color:str(g.color) || 'grey', archived:!!g.archived })) : null;
   const acts = groups && validActList(obj.acts) ? obj.acts.map(a => ({ id:a.id, name:a.name, groupId:a.groupId, removed:!!a.removed })) : null;
   return { records, sessions, groups, acts, activities: validActs(obj.activities) ? obj.activities : null,
-    reviews: cleanReviews(obj.reviews), checks: cleanChecks(obj.checks), savedQuotes: cleanQuotes(obj.savedQuotes),
+    reviews: cleanReviews(obj.reviews), checks: cleanChecks(obj.checks), savedQuotes: cleanQuotes(obj.savedQuotes), savedBubbles: cleanBubbles(obj.savedBubbles),
     checkStart: 'checkStart' in obj ? (DATE_RE.test(obj.checkStart || '') ? obj.checkStart : null) : undefined };
 }
 /* 분류: v5 백업이면 백업의 그룹 · 활동 그대로.
@@ -2610,7 +2925,7 @@ function dbFrom(bk){
   }
   return migrate({ records: bk.records, sessions: bk.sessions, groups, acts,
     reviews: bk.reviews || db.reviews, checks: bk.checks || db.checks,
-    savedQuotes: bk.savedQuotes || db.savedQuotes, checkStart: bk.checkStart === undefined ? db.checkStart : bk.checkStart });
+    savedQuotes: bk.savedQuotes || db.savedQuotes, savedBubbles: bk.savedBubbles || db.savedBubbles, checkStart: bk.checkStart === undefined ? db.checkStart : bk.checkStart });
 }
 
 function keepBefore(reason){
@@ -2702,6 +3017,7 @@ document.querySelector('.tabs').addEventListener('click', e => {
 });
 
 function renderAll(){
+  syncBubLoop(); paintBubCtl();
   document.querySelector('.tabs [data-tab="home"]').classList.toggle('run', !!timer);
   if (tab === 'home') renderHome();
   if (tab === 'week') renderWeek();
