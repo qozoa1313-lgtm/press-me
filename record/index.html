@@ -180,18 +180,20 @@ input,textarea{font:inherit;color:inherit}
 .pic img{display:block;width:100%;height:100%;object-fit:contain;border-radius:14px}
 .timg .pic:not([style]) img{width:auto;height:auto;max-width:100%;max-height:52vh}
 /* 이미지 위 말풍선 — 이미지 크기에 영향 없이 위에 겹쳐 뜹니다 */
-.bub{position:absolute;z-index:2;width:min(calc(100% - 20px),360px);min-width:min(220px,calc(100vw - 40px));box-sizing:border-box;padding:10px 12px 12px 16px;border-radius:18px;background:rgba(255,253,246,.95);color:#383834;box-shadow:0 6px 20px rgba(0,0,0,.22),0 1px 3px rgba(0,0,0,.12);font-family:"Pretendard","Pretendard Variable",-apple-system,BlinkMacSystemFont,system-ui,"Noto Sans KR","Noto Sans CJK KR","Apple SD Gothic Neo","Malgun Gothic","Hiragino Sans","Yu Gothic",sans-serif;font-weight:500;text-align:left;opacity:0;transition:opacity .45s ease;pointer-events:none}
+.bub{position:absolute;z-index:2;display:block;width:max-content;max-width:calc(100vw - 40px);box-sizing:border-box;padding:9px 18px;border-radius:18px;background:rgba(255,253,246,.95);color:#383834;box-shadow:0 6px 20px rgba(0,0,0,.22),0 1px 3px rgba(0,0,0,.12);font-family:"Pretendard","Pretendard Variable",-apple-system,BlinkMacSystemFont,system-ui,"Noto Sans KR","Noto Sans CJK KR","Apple SD Gothic Neo","Malgun Gothic","Hiragino Sans","Yu Gothic",sans-serif;font-weight:500;text-align:left;opacity:0;transition:opacity .45s ease;pointer-events:none}
 .bub.on{opacity:1;pointer-events:auto}
 .bub[hidden]{display:none}
-.bub.p-tl{top:10px;left:10px}.bub.p-tc{top:10px;left:50%;transform:translateX(-50%)}.bub.p-tr{top:10px;right:10px}
+.bub.p-tl{top:18px;left:10px}.bub.p-tc{top:18px;left:50%;transform:translateX(-50%)}.bub.p-tr{top:18px;right:10px}
 .bub.p-bl{bottom:10px;left:10px}.bub.p-br{bottom:10px;right:10px}
-.bub .bt{margin:0;line-height:1.45;word-break:keep-all;overflow-wrap:anywhere;letter-spacing:-.01em}
-.bub .bbtns{float:right;display:flex;align-items:center;gap:0;margin:-4px -6px 0 8px}
-.bub .bbtns button{width:30px;height:30px;display:grid;place-items:center;border-radius:10px;color:#86867e;font-size:14px}
-.bub .bbtns button:hover{background:rgba(0,0,0,.06)}
+.bub .bt{margin:0;line-height:1.45;word-break:keep-all;overflow-wrap:anywhere;letter-spacing:-.01em;text-wrap:balance}
+.bub.one .bt{white-space:nowrap}
+.bub .bbtns{position:absolute;top:-12px;right:8px;display:flex;align-items:center;gap:5px}
+.bub .bbtns button{width:26px;height:26px;display:grid;place-items:center;border-radius:50%;background:#fffdf6;color:#7d7d75;font-size:11px;box-shadow:0 1px 4px rgba(0,0,0,.28)}
+.bub .bbtns button svg{width:14px;height:14px}
+.bub .bbtns button:hover{background:#f1eee4}
 .bub .bsave.on{color:#b0813a}
 .bub .bsave.on svg{fill:currentColor}
-.bub .bsaved{font-size:11px;color:#9b8a68;opacity:0;transition:opacity .3s;margin-right:2px}
+.bub .bsaved{font-size:11px;color:#8a7a58;background:#fffdf6;border-radius:10px;padding:3px 8px;box-shadow:0 1px 4px rgba(0,0,0,.2);opacity:0;transition:opacity .3s}
 .bub .bsaved.on{opacity:1}
 @media (prefers-reduced-motion: reduce){.bub,.bub .bsaved{transition:none}}
 /* 사진 자르기 — 틀 = 이 폰 전체화면 사진칸 비율 */
@@ -1895,14 +1897,22 @@ function bubHide(now){
 /* 글자 크기 — 길이로 시작값을 정하고, 실제 너비에서 줄 수 · 높이를 재며 줄입니다. 말줄임 없이 끝까지 보여줌 */
 function fitBub(el, pic){
   if (el.hidden || !pic.clientWidth) return;
-  const tx = el.querySelector('.bt'), n = [...tx.textContent].length;
-  let s = n <= 25 ? 27 : n <= 45 ? 22 : n <= 70 ? 18 : 16;
-  const lo = n <= 25 ? 24 : n <= 45 ? 20 : n <= 70 ? 17 : 15;
-  if (pic.clientWidth < 300) s = Math.max(lo, s - 2);
-  const fits = max => { tx.style.fontSize = s + 'px'; return Math.round(tx.offsetHeight / (s * 1.45)) <= max && el.offsetHeight <= pic.clientHeight * 0.5; };
-  while (!fits(3) && s > lo) s--;
-  while (!fits(4) && s > 13) s--;
-  tx.style.fontSize = s + 'px';
+  const tx = el.querySelector('.bt');
+  /* 폭 — 사진 폭을 넘어도 되지만 사진칸(화면) 밖으로는 안 나가게. 위치(왼 · 가운데 · 오른)에 따라 계산 */
+  const sr = pic.parentElement.getBoundingClientRect(), pr = pic.getBoundingClientRect(), side = BP.pos()[1];
+  const mw = side === 'c' ? sr.width - 20 : side === 'l' ? sr.right - pr.left - 20 : pr.right - sr.left - 20;
+  el.style.maxWidth = Math.max(160, Math.floor(mw)) + 'px';
+  /* 한 줄이 먼저 — 들어갈 때까지 글자를 줄임(24 → 15px) */
+  el.classList.add('one');
+  const one = s => { tx.style.fontSize = s + 'px'; return tx.scrollWidth <= tx.clientWidth + 1; };
+  let s = pic.clientWidth < 300 ? 22 : 24;
+  while (s > 15 && !one(s)) s--;
+  if (one(s)) return;
+  /* 15px로도 안 들어가는 긴 문장만 줄바꿈(줄 길이를 고르게) */
+  el.classList.remove('one');
+  s = 16;
+  const ok = () => { tx.style.fontSize = s + 'px'; return Math.round(tx.offsetHeight / (s * 1.45)) <= 3 && el.offsetHeight <= pic.clientHeight * 0.5; };
+  while (!ok() && s > 13) s--;
 }
 /* 이미지 크기 — 쓸 수 있는 칸 안에서 비율 그대로 최대한 크게(원래 해상도보다 늘리지는 않음) */
 function fitPic(stage, pic, im, availH){
