@@ -175,6 +175,10 @@ input,textarea{font:inherit;color:inherit}
 .tbusy .big{font-size:26px;font-weight:700;color:var(--sage-ink)}
 .tbusy .sub{font-size:14px;color:var(--soft);margin-top:4px}
 .timer .tg2{margin-top:2px}
+.timg{margin:12px auto 4px;max-width:100%}
+.timg img{display:block;max-width:100%;max-height:52vh;margin:0 auto;border-radius:14px;object-fit:contain}
+.timer.paused .timg img{opacity:.45}
+.imgbar{display:flex;justify-content:center;gap:4px;margin-top:6px}
 /* 마무리 화면 — 제목 · 기분 · 경험 */
 .done{padding:20px 18px 18px}
 .dhead{display:flex;align-items:flex-start;gap:10px}
@@ -361,6 +365,8 @@ textarea::placeholder,.search input::placeholder{color:var(--faint)}
     <section class="card timer hidden" id="homeTimer">
       <div class="grp" id="tGroup"></div>
       <div class="tn" id="tName"></div>
+      <div class="timg hidden" id="tImgBox"><img id="tImg" alt="고른 이미지"></div>
+      <input type="file" accept="image/*" id="tFile" hidden>
       <div class="clock" id="tClock" role="timer">00:00:00</div>
       <div class="tbusy hidden" id="tBusy"><div class="big" id="tBusyBig">진행 중</div><div class="sub" id="tBusySub">지금은 이 일에 집중하는 시간이에요.</div></div>
       <div class="st" id="tState"></div>
@@ -373,6 +379,7 @@ textarea::placeholder,.search input::placeholder{color:var(--faint)}
         <button class="btn primary wide" id="tGo" style="height:58px;font-size:17px;border-radius:16px;margin-top:18px">시작하기</button>
         <button class="linkbtn" id="tBack" style="margin-top:10px">‹ 다른 활동 고르기</button>
       </div>
+      <div class="imgbar hidden" id="tImgBar"><button class="linkbtn" id="tImgPick">이미지 넣기</button><button class="linkbtn hidden" id="tImgDel">이미지 빼기</button></div>
       <div class="wake" id="tWake"></div>
     </section>
     <div id="qDoing" class="hidden" style="margin-top:14px"></div>
@@ -919,7 +926,7 @@ function savePrefs(){ try { localStorage.setItem(PREF_KEY, JSON.stringify(prefs)
 /* 다른 창에서 고쳤으면 다시 읽습니다 */
 addEventListener('storage', e => {
   if (e.key === KEY){ loadFailed = false; db = readDb(); renderAll(); }
-  if (e.key === TIMER_KEY){ timer = readTimer(); syncWake(); renderAll(); }
+  if (e.key === TIMER_KEY){ timer = readTimer(); syncWake(); renderAll(); loadImg(); }
 });
 
 /* 브라우저가 공간 부족 때 마음대로 지우지 않도록 요청 */
@@ -1403,7 +1410,60 @@ function startTimer(act, group){
   timer = { id:newId(), activityId:act.id, name:act.name, group, start:now, segStart:now, accMs:0, pauses:[] };
   saveTimer(); syncWake(); renderAll(); scrollTo(0, 0);
 }
-$('tGo').onclick = () => { if (ready) startTimer(ready.act, ready.group); };
+/* 누르는 순간 시간이 흐르고, 곧바로 이미지 고르기 창이 열립니다. 안 고르고 닫아도 시간은 그대로 흐릅니다 */
+$('tGo').onclick = () => { if (!ready) return; startTimer(ready.act, ready.group); if (timer) $('tFile').click(); };
+
+/* 진행 중 이미지 — 기록에는 넣지 않고, 「여기까지」를 누를 때까지만 보여줍니다.
+   새로고침해도 남도록 이 기기의 IndexedDB(브라우저 안 파일 보관함)에 한 장만 둡니다 */
+const IMG_DB = 'myrecord.v1.img';
+let img = null;   // { id: 타이머 id, url }
+function imgStore(mode, fn){
+  return new Promise((res, rej) => {
+    if (!('indexedDB' in window)) return rej(new Error('no idb'));
+    const r = indexedDB.open(IMG_DB, 1);
+    r.onupgradeneeded = () => r.result.createObjectStore('img');
+    r.onerror = () => rej(r.error);
+    r.onsuccess = () => {
+      const d = r.result, tx = d.transaction('img', mode), st = tx.objectStore('img');
+      let out; const q = fn(st); if (q) q.onsuccess = () => { out = q.result; };
+      tx.oncomplete = () => { d.close(); res(out); };
+      tx.onerror = tx.onabort = () => { d.close(); rej(tx.error); };
+    };
+  });
+}
+function showImg(id, blob){
+  if (img) URL.revokeObjectURL(img.url);
+  img = blob ? { id, url: URL.createObjectURL(blob) } : null;
+  paintImg();
+}
+function paintImg(){
+  const on = !!(timer && img && img.id === timer.id);
+  $('tImgBox').classList.toggle('hidden', !on);
+  if (on && $('tImg').getAttribute('src') !== img.url) $('tImg').src = img.url;
+  if (!on) $('tImg').removeAttribute('src');
+  $('tImgPick').textContent = on ? '이미지 바꾸기' : '이미지 넣기';
+  $('tImgDel').classList.toggle('hidden', !on);
+}
+function clearImg(){ showImg(null, null); imgStore('readwrite', st => st.clear()).catch(() => {}); }
+async function loadImg(){
+  if (!timer){ if (img) showImg(null, null); return; }
+  if (img && img.id === timer.id) return paintImg();
+  try {
+    const rec = await imgStore('readonly', st => st.get('cur'));
+    if (rec && timer && rec.id === timer.id) showImg(rec.id, rec.blob); else paintImg();
+  } catch(e){ paintImg(); }
+}
+$('tFile').onchange = async () => {
+  const f = $('tFile').files[0]; $('tFile').value = '';
+  if (!f || !timer) return;
+  if (!/^image\//.test(f.type)) return toast('이미지 파일만 넣을 수 있어요', true);
+  const id = timer.id;
+  showImg(id, f);
+  try { await imgStore('readwrite', st => { st.clear(); st.put({ id, blob: f }, 'cur'); }); }
+  catch(e){ toast('이미지를 보관하지 못했어요. 새로고침하면 이미지만 사라질 수 있어요', true); }
+};
+$('tImgPick').onclick = () => { if (timer) $('tFile').click(); };
+$('tImgDel').onclick = clearImg;
 $('tBack').onclick = () => { ready = null; renderAll(); };
 function pauseTimer(){
   timer = readTimer() || timer;
@@ -1437,7 +1497,7 @@ function finishTimer(){
       mood:[], notes:{}, createdAt:now, updatedAt:now });
     if (!persist()){ db.sessions.pop(); return; }   // 저장 못 하면 타이머를 그대로 둡니다
   }
-  timer = null; saveTimer(); syncWake();
+  timer = null; saveTimer(); syncWake(); clearImg();
   /* 저장은 이미 끝났습니다. 마무리 화면은 기분 · 경험을 「덧붙일지」만 묻습니다 */
   done = t.id; draft = { mood:[], notes:{}, tab:'felt' };
   renderAll(); scrollTo(0, 0);
@@ -1542,6 +1602,8 @@ function renderHome(){
   $('tRun').classList.toggle('hidden', mode !== 'timer');
   $('tReady').classList.toggle('hidden', mode !== 'ready');
   $('tToggle').classList.toggle('hidden', mode !== 'timer');
+  $('tImgBar').classList.toggle('hidden', mode !== 'timer');
+  paintImg();
   if (mode === 'ready'){
     const a = actOf(ready.act.id) || ready.act;
     $('homeTimer').classList.remove('paused');
@@ -2462,6 +2524,7 @@ applyTheme();
 if (loadFailed) setStatus(false, '저장된 기록을 읽지 못했습니다');
 renderAll();
 syncWake();
+loadImg();
 askPersist();
 if ('serviceWorker' in navigator && location.protocol !== 'file:'){
   addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));

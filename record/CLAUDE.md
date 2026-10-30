@@ -31,6 +31,7 @@ https://qozoa1313-lgtm.github.io/press-me/record/
 - 진행 중 타이머는 myrecord.v1.timer 에만. 시작·쉬기·이어하기 시각으로 계산(초 세기 아님). 「여기까지」 때 타이머 id 로 중복 저장 막음
 - 타이머 기록은 시작한 날짜에 들어감. 활동 목록에서 지워도 과거 기록은 남음(이름을 기록에 복사해 둠)
 - 타이머가 켜져 있는 동안 화면 켜짐 유지(Wake Lock) — 지원 안 하는 브라우저는 안내만
+- 진행 중 이미지: 「시작하기」 = 시간 시작 + 이미지 고르기 창 열기. 안 고르면 그냥 흐름. 이미지는 기록에 안 넣음 — IndexedDB 'myrecord.v1.img' 에 한 장만, 「여기까지」·「이미지 빼기」 때 비움
 - 같은 github.io 주소의 다른 사이트(oneline.v1, maestro.v3)와 저장공간을 같이 씀 → localStorage.clear() 금지, 내 이름만 지울 것
 - 저장값을 못 읽으면 덮어쓰지 않고 저장을 막음
 - 카테고리: 영어·면접·도면·프로젝트·기타
@@ -44,4 +45,5 @@ https://qozoa1313-lgtm.github.io/press-me/record/
 
 ## 아직 확인 못 한 것
 - 실제 갤럭시 휴대폰(삼성 인터넷·크롬)에서의 동작 · 화면 켜짐 유지 — 2026-10-26 기준 PC 크롬 휴대폰 크기 흉내 + 가짜 시계 + 가짜 화면 켜짐 장치로만 시험
-- 시험 파일은 저장소 밖(임시 폴더)에 있음: test_record.py(39) · test_timer.py(52) · test_final.py(85) · test_v4.py(50) · test_v5.py(61) · test_seg.py(10)
+- 시험 파일은 저장소 밖(임시 폴더)에 있음: test_record.py(39) · test_timer.py(52) · test_final.py(85) · test_v4.py(50) · test_v5.py(61) · test_seg.py(10) · test_img.py(17)
+- 2026-10-30: test_v4 의 「무작위 30번 + 새로고침」 구간에서 시험 브라우저가 죽음. 바꾸기 전 버전(3f44c6d)도 똑같이 죽어서 이미지 기능 탓은 아님. 원인 못 찾음, 그 구간 시험은 이번에 못 돌림
