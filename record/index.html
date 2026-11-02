@@ -1680,7 +1680,12 @@ async function loadImg(){
   if (img && img.id === timer.id) return paintImg();
   try {
     const rec = await imgStore('readonly', st => st.get('cur'));
-    if (rec && timer && rec.id === timer.id) showImg(rec.id, rec.blobs || (rec.blob ? [rec.blob] : [])); else paintImg();
+    if (rec && timer && rec.id === timer.id){
+      const { ok, bad } = await prepImgs(rec.blobs || (rec.blob ? [rec.blob] : []));
+      if (!timer || timer.id !== rec.id) return;
+      showImg(rec.id, ok);
+      if (bad){ toast(`열 수 없게 된 사진 ${bad}장은 뺐어요`, true); saveImgs(rec.id, ok); }
+    } else paintImg();
   } catch(e){ paintImg(); }
 }
 $('tFile').onchange = async () => {
@@ -1692,10 +1697,38 @@ $('tFile').onchange = async () => {
   if (fs.length > IMG_MAX){ fs = fs.slice(0, IMG_MAX); toast(`사진은 ${IMG_MAX}장까지예요. 앞의 ${IMG_MAX}장만 넣었어요`); }
   else if (bad) toast('이미지가 아닌 파일은 뺐어요');
   const id = timer.id;
-  showImg(id, fs);
-  try { await imgStore('readwrite', st => { st.clear(); st.put({ id, blobs: fs }, 'cur'); }); }
-  catch(e){ toast('이미지를 보관하지 못했어요. 새로고침하면 이미지만 사라질 수 있어요', true); }
+  const { ok, bad: broken } = await prepImgs(fs);
+  if (!timer || timer.id !== id) return;
+  if (broken) toast(ok.length ? `열 수 없는 사진 ${broken}장은 뺐어요 (HEIC 형식 등)` : '이 사진은 열 수 없어요. 다른 사진을 골라 주세요 (HEIC 형식 등)', true);
+  if (!ok.length) return;
+  showImg(id, ok);
+  saveImgs(id, ok);
 };
+const saveImgs = (id, blobs) => imgStore('readwrite', st => { st.clear(); st.put({ id, blobs }, 'cur'); })
+  .catch(() => toast('이미지를 보관하지 못했어요. 새로고침하면 이미지만 사라질 수 있어요', true));
+/* 고른 사진을 앱 안으로 복사하고(갤러리 원본과 연결이 끊겨도 보이게), 미리 한 번 열어 봅니다.
+   못 여는 사진(HEIC 등 · 이미 사라진 파일)은 뺍니다 */
+async function prepImgs(list){
+  const ok = []; let bad = 0;
+  for (const f of list){
+    try {
+      const copy = new Blob([await f.arrayBuffer()], { type: f.type || 'image/jpeg' });
+      if ('createImageBitmap' in window){ const bm = await createImageBitmap(copy); if (bm.close) bm.close(); }
+      ok.push(copy);
+    } catch(e){ bad++; }
+  }
+  return { ok, bad };
+}
+/* 띄우다 실패한 사진은 깨진 아이콘 대신 건너뜁니다 */
+function imgBroken(e){
+  if (!img || !timer || img.id !== timer.id || e.target.getAttribute('src') !== img.urls[img.idx]) return;
+  URL.revokeObjectURL(img.urls[img.idx]);
+  img.urls.splice(img.idx, 1);
+  if (!img.urls.length){ clearImg(); toast('사진을 더 이상 열 수 없어서 뺐어요', true); return; }
+  else img.idx %= img.urls.length;
+  paintImg();
+}
+$('tImg').addEventListener('error', imgBroken); $('fImg').addEventListener('error', imgBroken);
 $('tImgPick').onclick = () => { if (timer) $('tFile').click(); };
 
 /* ───── 이미지 위 말풍선 ─────
