@@ -2661,7 +2661,10 @@ function closeSheet(){ document.getElementById('sheetWrap').classList.add('hide'
 
 /* 완료한 문장 전부 */
 function doneSheet(){
-  const cards = Object.values(DB.cards).sort((a,b) => b.day - a.day);
+  /* 배운 표시가 있는 것만 — 영상 문장은 넣기만 해도 카드가 생기므로 꼭 걸러야 합니다 */
+  const cards = Object.values(DB.cards)
+    .filter(c => c.learnedOn)
+    .sort((a,b) => b.day - a.day);
   const rows = cards.map(c => {
     const s = sOf(c);
     if(!s) return '';
@@ -2678,7 +2681,8 @@ function revSheet(from){
   const f = from || '';
   const rows = [];
   let revT = 0, prT = 0;
-  Object.values(DB.cards).sort((a,b) => b.day - a.day).forEach(c => {
+  Object.values(DB.cards).filter(c => c.learnedOn)
+      .sort((a,b) => b.day - a.day).forEach(c => {
     const rv = revCount(c.log, f), pr = pracCount(c.log, f);
     if(!rv && !pr) return;
     revT += rv; prT += pr;
@@ -2849,11 +2853,13 @@ function renderLog(){
   const openDays = Object.keys(DB.days);
   const openAll = openDays.length, openWk = openDays.filter(k => k >= mon).length;
 
+  /* 완료 · 복습 숫자는 목록과 같은 기준으로 셉니다 — 배운 것은 두 갈래 다 */
+  const learned = Object.values(DB.cards).filter(c => c.learnedOn);
   let doneAll = 0, doneWk = 0;
-  cards.forEach(c => c.log.forEach(l => {
+  learned.forEach(c => c.log.forEach(l => {
     if(l.m === 'new'){ doneAll++; if(l.d >= mon) doneWk++; }
   }));
-  const sum = (f, from) => cards.reduce((n, c) => n + f(c.log, from), 0);
+  const sum = (f, from) => learned.reduce((n, c) => n + f(c.log, from), 0);
   const revAll = sum(revCount), revWk = sum(revCount, mon);
 
   document.getElementById('logBody').innerHTML = `
