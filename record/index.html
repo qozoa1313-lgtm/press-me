@@ -412,6 +412,55 @@ textarea::placeholder,.search input::placeholder{color:var(--faint)}
   .sheet{animation:up .16s ease-out}
   @keyframes up{from{transform:translateY(12px);opacity:.6}to{transform:none;opacity:1}}
 }
+
+/* 시작하기 버튼 · 활동 고르는 새 창 */
+.startbig{height:60px;font-size:18px;border-radius:16px;margin-top:4px}
+.pickpage{position:fixed;inset:0;z-index:15;background:var(--bg);overflow:auto;overscroll-behavior:contain}
+.pkin{max-width:560px;margin:0 auto;padding:calc(10px + env(safe-area-inset-top)) 16px calc(40px + env(safe-area-inset-bottom))}
+.pkhd{display:flex;align-items:center;gap:4px;margin:4px 0 10px}
+.pkhd .hello{margin:0}
+.pkback{font-size:26px;flex:none}
+.pkhint{font-size:12px;color:var(--faint);text-align:center;margin-top:16px;line-height:1.6}
+/* 시작 직후 「취소」 */
+.undo{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translateX(-50%);width:calc(100% - 32px);max-width:528px;display:flex;align-items:center;gap:10px;background:var(--ink);color:var(--bg);border-radius:14px;padding:10px 10px 12px 16px;font-size:14px;z-index:25;overflow:hidden}
+.undo span{flex:1}
+.undo button{color:var(--bg);font-weight:700;padding:8px 14px;border-radius:10px;background:rgba(127,127,127,.28)}
+.undo i{position:absolute;left:0;bottom:0;height:3px;width:100%;background:var(--sage);transform-origin:left}
+
+/* 하루 동그라미 — 24시간 생활계획표 */
+.ring{padding:16px 16px 14px;margin:14px 0 10px}
+.ring .rhd{display:flex;justify-content:space-between;align-items:center}
+.ring .rhd h3{font-size:15px;font-weight:700}
+.ring .rfold{font-size:13px;font-weight:600;color:var(--sage-ink);padding:6px 2px}
+.ring .rchart{max-width:330px;margin:6px auto 0}
+.ring svg{width:100%;height:auto;display:block;overflow:visible}
+.ring svg text{font-family:inherit}
+.ring .rhit{cursor:pointer}
+.ring .rhit:hover{opacity:.82}
+.ring .rhr{cursor:pointer}
+.ring path.rhr{fill:transparent}
+.ring .rlive{animation:rblink 2s ease-in-out infinite}
+@keyframes rblink{50%{opacity:.45}}
+@media (prefers-reduced-motion: reduce){.ring .rlive{animation:none}}
+.ring .rleg{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;font-size:12px;color:var(--soft);margin-top:6px}
+.ring .rleg span{display:flex;align-items:center;gap:5px}
+.ring .rleg i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.ring .rmini{display:flex;align-items:center;gap:12px;margin-top:8px;font-size:14px;color:var(--soft);line-height:1.5}
+.ring .rmini svg{width:52px;height:52px;flex:none}
+.ring .rmini b{color:var(--ink);font-size:16px}
+.ring .rpan{margin-top:12px;background:var(--sunk);border-radius:14px;padding:14px}
+.ring .rpan .hint{font-size:13px;color:var(--soft);text-align:center;line-height:1.6;margin:0}
+.ring .rpan .dh{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:8px}
+.ring .rpan .dh b{font-size:16px}
+.ring .rpan .dh span{font-size:12px;color:var(--soft);text-align:right}
+.ring .ev{position:relative;padding:6px 0 6px 22px;font-size:14px;line-height:1.55}
+.ring .ev::before{content:"";position:absolute;left:5px;top:0;bottom:0;width:2px;background:var(--line)}
+.ring .ev:first-of-type::before{top:14px}
+.ring .ev:last-of-type::before{bottom:calc(100% - 14px)}
+.ring .ev > i{position:absolute;left:0;top:9px;width:12px;height:12px;border-radius:50%;background:var(--card);border:2px solid var(--c,var(--faint))}
+.ring .ev .tm{font-size:12px;color:var(--soft)}
+.ring .ev .bx{margin-top:4px;background:var(--card);border-radius:10px;padding:8px 10px;white-space:pre-wrap;word-break:break-word}
+.ring .ev .bx b{font-size:12px;color:var(--soft);font-weight:600;margin-right:6px}
 </style>
 </head>
 <body>
@@ -428,15 +477,28 @@ textarea::placeholder,.search input::placeholder{color:var(--faint)}
       <button class="x" id="firstNoteX" aria-label="안내 닫기">닫기</button>
     </div>
     <div id="homePick">
-      <h2 class="hello">오늘은 무엇을 해볼까요?</h2>
-      <div id="qStart"></div>
-      <div id="recentBox"></div>
-      <div class="seg gseg" id="groupSeg">
-        <button data-g="daily">일상</button>
-        <button data-g="levelup">레벨업</button>
+      <button class="btn primary wide startbig" id="homeStart">시작하기</button>
+    </div>
+    <!-- 시작하기 → 새 창: 활동을 누르면 바로 시작 -->
+    <div class="pickpage hidden" id="pickPage" role="dialog" aria-modal="true" aria-labelledby="pkTitle">
+      <div class="pkin">
+        <div class="pkhd"><button class="iconbtn pkback" id="pkBack" aria-label="닫기">‹</button><h2 class="hello" id="pkTitle">오늘은 무엇을 해볼까요?</h2></div>
+        <div id="qStart"></div>
+        <div id="recentBox"></div>
+        <div class="seg gseg" id="groupSeg">
+          <button data-g="daily">일상</button>
+          <button data-g="levelup">레벨업</button>
+        </div>
+        <div class="actgrid" id="actGrid"></div>
+        <div class="editbar"><button class="linkbtn" id="toManage">그룹 관리 ›</button><button class="linkbtn" id="editActs">목록 편집</button></div>
+        <!-- 예전 준비 화면에 있던 말풍선 고르기 — 시작 전에 고를 수 있게 여기로 옮김 -->
+        <div class="bubready" id="bubReady">
+          <div class="flab" style="margin:16px 2px 6px">말풍선 분위기<small>사진 위에 가끔 뜨는 한마디</small></div>
+          <div class="seg" data-bmood></div>
+          <label class="tgl" style="border-top:none;padding-bottom:0"><span>말풍선 자동 표시<small>사진을 고르지 않으면 나오지 않아요</small></span><input type="checkbox" data-bon></label>
+        </div>
+        <p class="pkhint">활동을 누르면 바로 시작돼요. 사진 고르는 창이 같이 열리고, 안 골라도 시간은 흘러요.</p>
       </div>
-      <div class="actgrid" id="actGrid"></div>
-      <div class="editbar"><button class="linkbtn" id="toManage">그룹 관리 ›</button><button class="linkbtn" id="editActs">목록 편집</button></div>
     </div>
     <section class="card timer hidden" id="homeTimer">
       <div class="grp" id="tGroup"></div>
@@ -453,11 +515,6 @@ textarea::placeholder,.search input::placeholder{color:var(--faint)}
         <button class="btn primary" id="tStop">오늘은 여기까지</button>
       </div>
       <div id="tReady" class="hidden">
-        <div class="bubready" id="bubReady">
-          <div class="flab" style="margin:16px 2px 6px">말풍선 분위기<small>사진 위에 가끔 뜨는 한마디</small></div>
-          <div class="seg" data-bmood></div>
-          <label class="tgl" style="border-top:none;padding-bottom:0"><span>말풍선 자동 표시<small>사진을 고르지 않으면 나오지 않아요</small></span><input type="checkbox" data-bon></label>
-        </div>
         <button class="btn primary wide" id="tGo" style="height:58px;font-size:17px;border-radius:16px;margin-top:18px">시작하기</button>
         <button class="linkbtn" id="tBack" style="margin-top:10px">‹ 다른 활동 고르기</button>
       </div>
@@ -486,6 +543,7 @@ textarea::placeholder,.search input::placeholder{color:var(--faint)}
       <button class="btn primary wide" id="dSave">그냥 마치기</button>
     </section>
     <div id="qEnd" class="hidden" style="margin-top:14px"></div>
+    <section class="card ring hidden" id="homeRing"></section>
     <div id="homeToday" style="margin-top:20px"></div>
     <div id="checkCard"></div>
   </main>
@@ -536,6 +594,7 @@ textarea::placeholder,.search input::placeholder{color:var(--faint)}
       <h2 id="dayTitle"></h2>
       <button class="btn primary sm" id="addBtn">＋ 기록</button>
     </div>
+    <section class="card ring hidden" id="dayRing"></section>
     <div id="daySess"></div>
     <div id="dayList"></div>
   </main>
@@ -671,6 +730,9 @@ textarea::placeholder,.search input::placeholder{color:var(--faint)}
     </section>
   </main>
 </div>
+
+<!-- 시작 직후 잠깐 나오는 취소 -->
+<div class="undo hidden" id="stUndo" role="status"><span id="stUndoTx"></span><button id="stUndoBtn">취소</button><i id="stUndoBar"></i></div>
 
 <nav class="tabs" aria-label="화면 이동">
   <div class="in">
@@ -1176,6 +1238,7 @@ function renderDay(){
   const n = recs.length + db.sessions.filter(s => s.date === sel).length;
   $('dayTitle').innerHTML = `${esc(fmtDay(sel))}${n ? `<span class="cnt">${n}개</span>` : ''}`;
   $('daySess').innerHTML = sess;
+  paintRing('dayRing', sel, false);
   $('dayList').innerHTML = recs.length
     ? recs.map(r => recCard(r, true)).join('')
     : sess ? '' : `<div class="empty">이 날의 기록이 없습니다.</div>`;
@@ -1591,8 +1654,10 @@ const activeMs = (t, now = Date.now()) => t.accMs + (t.segStart ? Math.max(0, no
 let ready = null;   // { act, group }
 function pickAct(act, group){
   if (readTimer()){ timer = readTimer(); syncWake(); renderAll(); toast('이미 진행 중인 활동이 있어요'); return; }
-  done = null; ready = { act, group };
-  renderAll(); scrollTo(0, 0);
+  /* 활동을 누르면 바로 시작 — 사진 고르는 창이 같이 열리고, 잠깐 「취소」가 보입니다 */
+  closePick();
+  startTimer(act, group);
+  if (timer){ $('tFile').click(); showUndo(); }
 }
 /* 「시작하기」를 누른 순간이 시작 시각입니다 */
 function startTimer(act, group){
@@ -2227,6 +2292,7 @@ function renderHome(){
     paintActs();
   }
   $('homeToday').innerHTML = sessHtml(today, '오늘 기록한 활동');
+  paintRing('homeRing', today, true);
   $('checkCard').innerHTML = mode === 'pick' && checkDue()
     ? `<section class="card ckcard"><h3>14일 사용 점검</h3>
         <p>이 앱이 실제로 나에게 도움이 되었는지 살펴볼까요? 시험이나 평가가 아니라, 앱을 쓰는 방법을 점검하는 짧은 질문이에요.</p>
@@ -2414,6 +2480,207 @@ for (const id of ['homeToday', 'daySess']){
     }
   });
 }
+
+/* ───── 시작하기 → 활동 고르는 새 창 → 누르면 바로 시작 · 잠깐 「취소」 ───── */
+function openPick(){ if (readTimer()) return; $('pickPage').classList.remove('hidden'); $('pickPage').scrollTop = 0; }
+function closePick(){ $('pickPage').classList.add('hidden'); }
+$('homeStart').onclick = openPick;
+$('pkBack').onclick = closePick;
+$('toManage').addEventListener('click', closePick);
+addEventListener('keydown', e => { if (e.key === 'Escape' && !$('pickPage').classList.contains('hidden') && !document.querySelector('.scrim:not(.hidden)')) closePick(); });
+
+/* 시작하고 7초 동안 「취소」 — 누르면 기록 없이 없던 일이 되고, 활동 고르는 창으로 돌아갑니다.
+   사진 고르는 창이 떠 있는 동안(앱이 가려진 동안)은 7초를 세지 않습니다 */
+var undoId = null, undoLeft = 0, undoLoop = null;
+const UNDO_MS = 7000;
+const paintUndo = () => { $('stUndoBar').style.transform = `scaleX(${Math.max(0, undoLeft / UNDO_MS)})`; };
+function showUndo(){
+  undoId = timer.id; undoLeft = UNDO_MS;
+  $('stUndoTx').textContent = `「${timer.name}」 시작했어요`;
+  $('stUndo').classList.remove('hidden'); paintUndo();
+  clearInterval(undoLoop);
+  undoLoop = setInterval(() => {
+    const t = readTimer();
+    if (!t || t.id !== undoId) return hideUndo();
+    if (document.hidden || !document.hasFocus()) return;
+    undoLeft -= 200; if (undoLeft <= 0) return hideUndo();
+    paintUndo();
+  }, 200);
+}
+function hideUndo(){ clearInterval(undoLoop); undoLoop = null; undoId = null; $('stUndo').classList.add('hidden'); }
+$('stUndoBtn').onclick = () => {
+  const t = readTimer() || timer, id = undoId;
+  hideUndo();
+  if (!t || t.id !== id) return;
+  timer = null; saveTimer(); syncWake(); clearImg(); closeFocus(); bubHide(true); bubSch = null;
+  renderAll(); scrollTo(0, 0);
+  toast('취소했어요. 기록은 남지 않았어요');
+  openPick();
+};
+
+/* ───── 하루 동그라미 — 24시간 생활계획표 ─────
+   타이머 기록을 읽기만 합니다(저장 · 백업과 상관없음). 손으로 쓴 기록은 시각이 없어 그리지 않아요.
+   바깥 숫자를 누르면 그 한 시간에 한 일, 색칠된 조각을 누르면 그 활동 전체가 아래에 나옵니다 */
+var ringOpen = false, ringSel = {};   // ringSel[칸 id] = { date, k:'hr'|'it', h, key }
+const RNS = 'http://www.w3.org/2000/svg', RDAY = 86400000, RHOUR = 3600000;
+function rEl(tag, at, parent){ const e = document.createElementNS(RNS, tag); for (const k in at) e.setAttribute(k, at[k]); if (parent) parent.appendChild(e); return e; }
+function rPt(r, deg){ const a = (deg - 90) * Math.PI / 180; return [160 + r * Math.cos(a), 160 + r * Math.sin(a)]; }
+function rBand(r0, r1, d0, d1, min = 0){
+  if (d1 - d0 < min) d1 = d0 + min;
+  if (d1 - d0 >= 359.9) d1 = d0 + 359.9;
+  const big = d1 - d0 > 180 ? 1 : 0, [a, b] = rPt(r1, d0), [c, d] = rPt(r1, d1), [e, f] = rPt(r0, d1), [g, h] = rPt(r0, d0);
+  return `M${a} ${b}A${r1} ${r1} 0 ${big} 1 ${c} ${d}L${e} ${f}A${r0} ${r0} 0 ${big} 0 ${g} ${h}Z`;
+}
+const rOvl = (a0, a1, b0, b1) => Math.max(0, Math.min(a1, b1) - Math.max(a0, b0));
+
+/* 그날의 타이머 기록 + (오늘이면) 지금 하는 것 */
+function ringItems(date){
+  const base = parseYmd(date).getTime();
+  const items = db.sessions.filter(s => s.date === date).sort((a, b) => a.start - b.start).map(s => {
+    const seg = segments(s);   // 쉰 구간이 안 맞는(손으로 고친) 기록은 시작~끝 한 덩어리
+    return { key:s.id, name:sName(s), gid:sGroupId(s), start:s.start, end:s.end, active:s.activeMs,
+      focus: seg && seg.length ? seg : [[s.start, s.end]], exact: !!(seg && seg.length),   // exact=false 면 시간대별 집중 분은 세지 않음
+      rests: seg ? (s.pauses || []).filter(p => p.end > p.start).sort((a, b) => a.start - b.start) : [],
+      memos: s.memos || [], mood: s.mood || [], notes: noteList(s), live:false };
+  });
+  const t = timer;
+  if (t && ymd(new Date(t.start)) === date){
+    const now = Date.now(), a = actOf(t.activityId);
+    const ps = (t.pauses || []).map(p => ({ start:p.start, end:p.end ?? now, reason:p.reason })).filter(p => p.end > p.start).sort((x, y) => x.start - y.start);
+    const focus = []; let cur = t.start;
+    for (const p of ps){ if (p.start > cur) focus.push([cur, p.start]); cur = Math.max(cur, p.end); }
+    if (now > cur) focus.push([cur, now]);
+    items.push({ key:'live', name:a ? a.name : t.name, gid:a ? a.groupId : (t.group || ''), start:t.start, end:now, active:activeMs(t, now),
+      focus, exact:true, rests:ps, memos:t.memos || [], mood:[], notes:[], live:true });
+  }
+  /* 기록 날짜와 시작 시각이 하루 넘게 어긋난 경우(날짜를 손으로 고침) — 하루 단위로 당겨서 그림 */
+  items.forEach(it => { it.off = Math.floor((it.start - base) / RDAY) * RDAY; });
+  return { base, items };
+}
+
+/* 활동 하나를 일어난 순서대로: 시작 → 🐰 메모 → ⏸ 쉼 → 끝 → 마친 뒤 기록 */
+function ringEvents(it, n){
+  const hs = P.hideStats(), ev = [];
+  ev.push({ t:it.start, h:`<span class="tm">${fmtHm(it.start)}</span><br>${n}. ${esc(it.name)} 시작` });
+  for (const m of it.memos) ev.push({ t:m.at, h:`<span class="tm">🐰 ${hs ? fmtHm(m.at) : esc(memoWhen(m))}</span>`
+    + (m.text ? `<div class="bx">${esc(m.text)}</div>` : '') + (m.check ? `<div class="bx"><b>검토할 내용</b>${esc(m.check)}</div>` : '') });
+  for (const p of it.rests){
+    if (p.end - p.start < 1000 && !p.reason) continue;
+    ev.push({ t:p.start, e:p.end, h:`<span class="tm">${fmtHm(p.start)} ~ ${fmtHm(p.end)}${hs ? '' : ` · ${fmtDur(p.end - p.start)}`}</span><br>⏸ 잠깐 쉼${p.reason ? ` · ${esc(p.reason)}` : ''}` });
+  }
+  if (it.live) ev.push({ t:it.end, h:`<span class="tm">지금</span><br>${esc(it.name)} 하는 중` });
+  else {
+    const rest = Math.max(0, it.end - it.start - it.active);
+    ev.push({ t:it.end, h:`<span class="tm">${fmtHm(it.end)}</span><br>${esc(it.name)} 끝${hs ? '' : ` · 집중 ${fmtDur(it.active)}${rest >= 60000 ? ` · 쉼 ${fmtDur(rest)}` : ''}`}` });
+    const after = [it.mood.map(moodText).join('  '), ...it.notes.map(x => `<b>${x.name}</b>${esc(x.v)}`)].filter(Boolean);
+    if (after.length) ev.push({ t:it.end, h:`<span class="tm">마친 뒤 기록</span><div class="bx">${after.join('\n')}</div>` });
+  }
+  return ev.sort((a, b) => a.t - b.t);
+}
+const ringEvHtml = (list, it) => list.map(e => `<div class="ev" style="--c:${gColor(it.gid)}"><i></i>${e.h}</div>`).join('');
+
+function paintRing(id, date, home){
+  const box = $(id), { base, items } = ringItems(date);
+  box.classList.toggle('hidden', !items.length);
+  if (!items.length){ box.innerHTML = ''; return; }
+  const hs = P.hideStats(), live = items.some(i => i.live);
+  if (home && !live) ringOpen = false;   // 다음 타이머는 다시 접힌 채로
+  const fold = home && live && !ringOpen;
+  const sum = hs ? `활동 ${items.length}개` : fmtDur(items.reduce((a, i) => a + i.active, 0));
+  const gids = [...new Set(items.map(i => i.gid))];
+  box.innerHTML = `<div class="rhd"><h3>${date === today ? '오늘 한 일' : '이날 한 일'}</h3>${home && live ? `<button class="rfold" data-rfold="1">${fold ? '펼치기 ⌄' : '접기 ⌃'}</button>` : ''}</div>`
+    + (fold ? `<div class="rmini"></div>`
+      : `<div class="rchart"></div><div class="rleg">${gids.map(g => `<span><i style="background:${gColor(g)}"></i>${esc(gName(g))}</span>`).join('')}<span><i style="background:var(--faint);opacity:.5"></i>쉼</span></div><div class="rpan"></div>`);
+  const deg = (it, t) => (t - base - it.off) / RDAY * 360, R0 = 96, R1 = 132;
+  const svg = rEl('svg', { viewBox:fold ? '20 20 280 280' : '-20 -20 360 360', role:'img', 'aria-label':`${fmtDay(date)} 한 일 24시간 동그라미` });
+  rEl('circle', { cx:160, cy:160, r:(R0 + R1) / 2, fill:'none', stroke:'var(--sunk)', 'stroke-width':R1 - R0 }, svg);
+  if (!fold) for (let h = 0; h < 24; h++){
+    rEl('path', { class:'rhr', 'data-h':h, d:rBand(R0, R1 + 34, h * 15, h * 15 + 15) }, svg);
+    const [x1, y1] = rPt(R1 + 3, h * 15), [x2, y2] = rPt(R1 + (h % 6 ? 7 : 11), h * 15);
+    rEl('line', { x1, y1, x2, y2, stroke:'var(--faint)', 'stroke-width':h % 6 ? 1 : 1.6, 'pointer-events':'none' }, svg);
+    const [tx, ty] = rPt(R1 + 22, h * 15 + 7.5);
+    rEl('text', { class:'rhr', 'data-h':h, x:tx, y:ty + 4, 'text-anchor':'middle', 'font-size':h % 3 ? 10 : 12, fill:h % 3 ? 'var(--faint)' : 'var(--soft)' }, svg).textContent = h;
+  }
+  items.forEach((it, i) => {
+    const g = rEl('g', { class:(fold ? '' : 'rhit') + (it.live ? ' rlive' : '') }, svg);
+    if (!fold) g.setAttribute('data-it', i);
+    it.focus.forEach(([x, y]) => rEl('path', { d:rBand(R0, R1, deg(it, x), deg(it, y), .8), fill:gColor(it.gid), stroke:'var(--card)', 'stroke-width':1 }, g));
+    it.rests.forEach(p => rEl('path', { d:rBand(R0, R1, deg(it, p.start), deg(it, p.end)), fill:'var(--faint)', 'fill-opacity':.55, stroke:'var(--card)', 'stroke-width':1 }, g));
+    if (it.live){
+      const [x1, y1] = rPt(R0 - 4, deg(it, it.end)), [x2, y2] = rPt(R1 + 4, deg(it, it.end));
+      rEl('line', { x1, y1, x2, y2, stroke:'var(--ink)', 'stroke-width':2, 'stroke-linecap':'round', 'pointer-events':'none' }, svg);
+    }
+    if (fold) return;
+    const [nx, ny] = rPt(R0 - 14, (deg(it, it.start) + deg(it, it.end)) / 2);
+    rEl('circle', { cx:nx, cy:ny, r:9, fill:gColor(it.gid), 'pointer-events':'none' }, svg);
+    rEl('text', { x:nx, y:ny + 4, 'text-anchor':'middle', 'font-size':11, 'font-weight':700, fill:'#fff', 'pointer-events':'none' }, svg).textContent = i + 1;
+  });
+  if (fold){
+    box.querySelector('.rmini').innerHTML = `<span>${hs ? `<b>${sum}</b>` : `<b>${sum}</b> 집중`}<br>지금 하는 것까지 함께 그려져요</span>`;
+    box.querySelector('.rmini').prepend(svg);
+    return;
+  }
+  const c1 = rEl('text', { x:160, y:hs ? 166 : 154, 'text-anchor':'middle', 'font-size':hs ? 18 : 13, 'font-weight':hs ? 700 : 400, fill:hs ? 'var(--ink)' : 'var(--soft)' }, svg);
+  c1.textContent = hs ? sum : (date === today ? '오늘 집중' : '이날 집중');
+  if (!hs) rEl('text', { x:160, y:180, 'text-anchor':'middle', 'font-size':22, 'font-weight':700, fill:'var(--ink)' }, svg).textContent = sum;
+  box.querySelector('.rchart').appendChild(svg);
+  /* 고른 것 다시 보여주기 — 1분마다 다시 그려도 그대로 */
+  const s = ringSel[id];
+  if (s && s.date === date){
+    if (s.k === 'hr') return ringShow(id, date, s);
+    const i = items.findIndex(x => x.key === s.key); if (i >= 0) return ringShow(id, date, s);
+  }
+  ringSel[id] = null;
+  box.querySelector('.rpan').innerHTML = '<p class="hint">바깥 숫자(시간)를 누르면 그 한 시간에 한 일이,<br>색칠된 조각을 누르면 그 활동 전체가 나와요.</p>';
+}
+function ringShow(id, date, s){
+  const box = $(id), { base, items } = ringItems(date), hs = P.hideStats();
+  ringSel[id] = { ...s, date };
+  const svg = box.querySelector('.rchart svg'); if (!svg) return;
+  svg.querySelectorAll('.rsel').forEach(e => e.remove());
+  svg.querySelectorAll('text.rhr').forEach(t => t.setAttribute('font-weight', s.k === 'hr' && +t.getAttribute('data-h') === s.h ? 700 : 400));
+  let d0, d1, head, body = '';
+  if (s.k === 'hr'){
+    d0 = s.h * 15; d1 = d0 + 15;
+    let ms = 0;
+    items.forEach((it, i) => {
+      for (const off of [it.off, it.off + RDAY]){   // 자정을 넘긴 활동은 다음 날 0시대에도 걸쳐 있음
+        const w0 = base + off + s.h * RHOUR, w1 = w0 + RHOUR;
+        if (it.end <= w0 || it.start >= w1) continue;
+        if (it.exact) ms += it.focus.reduce((a, [x, y]) => a + rOvl(x, y, w0, w1), 0);
+        const ev = ringEvents(it, i + 1).filter(e => (e.t >= w0 && e.t < w1) || (e.e && e.t < w1 && e.e > w0));
+        if (it.start < w0) body += `<div class="ev" style="--c:${gColor(it.gid)}"><i></i><span class="tm">${fmtHm(it.start)}부터 이어서</span><br>${i + 1}. ${esc(it.name)} 하는 중</div>`;
+        body += ringEvHtml(ev, it);
+      }
+    });
+    head = `<b>${s.h}시 ~ ${s.h + 1}시</b><span>${ms >= 1000 && !hs ? '이 시간 집중 ' + fmtDur(ms) : ''}</span>`;
+    if (!body) body = '<p class="hint">이 시간에는 기록이 없어요.</p>';
+  } else {
+    const i = items.findIndex(x => x.key === s.key), it = items[i];
+    if (!it) return;
+    d0 = (it.start - base - it.off) / RDAY * 360; d1 = (it.end - base - it.off) / RDAY * 360;
+    head = `<b>${i + 1}. ${esc(it.name)}</b><span>${fmtHm(it.start)} ~ ${it.live ? '지금' : fmtHm(it.end)}</span>`;
+    body = ringEvHtml(ringEvents(it, i + 1), it);
+  }
+  rEl('path', { class:'rsel', d:rBand(92, 136, d0, d1, .8), fill:'var(--ink)', 'fill-opacity':.07, stroke:'var(--ink)', 'stroke-width':1.5, 'pointer-events':'none' }, svg);
+  box.querySelector('.rpan').innerHTML = `<div class="dh">${head}</div>${body}`;
+}
+for (const [id, home] of [['homeRing', true], ['dayRing', false]]){
+  $(id).addEventListener('click', e => {
+    const date = home ? today : sel;
+    if (e.target.closest('[data-rfold]')){ ringOpen = !ringOpen; return paintRing(id, date, home); }
+    const g = e.target.closest('[data-it]');
+    if (g){ const it = ringItems(date).items[+g.getAttribute('data-it')]; if (it) ringShow(id, date, { k:'it', key:it.key }); return; }
+    const h = e.target.closest('.rhr');
+    if (h) ringShow(id, date, { k:'hr', h:+h.getAttribute('data-h') });
+  });
+}
+/* 진행 중이면 1분마다 지금 하는 조각을 늘려 그림 */
+setInterval(() => {
+  if (!timer || document.hidden) return;
+  if (tab === 'home') paintRing('homeRing', today, true);
+  if (tab === 'cal' && sel === today) paintRing('dayRing', sel, false);
+}, 60000);
 
 async function deleteSess(id){
   const s = db.sessions.find(x => x.id === id); if (!s) return false;
