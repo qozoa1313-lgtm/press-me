@@ -210,6 +210,9 @@ h2.sec{font-size:13px;color:var(--soft);font-weight:700;margin:26px 0 10px;lette
 .bd{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;align-items:baseline}
 .bd b{font-weight:700}
 .bd span{color:var(--soft);font-size:14px}
+/* 「왜 I 인지 · 왜 I'm 인지」 — 쪼개기 맨 아래에 한 줄로 깝니다 */
+.bd .why{grid-column:1 / -1;margin-top:5px;padding-top:9px;font-size:13.5px;
+  color:var(--accent);border-top:1px dashed var(--line);line-height:1.65}
 .when{background:var(--band);border-radius:14px;padding:14px 16px;font-size:14.5px;line-height:1.65}
 .sim{font-size:14.5px;color:var(--soft);line-height:1.9}
 .rd{font-size:16px;letter-spacing:.02em;background:var(--band);border-radius:12px;padding:12px 14px;margin:0}
@@ -1410,7 +1413,9 @@ function meanHTML(s, open){
       <div class="in2">
         <p class="nuance" style="margin:0">${s.ko2} ${s.when}</p>
         <div class="sec2" style="margin-top:12px"><div class="bd">${
-          s.bd.map(p=>`<b>${p[0]}</b><span>${p[1]}</span>`).join('')}</div></div>
+          s.bd.map(p => p[0] === '왜'
+            ? `<span class="why">${p[1]}</span>`
+            : `<b>${p[0]}</b><span>${p[1]}</span>`).join('')}</div></div>
       </div>
     </details>`;
 }
