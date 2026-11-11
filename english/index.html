@@ -210,9 +210,14 @@ h2.sec{font-size:13px;color:var(--soft);font-weight:700;margin:26px 0 10px;lette
 .bd{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;align-items:baseline}
 .bd b{font-weight:700}
 .bd span{color:var(--soft);font-size:14px}
-/* 「왜 I 인지 · 왜 I'm 인지」 — 쪼개기 맨 아래에 한 줄로 깝니다 */
-.bd .why{grid-column:1 / -1;margin-top:5px;padding-top:9px;font-size:13.5px;
-  color:var(--accent);border-top:1px dashed var(--line);line-height:1.65}
+/* I / I'm 짝 문장 — 쪼개기 맨 아래에 두 줄로 깝니다. 색이 들어온 줄이 지금 문장입니다 */
+.bd .pair{grid-column:1 / -1;margin-top:6px;padding-top:10px;
+  border-top:1px dashed var(--line);
+  display:grid;grid-template-columns:auto 1fr;gap:5px 10px;align-items:baseline}
+.bd .pair .pe{font-size:14px;font-weight:700;color:var(--soft)}
+.bd .pair .pk{font-size:13.5px;color:var(--soft)}
+.bd .pair .now{color:var(--accent)}
+.bd .pair .pe.now{font-weight:800}
 .when{background:var(--band);border-radius:14px;padding:14px 16px;font-size:14.5px;line-height:1.65}
 .sim{font-size:14.5px;color:var(--soft);line-height:1.9}
 .rd{font-size:16px;letter-spacing:.02em;background:var(--band);border-radius:12px;padding:12px 14px;margin:0}
@@ -1407,15 +1412,28 @@ function renderToday(){
   save();
 }
 
+/* 쪼개기 한 칸 — 「짝」 항목만 두 줄 표로 그리고 나머지는 낱말·뜻 한 줄입니다.
+   * 가 붙은 쪽이 지금 문장이라 색이 들어옵니다 */
+function bdHTML(s){
+  return (s.bd || []).map(p => {
+    if(p[0] !== '짝') return `<b>${p[0]}</b><span>${p[1]}</span>`;
+    const a = p[1].split('|');
+    let h = '<div class="pair">';
+    for(let i = 0; i < a.length; i += 2){
+      const now = a[i].charAt(0) === '*';
+      h += `<span class="pe${now ? ' now' : ''}">${now ? a[i].slice(1) : a[i]}</span>`
+         + `<span class="pk${now ? ' now' : ''}">${a[i + 1] || ''}</span>`;
+    }
+    return h + '</div>';
+  }).join('');
+}
+
 /* 뜻 칸 — 설명과 단어 쪼개기를 한 칸에. 문장함 · 학습하기 · 복습이 같이 씁니다 */
 function meanHTML(s, open){
   return `<details class="more"${open ? ' open' : ''}><summary>이런 뜻이에요</summary>
       <div class="in2">
         <p class="nuance" style="margin:0">${s.ko2} ${s.when}</p>
-        <div class="sec2" style="margin-top:12px"><div class="bd">${
-          s.bd.map(p => p[0] === '왜'
-            ? `<span class="why">${p[1]}</span>`
-            : `<b>${p[0]}</b><span>${p[1]}</span>`).join('')}</div></div>
+        <div class="sec2" style="margin-top:12px"><div class="bd">${bdHTML(s)}</div></div>
       </div>
     </details>`;
 }
@@ -1607,7 +1625,7 @@ function learnHTML(s, done){
     <p class="tryn" id="lrnTry"></p>
     </div>
     <p class="nuance">${s.ko2} ${s.when}</p>
-    <div class="sec2"><div class="bd">${s.bd.map(x => `<b>${x[0]}</b><span>${x[1]}</span>`).join('')}</div></div>
+    <div class="sec2"><div class="bd">${bdHTML(s)}</div></div>
     ${swapHTML(s)}
     <details class="more"><summary>더 알고 싶어요</summary>
       <div class="in2">
