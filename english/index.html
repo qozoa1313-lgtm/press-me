@@ -594,6 +594,7 @@ nav button.dim{opacity:.32}
       <button class="qm" id="revQ">?</button>
       <span class="hdr">
         <button class="chip on" id="revLangBtn">한국어 모드</button>
+        <button class="chip" id="revRd">발음</button>
         <span class="revcnt" id="revCnt"></span>
       </span>
     </div>
@@ -2291,6 +2292,14 @@ function revTabs(){
   </div>`;
 }
 function wireRevTabs(){
+  /* 발음 보기 — 문장함과 같은 단추입니다. 발음 줄은 「답 보기」 뒤에만 나옵니다 */
+  const rrd = document.getElementById('revRd');
+  if(rrd){
+    const rsync = () => rrd.classList.toggle('on', document.body.classList.contains('showrd'));
+    rsync();
+    rrd.onclick = () => { document.body.classList.toggle('showrd'); rsync(); };
+  }
+
   /* 한국어 ↔ 영어 — 보던 카드와 차례는 그대로, 보는 쪽만 뒤집습니다 */
   const lb = document.getElementById('revLangBtn');
   if(lb){
