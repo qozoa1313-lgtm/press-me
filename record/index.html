@@ -62,6 +62,7 @@ input,textarea{font:inherit;color:inherit}
 .calhd{display:flex;align-items:center;justify-content:space-between;padding:0 4px 10px}
 .calhd .ym{font-size:17px;font-weight:700}
 .calhd .nav{display:flex;gap:4px;align-items:center}
+.cal.fold .day.wkoff, .cal.fold .legend{display:none}   /* 접으면 고른 날이 있는 한 주만 */
 .iconbtn{width:36px;height:36px;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;color:var(--soft);font-size:18px}
 .iconbtn:hover{background:var(--sunk)}
 .pill{font-size:13px;padding:6px 12px;border-radius:999px;border:1px solid var(--line);color:var(--soft)}
@@ -580,6 +581,7 @@ textarea::placeholder,.search input::placeholder{color:var(--faint)}
       <div class="calhd">
         <div class="ym" id="ym"></div>
         <div class="nav">
+          <button class="pill" id="calFold">접기 ⌃</button>
           <button class="pill" id="todayBtn">오늘</button>
           <button class="iconbtn" id="prevM" aria-label="이전 달">‹</button>
           <button class="iconbtn" id="nextM" aria-label="다음 달">›</button>
@@ -1199,6 +1201,11 @@ function renderCal(){
   const lastDate = new Date(view.y, view.m + 1, 0).getDate();
   const weeks = Math.ceil((first.getDay() + lastDate) / 7);
   let h = '';
+  const fold = prefs.calFold === true, selRow = Math.floor((parseYmd(sel) - start) / 864e5 + .5) / 7 | 0;
+  document.querySelector('#v-cal .cal').classList.toggle('fold', fold);
+  $('calFold').textContent = fold ? '펼치기 ⌄' : '접기 ⌃';
+  $('prevM').setAttribute('aria-label', fold ? '이전 주' : '이전 달');
+  $('nextM').setAttribute('aria-label', fold ? '다음 주' : '다음 달');
   for (let i = 0; i < weeks * 7; i++){
     const d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
     const k = ymd(d);
@@ -1208,7 +1215,7 @@ function renderCal(){
     const cls = ['day',
       d.getMonth() !== view.m && 'out',
       d.getDay() === 0 && 'sun', d.getDay() === 6 && 'sat',
-      k === today && 'today', k === sel && 'sel'].filter(Boolean).join(' ');
+      k === today && 'today', k === sel && 'sel', (i / 7 | 0) !== selRow && 'wkoff'].filter(Boolean).join(' ');
     const label = `${fmtDay(k)}${recs.length ? `, 일기 ${recs.length}개` : ''}${nSess ? `, 타이머 기록 ${nSess}개` : ''}`;
     h += `<button class="${cls}" data-d="${k}" aria-label="${label}"><span class="n">${d.getDate()}</span>`
       + `<span class="dots">${gs.map(id => `<i style="background:${gColor(id)}"></i>`).join('')}</span></button>`;
@@ -1252,7 +1259,19 @@ $('days').addEventListener('click', e => {
   if (d.getMonth() !== view.m || d.getFullYear() !== view.y) view = { y:d.getFullYear(), m:d.getMonth() };
   renderCal();
 });
-const moveMonth = n => { const d = new Date(view.y, view.m + n, 1); view = { y:d.getFullYear(), m:d.getMonth() }; renderCal(); };
+const moveMonth = n => {
+  if (prefs.calFold === true){   // 접혀 있으면 한 주씩
+    const s = parseYmd(sel); s.setDate(s.getDate() + n * 7); sel = ymd(s);
+    view = { y:s.getFullYear(), m:s.getMonth() }; return renderCal();
+  }
+  const d = new Date(view.y, view.m + n, 1); view = { y:d.getFullYear(), m:d.getMonth() }; renderCal();
+};
+$('calFold').onclick = () => {
+  prefs.calFold = !(prefs.calFold === true); savePrefs();
+  const d = parseYmd(sel);   // 접을 때 고른 날이 지금 달에 없으면 그 달로
+  if (prefs.calFold) view = { y:d.getFullYear(), m:d.getMonth() };
+  renderCal();
+};
 $('prevM').onclick = () => moveMonth(-1);
 $('nextM').onclick = () => moveMonth(1);
 $('todayBtn').onclick = () => { sel = today; view = { y:new Date().getFullYear(), m:new Date().getMonth() }; renderCal(); };
@@ -2561,12 +2580,12 @@ function ringItems(date){
 /* 활동 하나를 일어난 순서대로: 시작 → 🐰 메모 → ⏸ 쉼 → 끝 → 마친 뒤 기록 */
 function ringEvents(it, n){
   const hs = P.hideStats(), ev = [];
-  ev.push({ t:it.start, h:`<span class="tm">${fmtHm(it.start)}</span><br>${n}. ${esc(it.name)} 시작` });
+  ev.push({ t:it.start, h:`<span class="tm">${fmtHm(it.start)}</span><br>${esc(it.name)} 시작` });
   for (const m of it.memos) ev.push({ t:m.at, h:`<span class="tm">🐰 ${hs ? fmtHm(m.at) : esc(memoWhen(m))}</span>`
     + (m.text ? `<div class="bx">${esc(m.text)}</div>` : '') + (m.check ? `<div class="bx"><b>검토할 내용</b>${esc(m.check)}</div>` : '') });
   for (const p of it.rests){
     if (p.end - p.start < 1000 && !p.reason) continue;
-    ev.push({ t:p.start, e:p.end, h:`<span class="tm">${fmtHm(p.start)} ~ ${fmtHm(p.end)}${hs ? '' : ` · ${fmtDur(p.end - p.start)}`}</span><br>⏸ 잠깐 쉼${p.reason ? ` · ${esc(p.reason)}` : ''}` });
+    ev.push({ t:p.start, e:p.end, h:`<span class="tm">${fmtHm(p.start)} ~ ${fmtHm(p.end)}${hs ? '' : ` · ${fmtDur(p.end - p.start)}`}</span><br>⏸ 휴식${p.reason ? ` ${esc(p.reason)}` : ''}` });
   }
   if (it.live) ev.push({ t:it.end, h:`<span class="tm">지금</span><br>${esc(it.name)} 하는 중` });
   else {
@@ -2581,8 +2600,7 @@ const ringEvHtml = (list, it) => list.map(e => `<div class="ev" style="--c:${gCo
 
 function paintRing(id, date, home){
   const box = $(id), { base, items } = ringItems(date);
-  box.classList.toggle('hidden', !items.length);
-  if (!items.length){ box.innerHTML = ''; return; }
+  box.classList.remove('hidden');   // 기록이 없어도 빈 동그라미는 늘 보임
   const hs = P.hideStats(), live = items.some(i => i.live);
   if (home && !live) ringOpen = false;   // 다음 타이머는 다시 접힌 채로
   const fold = home && live && !ringOpen;
@@ -2620,6 +2638,13 @@ function paintRing(id, date, home){
     box.querySelector('.rmini').prepend(svg);
     return;
   }
+  if (!items.length){
+    rEl('text', { x:160, y:165, 'text-anchor':'middle', 'font-size':14, fill:'var(--soft)' }, svg).textContent = '아직 기록이 없어요';
+    box.querySelector('.rchart').appendChild(svg);
+    box.querySelector('.rleg').remove();
+    box.querySelector('.rpan').innerHTML = `<p class="hint">${date === today ? '활동을 시작하면' : '타이머로 잰 기록이 있으면'} 여기에 시간대별로 그려져요.</p>`;
+    ringSel[id] = null; return;
+  }
   const c1 = rEl('text', { x:160, y:hs ? 166 : 154, 'text-anchor':'middle', 'font-size':hs ? 18 : 13, 'font-weight':hs ? 700 : 400, fill:hs ? 'var(--ink)' : 'var(--soft)' }, svg);
   c1.textContent = hs ? sum : (date === today ? '오늘 집중' : '이날 집중');
   if (!hs) rEl('text', { x:160, y:180, 'text-anchor':'middle', 'font-size':22, 'font-weight':700, fill:'var(--ink)' }, svg).textContent = sum;
@@ -2649,7 +2674,7 @@ function ringShow(id, date, s){
         if (it.end <= w0 || it.start >= w1) continue;
         if (it.exact) ms += it.focus.reduce((a, [x, y]) => a + rOvl(x, y, w0, w1), 0);
         const ev = ringEvents(it, i + 1).filter(e => (e.t >= w0 && e.t < w1) || (e.e && e.t < w1 && e.e > w0));
-        if (it.start < w0) body += `<div class="ev" style="--c:${gColor(it.gid)}"><i></i><span class="tm">${fmtHm(it.start)}부터 이어서</span><br>${i + 1}. ${esc(it.name)} 하는 중</div>`;
+        if (it.start < w0) body += `<div class="ev" style="--c:${gColor(it.gid)}"><i></i><span class="tm">${fmtHm(it.start)}부터 이어서</span><br>${esc(it.name)} 하는 중</div>`;
         body += ringEvHtml(ev, it);
       }
     });
