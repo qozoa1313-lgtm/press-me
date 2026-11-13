@@ -404,6 +404,13 @@ select,input[type=text],input[type=time]{
 .swapo .pill b{font-weight:inherit}
 .swapo .pill span{font-size:11px;color:var(--soft);font-weight:400}
 .swapo .pill.on span{color:rgba(255,255,255,.85)}
+/* 문장 만들기 — 고른 알약 표시 · 아직 못 들려줄 때의 흐린 귀 단추 */
+.swapo .pill.bad{opacity:.4;text-decoration:line-through}
+.rnd.off{opacity:.3;pointer-events:none}
+.mkq{font-size:13px;color:var(--soft);margin:0 0 12px;line-height:1.6}
+.mkq b{display:block;font-size:19px;color:var(--ink);font-weight:800;margin-top:3px}
+.mkwhy{margin-top:16px}
+.mkwhy .qa{margin-top:9px}
 .lrn .nuance{margin-top:18px}
 /* 오늘 탭 맨 아래 — 따뜻한 한 줄 */
 .warm{text-align:center;margin:18px 0 4px;color:var(--soft);line-height:1.7}
@@ -1572,7 +1579,7 @@ function learnCard(){
   if(d.newDone && d.newCard && DB.cards[d.newCard]) return byDay(DB.cards[d.newCard].day);
   return newToday();
 }
-/* 내 문장으로 바꿔보기 — 틀이 있는 문장에만 칸이 생깁니다 */
+/* 문장 만들기 — 틀이 있는 문장에만 칸이 생깁니다 */
 /* 바꿔보기 발음 — 아직 안 골랐으면 가운데를 비워 둡니다 */
 function swapRd(pat, rd){
   return [pat.rdb, rd || '○○○', pat.rda].filter(Boolean).join(' ');
@@ -1581,7 +1588,7 @@ function swapHTML(s){
   const pat = (typeof PATTERNS !== 'undefined') && PATTERNS[s.day];
   if(!pat) return '';
   return `
-    <details class="more" data-pat="${s.day}"><summary>내 문장으로 바꿔보기</summary>
+    <details class="more" data-pat="${s.day}"><summary>문장 만들기</summary>
       <div class="in2">
         ${pat.q ? `<p class="qa">${pat.q}</p>` : ''}
         <div class="swapline">
@@ -1951,6 +1958,7 @@ const esc = s => s.replace(/"/g,'&quot;');
 let revMode = 'due';  /* 'due' 오늘 복습 · 'all' 전체 복습 */
 let revLang = 'ko';   /* 'ko' 뜻 보고 영어 떠올리기 · 'en' 영문 보고 뜻 떠올리기 */
 let freeQ = null;     /* 전체 복습 판 — 기록에 안 남기고, 앱을 끄면 사라집니다 */
+let makeQ = null;     /* 문장 만들기 판 — 지금 낸 문제 하나. 기록에 안 남습니다 */
 let freeTimer = null;
 const FREE_MIN = { mid:10, no:3 };   /* △ 10분 뒤 · ✕ 3분 뒤 */
 
@@ -2289,6 +2297,9 @@ function revTabs(){
   return `<div class="rmode">
     <button class="chip${revMode === 'due' ? ' on' : ''}" data-rmode="due">오늘 복습</button>
     <button class="chip${revMode === 'all' ? ' on' : ''}" data-rmode="all">전체 복습</button>
+    ${appMode === 'daily'
+      ? `<button class="chip${revMode === 'make' ? ' on' : ''}" data-rmode="make">문장 만들기</button>`
+      : ''}
   </div>`;
 }
 function wireRevTabs(){
@@ -2321,6 +2332,79 @@ function wireRevTabs(){
     renderRev();
   });
 }
+/* ── 문장 만들기 ── 배운 문장의 한 칸을 골라 채웁니다. 기록에 안 남습니다 */
+/* 틀이 있고 이미 배운 문장만 — 영상 문장에는 틀이 없습니다 */
+function makeList(){
+  return myCards().filter(c => c.learnedOn && !c.vid
+    && typeof PATTERNS !== 'undefined' && PATTERNS[c.day]);
+}
+/* 문제 한 장 — 문장 하나와 정답 하나를 뽑고 알약 차례를 섞습니다 */
+function makePick(){
+  const list = makeList();
+  if(!list.length) return null;
+  const c = list[Math.floor(Math.random() * list.length)];
+  const pat = PATTERNS[c.day];
+  return { day:c.day,
+           oi:Math.floor(Math.random() * pat.opts.length),
+           order:shuffle(pat.opts.map((o, i) => i)),
+           tries:[] };
+}
+function makeHTML(){
+  const pat = PATTERNS[makeQ.day];
+  const ans = pat.opts[makeQ.oi];
+  const got = makeQ.tries.includes(makeQ.oi);     /* 정답을 눌렀나 */
+  const full = (pat.before + ans[0] + pat.after).trim();
+  return `
+  <div class="card">
+    <span class="badge">DAY ${makeQ.day}</span>
+    <p class="mkq">이렇게 말하고 싶어요<b>${ans[1]}</b></p>
+    <div class="swapline">
+      <div class="swapbox">
+        <p class="swapen">${pat.before}<u>${
+          got ? ans[0] : '&nbsp;&nbsp;&nbsp;&nbsp;'}</u>${pat.after}</p>
+        <p class="rdline swaprd">${swapRd(pat, got ? ans[2] : null)}</p>
+      </div>
+      <button class="rnd${got ? '' : ' off'}"${
+        got ? ` data-speak="${esc(full)}"` : ''} title="들어보기">${ICO.ear}</button>
+    </div>
+    <div class="swapo">${makeQ.order.map(i => {
+      const o = pat.opts[i];
+      const cls = (i === makeQ.oi && got) ? ' on'
+                : makeQ.tries.includes(i) ? ' bad' : '';
+      return `<button class="pill${cls}" data-mk="${i}"><b>${o[0]}</b><span>${o[1]}</span></button>`;
+    }).join('')}</div>
+    ${pat.q ? `<details class="mkwhy"><summary>왜 이렇게 쓰나요</summary>
+      <p class="qa">${pat.q}</p></details>` : ''}
+    ${got ? `<button class="btn ghost" id="mkNext" style="margin-top:16px">다음 문장</button>` : ''}
+  </div>`;
+}
+function wireMake(){
+  document.querySelectorAll('#revBody [data-mk]').forEach(b => b.onclick = () => {
+    const i = +b.dataset.mk;
+    if(makeQ.tries.includes(i)) return;          /* 같은 것을 두 번 세지 않습니다 */
+    makeQ.tries.push(i);
+    renderRev();
+  });
+  const nx = document.getElementById('mkNext');
+  if(nx) nx.onclick = () => { makeQ = makePick(); renderRev(); };
+  document.querySelectorAll('#revBody [data-speak]')
+    .forEach(x => x.onclick = () => speak(x.dataset.speak));
+}
+function renderMake(body){
+  clearTimeout(freeTimer);
+  const cnt = document.getElementById('revCnt');
+  if(cnt) cnt.innerHTML = '';
+  if(!makeQ || !(typeof PATTERNS !== 'undefined' && PATTERNS[makeQ.day])) makeQ = makePick();
+  body.innerHTML = revTabs() + (makeQ ? makeHTML()
+    : `<p class="lead" style="text-align:center;padding:50px 0 10px">
+        ${grow(3, 44)}<br><br>아직 배운 문장이 없어요.<br>
+        <span style="font-size:13px">하루 한 문장을 ✓ 하면 여기에 나옵니다.</span></p>`);
+  wireRevTabs();
+  wireMake();
+  const rq = document.getElementById('revQ');
+  if(rq) rq.onclick = () => openSheet(revHelp());
+}
+
 /* 전체 복습 — 배운 문장을 전부, 기록은 안 남기고 */
 function renderFree(body){
   if(!freeQ) freeStart(true);
@@ -2371,6 +2455,7 @@ function renderRev(){
   sessSave();
   const t = todayStr();
   if(!DB.days[t]) DB.days[t] = { opened:true };
+  if(revMode === 'make') return renderMake(body);
   if(revMode === 'all') return renderFree(body);
   clearTimeout(freeTimer);
   const q = revQueue();
@@ -2425,6 +2510,11 @@ function revHelp(){
     <div class="li one"><b>영어</b><span>영문을 보고 뜻을 떠올립니다</span></div>
     <p class="lead" style="margin-top:10px">한 문장을 <b>하루에 두 번</b> 봅니다.
       복습 횟수와 다음 복습일은 <b>한국어 쪽만</b> 올라갑니다.</p>
+
+    <h3 style="margin-top:18px">문장 만들기</h3>
+    <p class="lead">배운 문장의 한 칸을 바꿔서 <b>내 이야기</b>로 만듭니다.
+      뜻을 보고 알맞은 말을 고르세요. <b>기록에 안 남습니다.</b><br>
+      맞히면 귀 단추로 들어볼 수 있고, 아래 <b>왜 이렇게 쓰나요</b>를 펴면 설명이 나옵니다.</p>
 
     <h3 style="margin-top:18px">전체 복습</h3>
     <p class="lead">배운 문장을 전부 한 바퀴. <b>기록에 안 남습니다.</b><br>
@@ -3391,7 +3481,7 @@ wireNav();
 document.querySelectorAll('#gate [data-go]').forEach(b =>
   b.onclick = () => goMode(b.dataset.go));
 /* ? 버튼 — 어느 창에 있든 그 줄의 설명만 폈다 접었다 합니다 */
-/* 내 문장으로 바꿔보기 — 학습 창과 문장함 어디서든 같게 (기록에는 남지 않습니다) */
+/* 문장 만들기 — 학습 창과 문장함 어디서든 같게 (기록에는 남지 않습니다) */
 /* 고르는 창에서 누른 곳으로 엽니다 */
 document.addEventListener('click', e => {
   const u = e.target.closest && e.target.closest('[data-url]');
