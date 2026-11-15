@@ -495,6 +495,7 @@ body.showrd .warm .rdline{display:block}
 }
 .hintline{margin-top:12px;font-size:19px;font-weight:700;letter-spacing:.06em}
 .hintline .dim{color:#CFC6B6}
+.hintline .got{color:var(--okink)}
 .rnd.key.on{outline:3px solid var(--line)}
 .typebox{margin-top:14px;display:none}
 .typebox.show{display:block}
@@ -1491,11 +1492,18 @@ function closeType(){
   document.getElementById('typeModal').classList.add('hide');
   typeCtx = null;
 }
-/* 3번 틀릴 때마다 글자를 한 자씩 열어줍니다 */
-function hintHTML(en, key){
+/* 힌트 — 맞힌 낱말은 그대로 보여주고, 못 맞힌 낱말만 가립니다.
+   못 맞힌 낱말은 3번 틀릴 때마다 글자를 한 자씩 열어줍니다.
+   r 은 방금 채점한 결과입니다. 창을 처음 열 때는 없습니다 */
+function hintHTML(en, key, r){
   const n = Math.floor((typeTries[key] || 0) / 3);
-  if(n <= 0) return '';
-  const words = en.split(/\s+/).map(w => {
+  const ws = en.split(/\s+/);
+  /* 낱말 수가 어긋나면 맞힌 표시를 쓰지 않습니다 — 엉뚱한 낱말이 열릴 수 있어서입니다 */
+  const ok = (r && r.marks && r.marks.length === ws.length) ? r.marks : null;
+  const any = ok && ok.some(Boolean);
+  if(n <= 0 && !any) return '';
+  const words = ws.map((w, i) => {
+    if(ok && ok[i]) return '<span class="got">' + w + '</span>';
     const show = w.slice(0, n);
     const rest = w.slice(n).replace(/[A-Za-z0-9']/g, '·');
     return show + '<span class="dim">' + rest + '</span>';
@@ -3472,7 +3480,7 @@ document.getElementById('mGo').onclick = () => {
   typeTries[typeCtx.key] = (typeTries[typeCtx.key] || 0) + 1;
   msg.innerHTML = '<div class="fb no"><span class="t">다시 생각해보세요</span>'
     + '<div class="ans" style="font-size:14px;color:var(--soft)">' + typeTries[typeCtx.key] + '번째</div></div>'
-    + hintHTML(typeCtx.en, typeCtx.key);
+    + hintHTML(typeCtx.en, typeCtx.key, r);
 };
 document.getElementById('mIn').onkeydown = e => { if(e.key === 'Enter') document.getElementById('mGo').onclick(); };
 document.getElementById('typeModal').onclick = e => { if(e.target.id === 'typeModal') closeType(); };
