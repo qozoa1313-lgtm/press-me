@@ -950,6 +950,7 @@ function streakInfo(){
 
 /* ═══════════════ 소리 ═══════════════ */
 function speak(text, rate){
+  if(!text) return;                    /* 읽을 글이 아직 없는 단추 */
   if(!('speechSynthesis' in window)) return toast('이 브라우저는 읽어주기를 지원하지 않습니다');
   speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
@@ -960,8 +961,17 @@ function speak(text, rate){
 /* ① 길게 누르면 천천히 읽어줍니다 (듣기 단추 · 틀린 단어 모두)
    ③ 틀린 단어를 누르면 그 단어만 들려줍니다
    화면마다 따로 걸지 않고 문서에서 한 번만 받습니다 */
-const SAYSEL = '[data-speak],.w.bad,.w.half';
-const sayText = el => el.dataset && el.dataset.speak ? el.dataset.speak : el.textContent.trim();
+/* 듣기 단추는 어디에 있든 이 목록에 걸려야 꾹 누르기가 됩니다.
+   새 듣기 단추를 만들 때는 data-speak 를 쓰는 것이 가장 쉽습니다 */
+const SAYSEL = '[data-speak],.swapsay,#earBtn,.w.bad,.w.half';
+const sayText = el => {
+  if(el.dataset){
+    if(el.dataset.speak) return el.dataset.speak;
+    if(el.dataset.made)  return el.dataset.made;      /* 문장 만들기 접힌 줄 */
+  }
+  if(el.id === 'earBtn') return (stage && stage.card && stage.card.en) || '';
+  return el.textContent.trim();
+};
 let holdT = null, held = false, toldSlow = false;
 document.addEventListener('pointerdown', e => {
   const b = e.target.closest && e.target.closest(SAYSEL);
