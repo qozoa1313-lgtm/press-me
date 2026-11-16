@@ -210,6 +210,11 @@ h2.sec{font-size:13px;color:var(--soft);font-weight:700;margin:26px 0 10px;lette
 .bd{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;align-items:baseline}
 .bd b{font-weight:700}
 .bd span{color:var(--soft);font-size:14px}
+/* 힌트 단추 — 「답 보기」보다 작게, 글자만큼만 차지합니다 */
+.hintb{flex:0 0 auto;width:auto;padding:16px 22px;font-size:15px;color:var(--soft)}
+.hintdots{font-size:27px;letter-spacing:.1em;color:var(--accent);
+  margin:20px 0 8px;text-align:center}
+
 /* I / I'm 짝 문장 — 쪼개기 맨 아래에 두 줄로 깝니다. 색이 들어온 줄이 지금 문장입니다 */
 .bd .pair{grid-column:1 / -1;margin-top:6px;padding-top:10px;
   border-top:1px dashed var(--line);
@@ -1842,6 +1847,14 @@ function logOnce(c, m){
   c.log.push({ d:t, m });
 }
 
+/* 힌트 창 — 낱말이 몇 개인지만 알려줍니다.
+   점은 낱말마다 셋으로 고정입니다. 철자 길이를 알려주면 답을 주는 셈이 됩니다 */
+function hintSheet(n){
+  return '<p class="mko">낱말 ' + n + '개예요</p>'
+    + '<p class="msub">순서대로 떠올려 보세요</p>'
+    + '<p class="hintdots">' + Array(n).fill('···').join(' ') + '</p>';
+}
+
 /* 돌아온 카드 — 펼친 것 */
 function viewReview(c, inRev){
   const s = byDay(c.day);
@@ -1874,7 +1887,11 @@ function viewReview(c, inRev){
         : ''}
       ${c.vid ? '' : meanHTML(s, true)}
     </div>
-    <button class="btn ghost" id="ansBtn" style="margin-top:16px">답 보기</button>
+    <div class="row" id="hintRow" style="margin-top:16px">
+      <button class="btn ghost hintb" id="hintBtn"
+        data-wc="${s.en.trim().split(/\s+/).length}">힌트</button>
+      <button class="btn ghost" id="ansBtn">답 보기</button>
+    </div>
     <div id="markBox" class="hide">
       <div class="row" style="margin-top:10px">${revMode === 'all' ? `
         <button class="mk3" data-mark="ok"><b>✓</b><span>기억나요</span><i>안 나와요</i></button>
@@ -2154,12 +2171,17 @@ function wireToday(){
     document.getElementById('markBox').classList.remove('hide');
     const ab = document.getElementById('ansBtn');
     if(ab) ab.classList.add('hide');
+    const hr = document.getElementById('hintRow');
+    if(hr) hr.classList.add('hide');     /* 답을 봤으면 힌트는 필요 없습니다 */
     document.querySelectorAll('[data-speak]').forEach(b => b.onclick = () => speak(b.dataset.speak));
     document.querySelectorAll('[data-mark]').forEach(b => b.onclick = () => mark(b.dataset.mark));
   };
 
   const ansBtn = document.getElementById('ansBtn');
   if(ansBtn) ansBtn.onclick = showAns;
+
+  const hintBtn = document.getElementById('hintBtn');
+  if(hintBtn) hintBtn.onclick = () => openSheet(hintSheet(+hintBtn.dataset.wc));
 
   /* 영상 문장 — 그 대목만 바로 듣기 */
   document.querySelectorAll('[data-at]').forEach(b =>
