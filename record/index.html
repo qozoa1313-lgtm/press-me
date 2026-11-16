@@ -81,6 +81,23 @@ input,textarea{font:inherit;color:inherit}
 @media (min-width:640px){.day{aspect-ratio:auto;height:60px}}
 .dots{display:flex;gap:3px;margin-top:5px;height:6px}
 .dots i{width:6px;height:6px;border-radius:50%;display:block}
+.dots .pen{font-size:10px;line-height:6px;color:var(--soft)}   /* 한 줄 일기를 쓴 날 */
+/* 하루 한 줄 · 일기 */
+.dline{padding:14px 16px;margin-bottom:12px}
+.dline .lh{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:700;color:var(--soft)}
+.dline .lh button{font-size:13px;font-weight:400;color:var(--soft);text-decoration:underline;padding:2px 4px}
+.dline .lempty{color:var(--soft);font-size:14px;margin:6px 0 10px}
+.dline .lone{font-size:17px;font-weight:700;margin:6px 0 4px;line-height:1.45;word-break:keep-all;overflow-wrap:anywhere}
+.dline .ltxt{font-size:14px;line-height:1.65;white-space:pre-wrap;border-top:1px solid var(--line);padding-top:8px;margin-top:6px;overflow-wrap:anywhere}
+.lnsub{font-size:12px;color:var(--soft);margin:-6px 2px 2px}
+.ln-in{width:100%;height:46px;border:1px solid var(--line);border-radius:12px;background:var(--card);padding:0 13px;font-size:16px;font-weight:600;outline:none}
+.ln-in:focus{border-color:var(--sage)}
+.ln-in::placeholder{color:var(--faint);font-weight:400}
+.lnref{margin-top:12px;background:var(--sunk);border-radius:12px;padding:9px 12px;font-size:13px;color:var(--soft)}
+.lnref summary{cursor:pointer}
+.lnref .ri{margin-top:8px;color:var(--ink);white-space:pre-wrap;overflow-wrap:anywhere}
+.lnref .ri b{font-weight:400;color:var(--soft);font-size:12px;display:block}
+#kindSeg button{font-size:13px;padding:0 2px}
 .legend{display:flex;flex-wrap:wrap;gap:6px 12px;padding:10px 6px 2px;font-size:12px;color:var(--soft)}
 .legend span{display:inline-flex;align-items:center;gap:5px}
 .legend i{width:7px;height:7px;border-radius:50%;display:inline-block}
@@ -596,6 +613,7 @@ textarea::placeholder,.search input::placeholder{color:var(--faint)}
       <h2 id="dayTitle"></h2>
       <button class="btn primary sm" id="addBtn">＋ 기록</button>
     </div>
+    <section class="card dline" id="dayLine"></section>
     <section class="card ring hidden" id="dayRing"></section>
     <div id="daySess"></div>
     <div id="dayList"></div>
@@ -613,6 +631,7 @@ textarea::placeholder,.search input::placeholder{color:var(--faint)}
       <button data-k="diary">수동 기록</button>
       <button data-k="act">타이머 기록</button>
       <button data-k="look">돌아보기</button>
+      <button data-k="line">한 줄</button>
     </div>
     <label class="card search">
       <span style="color:var(--faint)" aria-hidden="true">⌕</span>
@@ -778,6 +797,28 @@ textarea::placeholder,.search input::placeholder{color:var(--faint)}
       <button class="btn primary" id="edSave">저장</button>
     </div>
     <div class="hint">모든 칸은 비워도 저장됩니다.</div>
+  </div>
+</div>
+
+<!-- 하루 한 줄 · 일기 -->
+<div class="scrim hidden" id="lnScrim">
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="lnTitle">
+    <div class="sh">
+      <h2 id="lnTitle"></h2>
+      <button class="iconbtn" id="lnClose" aria-label="닫기">✕</button>
+    </div>
+    <div class="lnsub">하루에 하나 · 언제든 고칠 수 있어요</div>
+    <label class="flab" for="lnLine">한 줄 평가<small id="lnCnt">0 / 40자</small></label>
+    <input id="lnLine" class="ln-in" maxlength="40" placeholder="예: 면접 연습 처음으로 끝까지 함" autocomplete="off">
+    <label class="flab" for="lnText">일기<small>안 써도 돼요</small></label>
+    <textarea id="lnText" style="min-height:130px" placeholder="오늘 있었던 일, 든 생각을 자유롭게"></textarea>
+    <details class="lnref hidden" id="lnRef"><summary id="lnRefSum"></summary><div id="lnRefBody"></div></details>
+    <div class="foot">
+      <span class="grow"></span>
+      <button class="btn ghost" id="lnCancel">취소</button>
+      <button class="btn primary" id="lnSave">저장</button>
+    </div>
+    <div class="hint">두 칸을 모두 비우고 저장하면 이 날의 한 줄이 지워집니다.</div>
   </div>
 </div>
 
@@ -1094,6 +1135,7 @@ function migrate(d){
   if (!Array.isArray(d.checks)) d.checks = [];
   if (!Array.isArray(d.savedQuotes)) d.savedQuotes = [];
   if (!Array.isArray(d.savedBubbles)) d.savedBubbles = [];   // 말풍선에서 저장한 문장 — 활동 기록 · 통계와 따로
+  if (!Array.isArray(d.days)) d.days = [];   // 하루 한 줄 · 일기 — 날짜마다 하나 [{date,line,text,createdAt,updatedAt}]
   if (!DATE_RE.test(d.checkStart || '')) d.checkStart = null;
   d.version = 5;
   return d;
@@ -1196,6 +1238,7 @@ function renderCal(){
   for (const r of db.records) (dayGroups[r.date] ||= new Set()).add(rGroupId(r));
   for (const s of db.sessions) (dayGroups[s.date] ||= new Set()).add(sGroupId(s));
   const order = [...db.groups.map(g => g.id), ''];
+  const lineDays = new Set(db.days.map(x => x.date));
   const first = new Date(view.y, view.m, 1);
   const start = new Date(view.y, view.m, 1 - first.getDay());
   const lastDate = new Date(view.y, view.m + 1, 0).getDate();
@@ -1216,9 +1259,9 @@ function renderCal(){
       d.getMonth() !== view.m && 'out',
       d.getDay() === 0 && 'sun', d.getDay() === 6 && 'sat',
       k === today && 'today', k === sel && 'sel', (i / 7 | 0) !== selRow && 'wkoff'].filter(Boolean).join(' ');
-    const label = `${fmtDay(k)}${recs.length ? `, 일기 ${recs.length}개` : ''}${nSess ? `, 타이머 기록 ${nSess}개` : ''}`;
+    const label = `${fmtDay(k)}${lineDays.has(k) ? ', 한 줄 일기 있음' : ''}${recs.length ? `, 일기 ${recs.length}개` : ''}${nSess ? `, 타이머 기록 ${nSess}개` : ''}`;
     h += `<button class="${cls}" data-d="${k}" aria-label="${label}"><span class="n">${d.getDate()}</span>`
-      + `<span class="dots">${gs.map(id => `<i style="background:${gColor(id)}"></i>`).join('')}</span></button>`;
+      + `<span class="dots">${gs.map(id => `<i style="background:${gColor(id)}"></i>`).join('')}${lineDays.has(k) ? '<span class="pen">✎</span>' : ''}</span></button>`;
   }
   $('days').innerHTML = h;
   /* 범례 — 지금 그룹 목록 그대로. 보관한 그룹 · 분류 없음은 기록이 있을 때만 */
@@ -1245,10 +1288,11 @@ function renderDay(){
   const n = recs.length + db.sessions.filter(s => s.date === sel).length;
   $('dayTitle').innerHTML = `${esc(fmtDay(sel))}${n ? `<span class="cnt">${n}개</span>` : ''}`;
   $('daySess').innerHTML = sess;
+  paintLine();
   paintRing('dayRing', sel, false);
   $('dayList').innerHTML = recs.length
     ? recs.map(r => recCard(r, true)).join('')
-    : sess ? '' : `<div class="empty">이 날의 기록이 없습니다.</div>`;
+    : sess || dayOf(sel) ? '' : `<div class="empty">이 날의 기록이 없습니다.</div>`;
 }
 
 $('wdays').innerHTML = WD.map((w, i) => `<div class="wd ${i===0?'sun':i===6?'sat':''}">${w}</div>`).join('');
@@ -1389,6 +1433,68 @@ $('edScrim').addEventListener('keydown', e => {
   if ((e.ctrlKey || e.metaKey) && e.key === 'Enter'){ e.preventDefault(); saveEditor(); }
 });
 
+/* ───── 하루 한 줄 · 일기 (날짜마다 하나) ───── */
+const dayOf = date => db.days.find(x => x.date === date);
+function paintLine(){
+  const d = dayOf(sel), h = `📝 ${sel === today ? '오늘' : '이날'}의 한 줄`;
+  $('dayLine').innerHTML = d
+    ? `<div class="lh">${h}<button data-lnopen="1">고치기</button></div>`
+      + (d.line ? `<div class="lone">${esc(d.line)}</div>` : '') + (d.text ? `<div class="ltxt">${esc(d.text)}</div>` : '')
+    : `<div class="lh">${h}</div><div class="lempty">${sel === today ? '오늘' : '이날'} 하루를 한 줄로 남겨볼까요?</div>`
+      + `<button class="btn primary wide" data-lnopen="1">한 줄 쓰기</button>`;
+}
+$('dayLine').addEventListener('click', e => { if (e.target.closest('[data-lnopen]')) openLine(sel); });
+
+let lnDate = null, lnSnap = '';
+const lnState = () => JSON.stringify([$('lnLine').value, $('lnText').value]);
+const lnCount = () => { $('lnCnt').textContent = `${$('lnLine').value.length} / 40자`; };
+$('lnLine').addEventListener('input', lnCount);
+function openLine(date){
+  const d = dayOf(date);
+  lnDate = date;
+  $('lnTitle').textContent = fmtDay(date);
+  $('lnLine').value = d ? d.line : '';
+  $('lnText').value = d ? d.text : '';
+  lnCount();
+  /* 그날 타이머 기록의 🐰 메모 · 쉰 이유 — 보면서 쓰기 */
+  const ss = db.sessions.filter(s => s.date === date).sort((a, b) => a.start - b.start);
+  const memos = ss.flatMap(s => (s.memos || []).map(m => ({ at:m.at, name:sName(s), t:[m.text, m.check].filter(Boolean).join('\n') })));
+  const rests = ss.flatMap(s => (s.pauses || []).filter(p => p.reason).map(p => ({ at:p.start, name:sName(s), t:p.reason })));
+  const ref = [...memos.map(x => ({ ...x, k:'🐰' })), ...rests.map(x => ({ ...x, k:'⏸ 휴식' }))].sort((a, b) => a.at - b.at);
+  $('lnRef').classList.toggle('hidden', !ref.length);
+  $('lnRef').open = false;
+  $('lnRefSum').textContent = `🐰 이날 쓴 메모 ${memos.length}개 · 쉰 이유 ${rests.length}개 — 보면서 쓰기`;
+  $('lnRefBody').innerHTML = ref.map(x => `<div class="ri"><b>${x.k} ${fmtHm(x.at)} · ${esc(x.name)}</b>${esc(x.t)}</div>`).join('');
+  lnSnap = lnState();
+  $('lnScrim').classList.remove('hidden');
+  if (matchMedia('(pointer:fine)').matches) $('lnLine').focus();
+}
+async function closeLine(){
+  if (lnState() !== lnSnap){
+    const ok = await ask('저장하지 않고 닫을까요?', '적은 내용이 사라집니다.', '', '닫기', true);
+    if (!ok) return;
+  }
+  $('lnScrim').classList.add('hidden');
+}
+function saveLine(){
+  const line = $('lnLine').value.trim().slice(0, 40), text = $('lnText').value.trim(), now = Date.now();
+  const before = JSON.stringify(db.days), d = dayOf(lnDate);
+  if (!line && !text){ if (d) db.days.splice(db.days.indexOf(d), 1); }
+  else if (d) Object.assign(d, { line, text, updatedAt:now });
+  else db.days.push({ date:lnDate, line, text, createdAt:now, updatedAt:now });
+  if (!persist()){ db.days = JSON.parse(before); return; }
+  $('lnScrim').classList.add('hidden');
+  renderAll();
+  toast(!line && !text ? (d ? '한 줄을 지웠어요' : '적은 내용이 없어요') : '저장했습니다');
+}
+$('lnSave').onclick = saveLine;
+$('lnCancel').onclick = closeLine;
+$('lnClose').onclick = closeLine;
+$('lnLine').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing){ e.preventDefault(); $('lnText').focus(); } });
+$('lnScrim').addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter'){ e.preventDefault(); saveLine(); }
+});
+
 async function deleteRec(id){
   const r = db.records.find(x => x.id === id); if (!r) return false;
   const ok = await ask('이 기록을 삭제할까요?', `${fmtDay(r.date)} · ${recLabelText(r)}`, '삭제하면 되돌릴 수 없습니다.', '삭제', true);
@@ -1503,6 +1609,15 @@ function listItems(){
           <div class="sum">${esc(CHECK_TYPE[checkType(c)].label)}${c.q4 ? ` · ${esc(c.q4)}` : ''}</div></button>` });
     }
   }
+  if ((listKind === 'all' || listKind === 'line') && !narrowed){
+    for (const d of db.days){
+      out.push({ date:d.date, t:-1, hay:['한 줄', '일기', d.line, d.text],   // 같은 날이면 맨 위
+        html: () => `<button class="card item" data-lopen="${d.date}">
+          <div class="head"><span class="chip">📝 한 줄</span></div>
+          ${d.line ? `<div class="sum" style="font-weight:700">${esc(d.line)}</div>` : ''}
+          ${d.text ? `<div class="sum"${openAll ? ' style="white-space:pre-wrap;-webkit-line-clamp:unset;display:block"' : ''}>${esc(d.text)}</div>` : ''}</button>` });
+    }
+  }
   return out;
 }
 
@@ -1543,9 +1658,10 @@ function renderList(){
   $('bubFilters').classList.toggle('hidden', !bm);
   if (bm){ $('filters').classList.add('hidden'); $('actFilters').classList.add('hidden'); return renderBubList(); }
   for (const b of $('kindSeg').children) b.classList.toggle('on', b.dataset.k === listKind);
-  $('filters').classList.toggle('hidden', listKind === 'look');
-  $('actFilters').classList.toggle('hidden', listKind === 'look');
-  if (listKind !== 'look'){ paintGroupFilters(); paintActFilters(); }
+  const noCls = listKind === 'look' || listKind === 'line';   // 돌아보기 · 한 줄은 그룹 · 활동이 없음
+  $('filters').classList.toggle('hidden', noCls);
+  $('actFilters').classList.toggle('hidden', noCls);
+  if (!noCls){ paintGroupFilters(); paintActFilters(); }
   const words = $('q').value.trim().toLowerCase().split(/\s+/).filter(Boolean);
   const from = $('lFrom').value, to = $('lTo').value;
   let items = listItems().filter(it => (!from || it.date >= from) && (!to || it.date <= to));
@@ -1558,7 +1674,7 @@ function renderList(){
   $('sortBtn').textContent = sortDesc ? '최신순' : '오래된순';
   $('openBtn').classList.toggle('on', openAll);
   $('listCnt').textContent = `${items.length}개`;
-  if (!db.records.length && !db.sessions.length && !db.reviews.length && !db.checks.length){
+  if (!db.records.length && !db.sessions.length && !db.reviews.length && !db.checks.length && !db.days.length){
     $('list').innerHTML = `<div class="empty">아직 기록이 없습니다.<br>「시작」에서 활동을 고르거나, 캘린더에서 「＋ 기록」으로 일기를 쓸 수 있어요.</div>`; return;
   }
   if (!items.length){ $('list').innerHTML = `<div class="empty">조건에 맞는 기록이 없습니다.</div>`; return; }
@@ -1582,6 +1698,11 @@ $('list').addEventListener('click', e => {
   const so = e.target.closest('[data-sopen]'); if (so) return openSess(so.dataset.sopen);
   const wo = e.target.closest('[data-wopen]'); if (wo) return openWeek(wo.dataset.wopen);
   const co = e.target.closest('[data-copen]'); if (co) return openCheck(co.dataset.copen);
+  const lo = e.target.closest('[data-lopen]');
+  if (lo){   // 그 날짜의 캘린더로
+    sel = lo.dataset.lopen; const d = parseYmd(sel); view = { y:d.getFullYear(), m:d.getMonth() };
+    return switchTab('cal');
+  }
   const o = e.target.closest('[data-open]'); if (o) return openDetail(o.dataset.open);
   const ed = e.target.closest('[data-edit]'); if (ed) return openEditor(ed.dataset.edit);
   const dl = e.target.closest('[data-del]'); if (dl) return deleteRec(dl.dataset.del);
@@ -1624,7 +1745,7 @@ $('cfYes').onclick = () => cfDone(true);
 $('cfNo').onclick = () => cfDone(false);
 
 /* 바깥 누르기 · Esc 로 닫기 */
-for (const [id, fn] of [['edScrim', closeEditor], ['dtScrim', closeDetail], ['cfScrim', () => cfDone(false)]]){
+for (const [id, fn] of [['edScrim', closeEditor], ['lnScrim', closeLine], ['dtScrim', closeDetail], ['cfScrim', () => cfDone(false)]]){
   $(id).addEventListener('click', e => { if (e.target.id === id) fn(); });
 }
 addEventListener('keydown', e => {
@@ -1632,6 +1753,7 @@ addEventListener('keydown', e => {
   if (!$('cfScrim').classList.contains('hidden')) return cfDone(false);
   if (!$('dtScrim').classList.contains('hidden')) return closeDetail();
   if (!$('edScrim').classList.contains('hidden')) return closeEditor();
+  if (!$('lnScrim').classList.contains('hidden')) return closeLine();
 });
 
 /* ───── 시간 표시 ───── */
@@ -3201,7 +3323,7 @@ $('mgOrphan').addEventListener('click', async e => {
 function renderSet(){
   renderManage();
   renderComfort();
-  $('sCount').textContent = `일기 ${db.records.length}개 · 타이머 ${db.sessions.length}개`;
+  $('sCount').textContent = `일기 ${db.records.length}개 · 타이머 ${db.sessions.length}개 · 한 줄 ${db.days.length}개`;
   let bytes = 0; try { bytes = (localStorage.getItem(KEY) || '').length * 2; } catch(e){}
   $('sSize').textContent = bytes < 1024 ? `${bytes} B` : `${(bytes/1024).toFixed(1)} KB`;
   $('sLast').textContent = prefs.lastBackup ? fmtStamp(prefs.lastBackup) : '아직 없음';
@@ -3217,7 +3339,7 @@ function exportBackup(){
   const name = `my-record-backup-${ymd(n).replace(/-/g,'')}-${pad(n.getHours())}${pad(n.getMinutes())}.json`;
   const data = { app:'나의 기록', version:5, exportedAt: n.toISOString(),
     records: db.records, sessions: db.sessions, groups: db.groups, acts: db.acts,
-    reviews: db.reviews, checks: db.checks, savedQuotes: db.savedQuotes, savedBubbles: db.savedBubbles, checkStart: db.checkStart };
+    reviews: db.reviews, checks: db.checks, savedQuotes: db.savedQuotes, savedBubbles: db.savedBubbles, days: db.days, checkStart: db.checkStart };
   const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type:'application/json' }));
   const a = document.createElement('a'); a.href = url; a.download = name;
   document.body.appendChild(a); a.click(); a.remove();
@@ -3294,7 +3416,13 @@ const cleanBubbles = list => {
     .map(b => ({ id: str(b.id) || newId(), msgId: b.msgId, text: b.text, mood: str(b.mood), date: DATE_RE.test(b.date) ? b.date : ymd(new Date(Number(b.savedAt) || 0)),
       savedAt: Number(b.savedAt) || 0, act: str(b.act), actId: str(b.actId), activeMs: Number.isFinite(b.activeMs) ? b.activeMs : null }));
 };
-/* 예전 백업도 받습니다 — 백업에 없는 칸(돌아보기 · 점검 · 모은 문장)은 지금 것을 그대로 둡니다 */
+const cleanDays = list => {
+  if (!Array.isArray(list)) return null;
+  const seen = new Set();   // 날짜마다 하나 — 겹치면 앞의 것
+  return list.filter(d => d && DATE_RE.test(d.date) && (str(d.line).trim() || str(d.text).trim()) && !seen.has(d.date) && seen.add(d.date))
+    .map(d => ({ date:d.date, line:str(d.line).trim().slice(0, 40), text:str(d.text).trim(), createdAt:Number(d.createdAt) || 0, updatedAt:Number(d.updatedAt) || 0 }));
+};
+/* 예전 백업도 받습니다 — 백업에 없는 칸(돌아보기 · 점검 · 모은 문장 · 한 줄)은 지금 것을 그대로 둡니다 */
 function cleanBackup(data){
   const records = cleanRecords(data); if (!records) return null;
   const obj = data && !Array.isArray(data) ? data : {};
@@ -3303,7 +3431,7 @@ function cleanBackup(data){
   const groups = validGroups(obj.groups) ? obj.groups.map(g => ({ id:g.id, name:g.name, color:str(g.color) || 'grey', archived:!!g.archived })) : null;
   const acts = groups && validActList(obj.acts) ? obj.acts.map(a => ({ id:a.id, name:a.name, groupId:a.groupId, removed:!!a.removed })) : null;
   return { records, sessions, groups, acts, activities: validActs(obj.activities) ? obj.activities : null,
-    reviews: cleanReviews(obj.reviews), checks: cleanChecks(obj.checks), savedQuotes: cleanQuotes(obj.savedQuotes), savedBubbles: cleanBubbles(obj.savedBubbles),
+    reviews: cleanReviews(obj.reviews), checks: cleanChecks(obj.checks), savedQuotes: cleanQuotes(obj.savedQuotes), savedBubbles: cleanBubbles(obj.savedBubbles), days: cleanDays(obj.days),
     checkStart: 'checkStart' in obj ? (DATE_RE.test(obj.checkStart || '') ? obj.checkStart : null) : undefined };
 }
 /* 분류: v5 백업이면 백업의 그룹 · 활동 그대로.
@@ -3317,7 +3445,7 @@ function dbFrom(bk){
   }
   return migrate({ records: bk.records, sessions: bk.sessions, groups, acts,
     reviews: bk.reviews || db.reviews, checks: bk.checks || db.checks,
-    savedQuotes: bk.savedQuotes || db.savedQuotes, savedBubbles: bk.savedBubbles || db.savedBubbles, checkStart: bk.checkStart === undefined ? db.checkStart : bk.checkStart });
+    savedQuotes: bk.savedQuotes || db.savedQuotes, savedBubbles: bk.savedBubbles || db.savedBubbles, days: bk.days || db.days, checkStart: bk.checkStart === undefined ? db.checkStart : bk.checkStart });
 }
 
 function keepBefore(reason){
@@ -3368,11 +3496,11 @@ $('undoBtn').onclick = async () => {
 };
 
 $('wipeBtn').onclick = async () => {
-  if (!db.records.length && !db.sessions.length && !db.reviews.length && !db.checks.length){ toast('지울 기록이 없습니다'); return; }
-  const ok = await ask('모든 기록을 지울까요?', `이 기기의 일기 ${db.records.length}개 · 타이머 기록 ${db.sessions.length}개 · 돌아보기 ${db.reviews.length}개 · 점검 ${db.checks.length}개를 지웁니다.\n활동 목록과 모은 문장은 그대로 둡니다.`, '지우기 직전 상태 하나는 「직전 상태로 되돌리기」로 살릴 수 있습니다.\n확실히 남기려면 먼저 「백업 파일 받기」를 하세요.', '모두 지우기', true);
+  if (!db.records.length && !db.sessions.length && !db.reviews.length && !db.checks.length && !db.days.length){ toast('지울 기록이 없습니다'); return; }
+  const ok = await ask('모든 기록을 지울까요?', `이 기기의 일기 ${db.records.length}개 · 타이머 기록 ${db.sessions.length}개 · 돌아보기 ${db.reviews.length}개 · 점검 ${db.checks.length}개 · 한 줄 ${db.days.length}개를 지웁니다.\n활동 목록과 모은 문장은 그대로 둡니다.`, '지우기 직전 상태 하나는 「직전 상태로 되돌리기」로 살릴 수 있습니다.\n확실히 남기려면 먼저 「백업 파일 받기」를 하세요.', '모두 지우기', true);
   if (!ok) return;
   keepBefore('전체 삭제');
-  const old = db; db = { ...db, records: [], sessions: [], reviews: [], checks: [], checkStart: null };
+  const old = db; db = { ...db, records: [], sessions: [], reviews: [], checks: [], days: [], checkStart: null };
   if (!persist()){ db = old; return; }
   renderAll(); toast('모든 기록을 지웠습니다');
 };
