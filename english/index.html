@@ -210,6 +210,15 @@ h2.sec{font-size:13px;color:var(--soft);font-weight:700;margin:26px 0 10px;lette
 .bd{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;align-items:baseline}
 .bd b{font-weight:700}
 .bd span{color:var(--soft);font-size:14px}
+/* 문장 만들기 — 낱말 조각을 순서대로 놓는 자리 */
+.mkslot{display:flex;flex-wrap:wrap;gap:8px;align-items:center;min-height:58px;
+  padding:13px;border-radius:15px;background:var(--band);margin:14px 0 16px}
+.mkslot.ok{background:var(--okbg)}
+.mkslot.no{background:var(--nobg)}
+.mkhint{font-size:13px;color:var(--soft)}
+.swapo .pill.used{opacity:.22;pointer-events:none}
+.mkno{font-size:14px;color:var(--noink);margin:0 0 4px;line-height:1.6}
+
 /* 힌트 단추 — 「답 보기」보다 작게, 글자만큼만 차지합니다 */
 .hintb{flex:0 0 auto;width:auto;padding:16px 22px;font-size:15px;color:var(--soft)}
 .hintdots{font-size:27px;letter-spacing:.1em;color:var(--accent);
@@ -2418,51 +2427,66 @@ function makeList(){
   return myCards().filter(c => c.learnedOn && !c.vid
     && typeof PATTERNS !== 'undefined' && PATTERNS[c.day]);
 }
-/* 문제 한 장 — 문장 하나와 정답 하나를 뽑고 알약 차례를 섞습니다 */
+/* 문제 한 장 — 문장을 하나 뽑고 낱말 차례를 섞습니다.
+   낱말은 빈칸으로 나눕니다. 쪼개기(bd)를 쓰면 DAY 12 하나가 원문과 안 맞습니다 */
 function makePick(){
   const list = makeList();
   if(!list.length) return null;
   const c = list[Math.floor(Math.random() * list.length)];
-  const pat = PATTERNS[c.day];
-  return { day:c.day,
-           oi:Math.floor(Math.random() * pat.opts.length),
-           order:shuffle(pat.opts.map((o, i) => i)),
-           tries:[] };
+  const words = byDay(c.day).en.trim().split(/\s+/);
+  return { day:c.day, words, order:shuffle(words.map((w, i) => i)), picked:[] };
 }
+/* 놓은 낱말을 이어붙인 것 — 같은 낱말이 두 번 나와도 글자로 견주므로 맞게 셉니다 */
+function makeSaid(){ return makeQ.picked.map(i => makeQ.words[i]).join(' '); }
+
 function makeHTML(){
+  const s = byDay(makeQ.day);
   const pat = PATTERNS[makeQ.day];
-  const ans = pat.opts[makeQ.oi];
-  const got = makeQ.tries.includes(makeQ.oi);     /* 정답을 눌렀나 */
-  const full = (pat.before + ans[0] + pat.after).trim();
+  const full = makeQ.words.join(' ');
+  const done = makeQ.picked.length === makeQ.words.length;
+  const ok = done && makeSaid() === full;
   return `
   <div class="card">
     <span class="badge">DAY ${makeQ.day}</span>
-    <p class="mkq">이렇게 말하고 싶어요<b>${ans[1]}</b></p>
-    <div class="swapline">
-      <div class="swapbox">
-        <p class="swapen">${pat.before}<u>${
-          got ? ans[0] : '&nbsp;&nbsp;&nbsp;&nbsp;'}</u>${pat.after}</p>
-        <p class="rdline swaprd">${swapRd(pat, got ? ans[2] : null)}</p>
-      </div>
-      <button class="rnd${got ? '' : ' off'}"${
-        got ? ` data-speak="${esc(full)}"` : ''} title="들어보기">${ICO.ear}</button>
-    </div>
-    <div class="swapo">${makeQ.order.map(i => {
-      const o = pat.opts[i];
-      const cls = (i === makeQ.oi && got) ? ' on'
-                : makeQ.tries.includes(i) ? ' bad' : '';
-      return `<button class="pill${cls}" data-mk="${i}"><b>${o[0]}</b><span>${o[1]}</span></button>`;
-    }).join('')}</div>
-    ${pat.q ? `<details class="mkwhy"><summary>왜 이렇게 쓰나요</summary>
+    <p class="mkq">이렇게 말하고 싶어요<b>${s.ko}</b></p>
+
+    <div class="mkslot${done ? (ok ? ' ok' : ' no') : ''}">${
+      makeQ.picked.length
+        ? makeQ.picked.map((wi, k) =>
+            `<button class="pill on" data-un="${k}">${makeQ.words[wi]}</button>`).join('')
+        : '<span class="mkhint">아래에서 순서대로 눌러 보세요</span>'}</div>
+
+    <div class="swapo">${makeQ.order.map(i =>
+      `<button class="pill${makeQ.picked.includes(i) ? ' used' : ''}" data-mk="${i}">${
+        makeQ.words[i]}</button>`).join('')}</div>
+
+    ${done ? (ok
+      ? `<div class="swapline" style="margin-top:16px">
+           <div class="swapbox">
+             <p class="swapen">${s.en}</p>
+             <p class="rdline always">${s.rd}</p>
+           </div>
+           <button class="rnd" data-speak="${esc(s.en)}" title="들어보기">${ICO.ear}</button>
+         </div>`
+      : `<p class="mkno">순서가 달라요. 위에 놓은 낱말을 눌러 빼고 다시 해보세요</p>`)
+      : ''}
+
+    ${pat && pat.q ? `<details class="mkwhy"><summary>왜 이렇게 쓰나요</summary>
       <p class="qa">${pat.q}</p></details>` : ''}
-    ${got ? `<button class="btn ghost" id="mkNext" style="margin-top:16px">다음 문장</button>` : ''}
+    ${ok ? `<button class="btn ghost" id="mkNext" style="margin-top:16px">다음 문장</button>` : ''}
   </div>`;
 }
 function wireMake(){
+  /* 아래 조각을 누르면 — 놓은 자리의 맨 뒤에 붙습니다 */
   document.querySelectorAll('#revBody [data-mk]').forEach(b => b.onclick = () => {
     const i = +b.dataset.mk;
-    if(makeQ.tries.includes(i)) return;          /* 같은 것을 두 번 세지 않습니다 */
-    makeQ.tries.push(i);
+    if(makeQ.picked.includes(i)) return;
+    makeQ.picked.push(i);
+    renderRev();
+  });
+  /* 놓은 것을 누르면 — 다시 뺍니다 */
+  document.querySelectorAll('#revBody [data-un]').forEach(b => b.onclick = () => {
+    makeQ.picked.splice(+b.dataset.un, 1);
     renderRev();
   });
   const nx = document.getElementById('mkNext');
