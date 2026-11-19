@@ -82,6 +82,8 @@ input,textarea{font:inherit;color:inherit}
 .dots{display:flex;gap:3px;margin-top:5px;height:6px}
 .dots i{width:6px;height:6px;border-radius:50%;display:block}
 .dots .pen{font-size:10px;line-height:6px;color:var(--soft)}   /* 한 줄 일기를 쓴 날 */
+.sa .cont{font-size:12px;font-weight:400;color:var(--soft);margin-left:6px;white-space:nowrap}   /* 자정을 넘긴 기록 */
+.rsplit{font-size:13px;color:var(--soft);margin:0 2px 8px}
 /* 하루 한 줄 · 일기 */
 .dline{padding:14px 16px;margin-bottom:12px}
 .dline .lh{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:700;color:var(--soft)}
@@ -1215,6 +1217,33 @@ const P = {
 const addDays = (s, n) => { const d = parseYmd(s); d.setDate(d.getDate() + n); return ymd(d); };
 const daysBetween = (a, b) => Math.round((parseYmd(b) - parseYmd(a)) / 86400000);
 const fmtMd = s => { const d = parseYmd(s); return `${d.getMonth()+1}/${d.getDate()}`; };
+const fmtMD = s => { const d = parseYmd(s); return `${d.getMonth()+1}월 ${d.getDate()}일`; };
+
+/* 자정을 넘긴 타이머 기록 (2026-11-20 유진님 결정)
+   기록은 하나(시작한 날 s.date)로 두고, 활동 시간만 실제 날짜별로 나눠 보여줍니다.
+   → [{ date, w0, w1(그 날의 시작 · 끝 시각), ms(그 날 활동한 시간) }] — 첫 칸이 시작한 날
+   날짜를 손으로 고쳐 시작 시각과 하루 넘게 어긋난 기록은 기록 날짜에 맞춰 하루 단위로 당겨서 봅니다 */
+function dayParts(s){
+  const b0 = parseYmd(s.date).getTime(), off = Math.floor((s.start - b0) / 86400000) * 86400000;
+  const seg = segments(s), out = [];
+  for (let k = 0; k < 60; k++){
+    const w0 = b0 + off + k * 86400000, w1 = w0 + 86400000;
+    if (k > 0 && !(s.end > w0)) break;   // 시각이 깨진 기록도 한 칸에서 멈춤
+    const ms = seg && seg.length ? seg.reduce((a, [x, y]) => a + Math.max(0, Math.min(y, w1) - Math.max(x, w0)), 0)
+      /* 쉰 구간이 안 맞는(손으로 고친) 기록 — 시작~끝 길이에 맞춰 나눔 */
+      : s.end > s.start ? Math.round(s.activeMs * Math.max(0, Math.min(s.end, w1) - Math.max(s.start, w0)) / (s.end - s.start)) : s.activeMs;
+    out.push({ date:addDays(s.date, k), w0, w1, ms });
+  }
+  return out;
+}
+/* 그 날에 걸쳐 있는 기록들 — 전날 시작해 넘어온 것까지. k = 시작한 날부터 며칠째(0 = 시작한 날) */
+const sessOn = date => db.sessions.flatMap(s => {
+  if (s.date > date) return [];
+  const ps = dayParts(s), k = ps.findIndex(p => p.date === date);
+  return k < 0 ? [] : [{ s, p:ps[k], k, parts:ps }];
+}).sort((a, b) => Math.max(a.s.start, a.p.w0) - Math.max(b.s.start, b.p.w0));
+/* 여러 날에 걸친 기록의 날짜별 시간 — 「11월 19일 1시간 · 11월 20일 18분」 */
+const partsText = ps => ps.map(p => `${fmtMD(p.date)} ${fmtDur(p.ms)}`).join(' · ');
 
 const byDate = () => {
   const map = {};
@@ -1236,7 +1265,8 @@ function renderCal(){
   /* 날짜별로 「어느 그룹의 기록이 있는지」만 — 같은 그룹 점은 하나 */
   const dayGroups = {};
   for (const r of db.records) (dayGroups[r.date] ||= new Set()).add(rGroupId(r));
-  for (const s of db.sessions) (dayGroups[s.date] ||= new Set()).add(sGroupId(s));
+  const nSessOf = {};   // 자정을 넘긴 기록은 걸친 날마다 점 · 개수
+  for (const s of db.sessions) for (const p of dayParts(s)){ (dayGroups[p.date] ||= new Set()).add(sGroupId(s)); nSessOf[p.date] = (nSessOf[p.date] || 0) + 1; }
   const order = [...db.groups.map(g => g.id), ''];
   const lineDays = new Set(db.days.map(x => x.date));
   const first = new Date(view.y, view.m, 1);
@@ -1254,7 +1284,7 @@ function renderCal(){
     const k = ymd(d);
     const recs = map[k] || [];
     const gs = dayGroups[k] ? order.filter(id => dayGroups[k].has(id)) : [];
-    const nSess = db.sessions.filter(s => s.date === k).length;
+    const nSess = nSessOf[k] || 0;
     const cls = ['day',
       d.getMonth() !== view.m && 'out',
       d.getDay() === 0 && 'sun', d.getDay() === 6 && 'sat',
@@ -1285,7 +1315,7 @@ function recCard(r, withActs){
 function renderDay(){
   const recs = (byDate()[sel] || []).sort(sortRecs);
   const sess = sessHtml(sel, sel === today ? '오늘 한 일 · 타이머' : '한 일 · 타이머');
-  const n = recs.length + db.sessions.filter(s => s.date === sel).length;
+  const n = recs.length + sessOn(sel).length;
   $('dayTitle').innerHTML = `${esc(fmtDay(sel))}${n ? `<span class="cnt">${n}개</span>` : ''}`;
   $('daySess').innerHTML = sess;
   paintLine();
@@ -2561,21 +2591,22 @@ $('nmInput').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isCo
 /* ───── 타이머 기록 보기 ─────
    같은 날 · 같은 활동은 합계로 한 줄, 누르면 한 번 한 번의 시작 · 종료 시각이 펼쳐집니다 */
 function sessHtml(date, title){
-  const list = db.sessions.filter(s => s.date === date).sort((a, b) => a.start - b.start);
+  const list = sessOn(date);   // 전날 시작해 넘어온 기록까지 — 시간은 이 날 한 만큼만 셈
   if (!list.length) return '';
   let h = `<section class="card sessbox"><div class="sbh">${esc(title)}</div>`;
   /* 그룹 순서대로, 같은 활동(id)끼리 한 줄 — 이름이 같아도 id 가 다르면 따로 */
   for (const gid of [...db.groups.map(g => g.id), '']){
-    const gs = list.filter(s => sGroupId(s) === gid);
+    const gs = list.filter(x => sGroupId(x.s) === gid);
     if (!gs.length) continue;
     h += `<div class="sg">${gDot(gid)}${esc(gName(gid))}</div>`;
-    for (const key of [...new Set(gs.map(sKey))]){
-      const ss = gs.filter(s => sKey(s) === key);
-      const name = sName(ss[0]);
-      const tot = ss.reduce((a, s) => a + s.activeMs, 0);
-      const moods = [...new Set(ss.flatMap(s => s.mood || []))];
-      h += `<details class="sa"><summary><span class="nm">${esc(name)}${moods.length ? ` <span style="font-size:13px">${moods.map(m => MOOD[m].e).join('')}</span>` : ''}</span><span class="dur">${P.hideStats() ? '' : `${fmtDur(tot)}${ss.length > 1 ? ` · ${ss.length}번` : ''}`}</span></summary>`
-        + ss.map(sessOne).join('') + `</details>`;
+    for (const key of [...new Set(gs.map(x => sKey(x.s)))]){
+      const ss = gs.filter(x => sKey(x.s) === key);
+      const name = sName(ss[0].s);
+      const tot = ss.reduce((a, x) => a + x.p.ms, 0);
+      const moods = [...new Set(ss.flatMap(x => x.s.mood || []))];
+      const cont = ss.some(x => x.k > 0) ? '전날부터 이어짐' : ss.some(x => x.k < x.parts.length - 1) ? '다음 날까지 이어짐' : '';
+      h += `<details class="sa"><summary><span class="nm">${esc(name)}${moods.length ? ` <span style="font-size:13px">${moods.map(m => MOOD[m].e).join('')}</span>` : ''}${cont ? ` <span class="cont">↪ ${cont}</span>` : ''}</span><span class="dur">${P.hideStats() ? '' : `${fmtDur(tot)}${ss.length > 1 ? ` · ${ss.length}번` : ''}`}</span></summary>`
+        + ss.map(x => sessOne(x.s)).join('') + `</details>`;
     }
   }
   return h + `</section>`;
@@ -2595,18 +2626,21 @@ function segments(s){
   return out.filter(([x, y]) => y - x >= 1000);   // 누르자마자 쉰 1초 미만 구간은 빼기
 }
 function sessOne(s){
-  const p = pauseMs(s), seg = segments(s);
+  const p = pauseMs(s), seg = segments(s), ps = dayParts(s), multi = ps.length > 1;
   const why = (s.pauses || []).filter(q => q.reason);
   const after = y => { const q = why.find(q => q.start === y); return q ? `<br><span class="preline">쉼 · ${esc(q.reason)}</span>` : ''; };
+  /* 여러 날에 걸친 기록은 시각 앞에 날짜를 붙임 — 어느 날짜에서 열어도 같은 내용 */
+  const at = t => multi ? `${fmtMD(ymd(new Date(t)))} ${fmtHm(t)}` : fmtHm(t);
   const lines = seg && seg.length
-    ? seg.map(([x, y]) => `${fmtHm(x)} ~ ${fmtHm(y)} (${fmtDur(y - x)})${after(y)}`).join('<br>')
-    : `${fmtHm(s.start)} ~ ${fmtHm(s.end)}${why.length ? `<br><span class="preline">쉰 이유 · ${why.map(q => esc(q.reason)).join(' · ')}</span>` : ''}`;
+    ? seg.map(([x, y]) => `${at(x)} ~ ${at(y)} (${fmtDur(y - x)})${after(y)}`).join('<br>')
+    : `${at(s.start)} ~ ${at(s.end)}${why.length ? `<br><span class="preline">쉰 이유 · ${why.map(q => esc(q.reason)).join(' · ')}</span>` : ''}`;
   return `<div class="sone">
     <div class="top1"><span>${lines}</span><button data-sedit="${s.id}">수정</button><button data-sdel="${s.id}">삭제</button></div>
     <div class="tm">총 ${fmtDur(s.activeMs)}${p >= 1000 ? ` · 쉼 ${fmtDur(p)}` : ''}</div>
+    ${multi ? `<div class="tm">${partsText(ps)}</div>` : ''}
     ${(s.mood || []).length ? `<div class="mtags">${s.mood.map(m => `<span>${moodText(m)}</span>`).join('')}</div>` : ''}
     ${noteList(s).map(n => `<div class="nline"><b>${n.name}</b>${esc(n.v)}</div>`).join('')}
-    ${(s.memos || []).map(m => `<div class="memo"><div class="mh"><span>🐰 ${memoWhen(m)}</span><button data-mcopy="${s.id}|${m.id}">복사</button></div>${m.text ? `<div class="mt">${esc(m.text)}</div>` : ''}${m.check ? `<div class="mc"><b>검토할 내용</b>${esc(m.check)}</div>` : ''}</div>`).join('')}
+    ${(s.memos || []).map(m => `<div class="memo"><div class="mh"><span>🐰 ${multi ? fmtMD(ymd(new Date(m.at))) + ' ' : ''}${memoWhen(m)}</span><button data-mcopy="${s.id}|${m.id}">복사</button></div>${m.text ? `<div class="mt">${esc(m.text)}</div>` : ''}${m.check ? `<div class="mc"><b>검토할 내용</b>${esc(m.check)}</div>` : ''}</div>`).join('')}
   </div>`;
 }
 for (const id of ['homeToday', 'daySess']){
@@ -2674,47 +2708,60 @@ function rBand(r0, r1, d0, d1, min = 0){
 }
 const rOvl = (a0, a1, b0, b1) => Math.max(0, Math.min(a1, b1) - Math.max(a0, b0));
 
-/* 그날의 타이머 기록 + (오늘이면) 지금 하는 것 */
+/* 그날의 타이머 기록 + 지금 하는 것.
+   자정을 넘긴 기록은 걸친 날마다 그 날 몫만 그립니다 (19일엔 23:00~24:00, 20일엔 0:00~0:18).
+   조각 칸: start · end · focus · rests · active = 이 날 몫 / fs · fe · fullActive · restsAll = 기록 전체 */
 function ringItems(date){
-  const base = parseYmd(date).getTime();
-  const items = db.sessions.filter(s => s.date === date).sort((a, b) => a.start - b.start).map(s => {
+  const base = parseYmd(date).getTime(), items = [];
+  const add = (src, p, k, parts) => {
+    const clip = (x, y) => [Math.max(x, p.w0), Math.min(y, p.w1)];
+    items.push({ ...src, fs:src.start, fe:src.end, fullActive:src.active, restsAll:src.rests,
+      start:Math.max(src.start, p.w0), end:Math.min(src.end, p.w1), active:p.ms,
+      focus:src.focus.map(([x, y]) => clip(x, y)).filter(([x, y]) => y > x),
+      rests:src.rests.map(r => { const [x, y] = clip(r.start, r.end); return { ...r, start:x, end:y }; }).filter(r => r.end > r.start),
+      off:p.w0 - base, prev:k > 0, next:src.end > p.w1, parts, multi:parts.length > 1,
+      live:src.running && src.end <= p.w1 });   // 깜빡임 · 지금 바늘은 「지금」이 있는 날에만
+  };
+  for (const { s, p, k, parts } of sessOn(date)){
     const seg = segments(s);   // 쉰 구간이 안 맞는(손으로 고친) 기록은 시작~끝 한 덩어리
-    return { key:s.id, name:sName(s), gid:sGroupId(s), start:s.start, end:s.end, active:s.activeMs,
+    add({ key:s.id, name:sName(s), gid:sGroupId(s), start:s.start, end:s.end, active:s.activeMs,
       focus: seg && seg.length ? seg : [[s.start, s.end]], exact: !!(seg && seg.length),   // exact=false 면 시간대별 집중 분은 세지 않음
-      rests: seg ? (s.pauses || []).filter(p => p.end > p.start).sort((a, b) => a.start - b.start) : [],
-      memos: s.memos || [], mood: s.mood || [], notes: noteList(s), live:false };
-  });
+      rests: seg ? (s.pauses || []).filter(q => q.end > q.start).sort((a, b) => a.start - b.start) : [],
+      memos: s.memos || [], mood: s.mood || [], notes: noteList(s), running:false }, p, k, parts);
+  }
   const t = timer;
-  if (t && ymd(new Date(t.start)) === date){
+  if (t){
     const now = Date.now(), a = actOf(t.activityId);
     const ps = (t.pauses || []).map(p => ({ start:p.start, end:p.end ?? now, reason:p.reason })).filter(p => p.end > p.start).sort((x, y) => x.start - y.start);
     const focus = []; let cur = t.start;
     for (const p of ps){ if (p.start > cur) focus.push([cur, p.start]); cur = Math.max(cur, p.end); }
     if (now > cur) focus.push([cur, now]);
-    items.push({ key:'live', name:a ? a.name : t.name, gid:a ? a.groupId : (t.group || ''), start:t.start, end:now, active:activeMs(t, now),
-      focus, exact:true, rests:ps, memos:t.memos || [], mood:[], notes:[], live:true });
+    const parts = dayParts({ date:ymd(new Date(t.start)), start:t.start, end:now, activeMs:activeMs(t, now), pauses:ps });
+    const k = parts.findIndex(p => p.date === date);
+    if (k >= 0) add({ key:'live', name:a ? a.name : t.name, gid:a ? a.groupId : (t.group || ''), start:t.start, end:now, active:activeMs(t, now),
+      focus, exact:true, rests:ps, memos:t.memos || [], mood:[], notes:[], running:true }, parts[k], k, parts);
   }
-  /* 기록 날짜와 시작 시각이 하루 넘게 어긋난 경우(날짜를 손으로 고침) — 하루 단위로 당겨서 그림 */
-  items.forEach(it => { it.off = Math.floor((it.start - base) / RDAY) * RDAY; });
   return { base, items };
 }
 
-/* 활동 하나를 일어난 순서대로: 시작 → 🐰 메모 → ⏸ 쉼 → 끝 → 마친 뒤 기록 */
+/* 활동 하나를 일어난 순서대로: 시작 → 🐰 메모 → ⏸ 쉼 → 끝 → 마친 뒤 기록 (어느 날짜에서 열어도 기록 전체) */
 function ringEvents(it, n){
   const hs = P.hideStats(), ev = [];
-  ev.push({ t:it.start, h:`<span class="tm">${fmtHm(it.start)}</span><br>${esc(it.name)} 시작` });
-  for (const m of it.memos) ev.push({ t:m.at, h:`<span class="tm">🐰 ${hs ? fmtHm(m.at) : esc(memoWhen(m))}</span>`
+  const at = t => it.multi ? `${fmtMD(ymd(new Date(t)))} ${fmtHm(t)}` : fmtHm(t);   // 여러 날에 걸치면 날짜도
+  const day = t => it.multi ? `${fmtMD(ymd(new Date(t)))} ` : '';
+  ev.push({ t:it.fs, h:`<span class="tm">${at(it.fs)}</span><br>${esc(it.name)} 시작` });
+  for (const m of it.memos) ev.push({ t:m.at, h:`<span class="tm">🐰 ${hs ? at(m.at) : day(m.at) + esc(memoWhen(m))}</span>`
     + (m.text ? `<div class="bx">${esc(m.text)}</div>` : '') + (m.check ? `<div class="bx"><b>검토할 내용</b>${esc(m.check)}</div>` : '') });
-  for (const p of it.rests){
+  for (const p of it.restsAll){
     if (p.end - p.start < 1000 && !p.reason) continue;
-    ev.push({ t:p.start, e:p.end, h:`<span class="tm">${fmtHm(p.start)} ~ ${fmtHm(p.end)}${hs ? '' : ` · ${fmtDur(p.end - p.start)}`}</span><br>⏸ 휴식${p.reason ? ` ${esc(p.reason)}` : ''}` });
+    ev.push({ t:p.start, e:p.end, h:`<span class="tm">${at(p.start)} ~ ${at(p.end)}${hs ? '' : ` · ${fmtDur(p.end - p.start)}`}</span><br>⏸ 휴식${p.reason ? ` ${esc(p.reason)}` : ''}` });
   }
-  if (it.live) ev.push({ t:it.end, h:`<span class="tm">지금</span><br>${esc(it.name)} 하는 중` });
+  if (it.running) ev.push({ t:it.fe, h:`<span class="tm">지금</span><br>${esc(it.name)} 하는 중` });
   else {
-    const rest = Math.max(0, it.end - it.start - it.active);
-    ev.push({ t:it.end, h:`<span class="tm">${fmtHm(it.end)}</span><br>${esc(it.name)} 끝${hs ? '' : ` · 집중 ${fmtDur(it.active)}${rest >= 60000 ? ` · 쉼 ${fmtDur(rest)}` : ''}`}` });
+    const rest = Math.max(0, it.fe - it.fs - it.fullActive);
+    ev.push({ t:it.fe, h:`<span class="tm">${at(it.fe)}</span><br>${esc(it.name)} 끝${hs ? '' : ` · 집중 ${fmtDur(it.fullActive)}${rest >= 60000 ? ` · 쉼 ${fmtDur(rest)}` : ''}`}` });
     const after = [it.mood.map(moodText).join('  '), ...it.notes.map(x => `<b>${x.name}</b>${esc(x.v)}`)].filter(Boolean);
-    if (after.length) ev.push({ t:it.end, h:`<span class="tm">마친 뒤 기록</span><div class="bx">${after.join('\n')}</div>` });
+    if (after.length) ev.push({ t:it.fe, h:`<span class="tm">마친 뒤 기록</span><div class="bx">${after.join('\n')}</div>` });
   }
   return ev.sort((a, b) => a.t - b.t);
 }
@@ -2791,14 +2838,15 @@ function ringShow(id, date, s){
     d0 = s.h * 15; d1 = d0 + 15;
     let ms = 0;
     items.forEach((it, i) => {
-      for (const off of [it.off, it.off + RDAY]){   // 자정을 넘긴 활동은 다음 날 0시대에도 걸쳐 있음
-        const w0 = base + off + s.h * RHOUR, w1 = w0 + RHOUR;
-        if (it.end <= w0 || it.start >= w1) continue;
-        if (it.exact) ms += it.focus.reduce((a, [x, y]) => a + rOvl(x, y, w0, w1), 0);
-        const ev = ringEvents(it, i + 1).filter(e => (e.t >= w0 && e.t < w1) || (e.e && e.t < w1 && e.e > w0));
-        if (it.start < w0) body += `<div class="ev" style="--c:${gColor(it.gid)}"><i></i><span class="tm">${fmtHm(it.start)}부터 이어서</span><br>${esc(it.name)} 하는 중</div>`;
-        body += ringEvHtml(ev, it);
-      }
+      const w0 = base + it.off + s.h * RHOUR, w1 = w0 + RHOUR;
+      if (it.end <= w0 || it.start >= w1) return;
+      if (it.exact) ms += it.focus.reduce((a, [x, y]) => a + rOvl(x, y, w0, w1), 0);
+      const ev = ringEvents(it, i + 1).filter(e => (e.t >= w0 && e.t < w1) || (e.e && e.t < w1 && e.e > w0));
+      const at = t => it.prev && t < base + it.off ? `${fmtMD(ymd(new Date(t)))} ${fmtHm(t)}` : fmtHm(t);   // 전날 시작이면 날짜도
+      if (it.fs < w0) body += `<div class="ev" style="--c:${gColor(it.gid)}"><i></i><span class="tm">${at(it.fs)}부터 이어서</span><br>${esc(it.name)} 하는 중</div>`;
+      body += ringEvHtml(ev, it);
+      if (it.next && w1 >= base + it.off + RDAY)   // 이 날 마지막 시간 → 다음 날로 이어짐
+        body += `<div class="ev" style="--c:${gColor(it.gid)}"><i></i><span class="tm">↪ 다음 날로 이어짐</span><br>${it.running ? '지금도 하는 중' : `${fmtMD(ymd(new Date(it.fe)))} ${fmtHm(it.fe)}에 끝`}</div>`;
     });
     head = `<b>${s.h}시 ~ ${s.h + 1}시</b><span>${ms >= 1000 && !hs ? '이 시간 집중 ' + fmtDur(ms) : ''}</span>`;
     if (!body) body = '<p class="hint">이 시간에는 기록이 없어요.</p>';
@@ -2806,8 +2854,11 @@ function ringShow(id, date, s){
     const i = items.findIndex(x => x.key === s.key), it = items[i];
     if (!it) return;
     d0 = (it.start - base - it.off) / RDAY * 360; d1 = (it.end - base - it.off) / RDAY * 360;
-    head = `<b>${i + 1}. ${esc(it.name)}</b><span>${fmtHm(it.start)} ~ ${it.live ? '지금' : fmtHm(it.end)}</span>`;
-    body = ringEvHtml(ringEvents(it, i + 1), it);
+    const at = t => it.multi ? `${fmtMD(ymd(new Date(t)))} ${fmtHm(t)}` : fmtHm(t);
+    head = `<b>${i + 1}. ${esc(it.name)}</b><span>${at(it.fs)} ~ ${it.running ? '지금' : at(it.fe)}</span>`;
+    /* 여러 날에 걸친 기록 — 어느 날짜에서 눌러도 같은 전체 내용 + 날짜별 시간 */
+    body = (it.multi && !hs ? `<p class="rsplit">전체 ${fmtDur(it.fullActive)} · ${partsText(it.parts)}</p>` : '')
+      + ringEvHtml(ringEvents(it, i + 1), it);
   }
   rEl('path', { class:'rsel', d:rBand(92, 136, d0, d1, .8), fill:'var(--ink)', 'fill-opacity':.07, stroke:'var(--ink)', 'stroke-width':1.5, 'pointer-events':'none' }, svg);
   box.querySelector('.rpan').innerHTML = `<div class="dh">${head}</div>${body}`;
@@ -2873,7 +2924,8 @@ function openSess(id){
   $('seExact').innerHTML = `저장된 원본 (초 단위)<br>시작 ${fmtHms(s.start)} · 종료 ${fmtHms(s.end)}<br>`
     + `전체 ${fmtDurS(s.end - s.start)} = 활동 ${fmtDurS(s.activeMs)} + 쉼 ${fmtDurS(pauseMs(s))}`
     + ((s.pauses || []).length ? `<br>쉬기 ${s.pauses.length}번 · 합계 ${fmtDurS(pz)}` : '')
-    + (segments(s) || []).map(([x, y], i) => `<br>구간 ${i + 1}: ${fmtHms(x)} ~ ${fmtHms(y)} (${fmtDurS(y - x)})`).join('');
+    + (segments(s) || []).map(([x, y], i) => `<br>구간 ${i + 1}: ${fmtHms(x)} ~ ${fmtHms(y)} (${fmtDurS(y - x)})`).join('')
+    + (dayParts(s).length > 1 ? `<br>날짜별: ${partsText(dayParts(s))}` : '');   // 자정을 넘긴 기록
   seMood = [...(s.mood || [])];
   $('seMoods').innerHTML = moodChips(seMood, 'data-sm');
   $('seNotes').innerHTML = NOTE_TYPES.map(t => `<label class="flab" for="seN_${t.id}">${t.name}<small>선택</small></label>`
@@ -3003,7 +3055,9 @@ function renderWeek(){
   $('wNext').disabled = weekEnd >= today;
   $('wNext').style.visibility = weekEnd >= today ? 'hidden' : '';
   $('qReview').innerHTML = quoteHtml('review');
-  const ss = db.sessions.filter(s => inWeek(s.date)).sort((a, b) => a.start - b.start);
+  /* 자정을 넘긴 기록: 시간은 이 7일 안에 든 날 몫만, 횟수는 기록 하나당 1번 */
+  const wMs = s => dayParts(s).filter(p => inWeek(p.date)).reduce((a, p) => a + p.ms, 0);
+  const ss = db.sessions.filter(s => dayParts(s).some(p => inWeek(p.date))).sort((a, b) => a.start - b.start);
   const rs = db.records.filter(r => inWeek(r.date)).sort(sortRecs);
   let h = '';
   /* 활동별 — 몇 번 · 실제 활동 시간 · 한 줄 기록 */
@@ -3016,7 +3070,7 @@ function renderWeek(){
       const notes = xs.flatMap(s => noteList(s).map(n => ({ date:s.date, ...n })));
       const moods = MOODS.filter(m => xs.some(s => (s.mood || []).includes(m.id)));
       h += `<section class="card wact"><div class="hd"><span class="nm">${esc(name)}</span><span class="num">${gDot(g)}${esc(gName(g))}</span></div>`
-        + (P.hideStats() ? '' : `<div class="num">총 ${xs.length}회 · 실제 활동 ${fmtDur(xs.reduce((a, s) => a + s.activeMs, 0))}</div>`)
+        + (P.hideStats() ? '' : `<div class="num">총 ${xs.length}회 · 실제 활동 ${fmtDur(xs.reduce((a, s) => a + wMs(s), 0))}</div>`)
         + (moods.length ? `<div class="mtags">${moods.map(m => `<span>${m.e} ${m.name}</span>`).join('')}</div>` : '')
         + (notes.length ? `<ul>${notes.map(n => `<li><small>${fmtMd(n.date)} · ${n.name}</small>${esc(n.v)}</li>`).join('')}</ul>` : '')
         + `</section>`;
