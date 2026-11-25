@@ -210,6 +210,10 @@ h2.sec{font-size:13px;color:var(--soft);font-weight:700;margin:26px 0 10px;lette
 .bd{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;align-items:baseline}
 .bd b{font-weight:700}
 .bd span{color:var(--soft);font-size:14px}
+/* 듣고 쓰기 — 창 안의 듣기 단추. 뜻이 있던 자리에 들어갑니다 */
+.modal .mko .earw{display:flex;align-items:center;justify-content:center;gap:8px;
+  margin:0 0 2px;padding:14px;font-size:15px}
+
 /* 문장 만들기 — 낱말 조각을 순서대로 놓는 자리 */
 .mkslot{display:flex;flex-wrap:wrap;gap:8px;align-items:center;min-height:58px;
   padding:13px;border-radius:15px;background:var(--band);margin:14px 0 16px}
@@ -1508,11 +1512,24 @@ function typeResult(target, typed){
 let typeCtx = null;              /* { en, ko, key, tries, onWin } */
 const typeTries = {};            /* 카드별 틀린 횟수 */
 
-function openType(en, ko, key, onWin){
+function openType(en, ko, key, onWin, ear){
   typeCtx = { en, ko, key, onWin };
   typeTries[key] = 0;     /* 창을 새로 열면 힌트는 처음부터입니다.
                              지난번 단계를 이어받으면 열자마자 답이 다 보입니다 */
-  document.getElementById('mKo').textContent = ko;
+  const mKo = document.getElementById('mKo');
+  const mSub = document.querySelector('#typeModal .msub');
+  if(ear){
+    /* 듣고 쓰기 — 뜻은 안 줍니다. 소리만 주고 받아씁니다.
+       data-speak 를 붙였으므로 꾹 누르면 천천히 읽습니다 */
+    mKo.innerHTML = '<button class="btn ol earw" data-speak="' + esc(en) + '">'
+      + ICO.ear + ' 다시 듣기</button>';
+    mKo.querySelector('button').onclick = () => speak(en);
+    mSub.textContent = '들은 대로 써보세요';
+    setTimeout(() => speak(en), 280);      /* 열자마자 한 번 읽어줍니다 */
+  } else {
+    mKo.textContent = ko;
+    mSub.textContent = '영어로 써보세요';
+  }
   document.getElementById('mIn').value = '';
   document.getElementById('mMsg').innerHTML = hintHTML(en, key);
   document.getElementById('typeModal').classList.remove('hide');
@@ -1881,6 +1898,7 @@ function viewReview(c, inRev){
         : `<p class="en" style="font-size:21px;margin:0;flex:1 1 auto">${s.ko}</p>`}
       <button class="rnd mic${done.mic ? ' got' : ''}" id="revMic" title="말해보기">${ICO.mic}</button>
       <button class="rnd key${done.key ? ' got' : ''}" id="rvKey" title="직접 써보기">${ICO.key}</button>
+      <button class="rnd" id="rvEar" title="듣고 써보기">${ICO.ear}</button>
     </div>
     <p class="tryn" id="revTry"></p>
     <div id="ansBox" class="open hide">
@@ -2216,6 +2234,15 @@ function wireToday(){
       logOnce(c, 'type');
       save(); renderToday();
     });
+  };
+
+  /* 복습 카드 — 듣고 써보기. 뜻 대신 소리만 주고 받아씁니다 */
+  const rvEar = document.getElementById('rvEar');
+  if(rvEar) rvEar.onclick = () => {
+    const c = cardOf(openRev);
+    if(!c) return;
+    const s = byDay(c.day);
+    openType(s.en, s.ko, 'ear-' + s.day, null, true);
   };
 
   /* 복습 카드 — 말해보고 답 확인하기 */
