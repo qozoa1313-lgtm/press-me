@@ -1510,7 +1510,8 @@ const typeTries = {};            /* 카드별 틀린 횟수 */
 
 function openType(en, ko, key, onWin){
   typeCtx = { en, ko, key, onWin };
-  typeTries[key] = typeTries[key] || 0;
+  typeTries[key] = 0;     /* 창을 새로 열면 힌트는 처음부터입니다.
+                             지난번 단계를 이어받으면 열자마자 답이 다 보입니다 */
   document.getElementById('mKo').textContent = ko;
   document.getElementById('mIn').value = '';
   document.getElementById('mMsg').innerHTML = hintHTML(en, key);
@@ -2418,6 +2419,7 @@ function wireRevTabs(){
     revMode = b.dataset.rmode;
     revSeen = [];
     openRev = null;
+    makeQ = null;        /* 판을 다시 열면 새 문제 — 풀던 것이 남지 않습니다 */
     renderRev();
   });
 }
@@ -3326,6 +3328,7 @@ function goMode(m){
   wireNav();
   document.getElementById('gate').classList.add('hide');
   revMode = 'due'; revLang = 'ko'; freeQ = null; revSeen = []; openRev = null;
+  makeQ = null;
   switchTab(m === 'video' ? 'Vid' : 'Today');
 }
 function wireNav(){
