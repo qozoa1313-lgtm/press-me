@@ -886,10 +886,10 @@ function vidFixOld(){
 }
 
 /* 오늘 볼 복습 줄 — 「다시」로 돌린 것은 맨 뒤로 가고, ✓ 를 누를 때까지 돌아옵니다 */
-function revQueue(){
+function revQueue(lang){
   const t = todayStr();
   /* 섞은 뒤 「다시」로 돌린 것만 맨 뒤로 보냅니다 */
-  return shuffle(dueToday())
+  return shuffle(dueToday(lang))
     .sort((a, b) => ((a.again === t) ? 1 : 0) - ((b.again === t) ? 1 : 0));
 }
 /* ✓ 를 누르면 며칠 뒤에 나오는지 */
@@ -1935,7 +1935,8 @@ function viewReview(c, inRev){
         <button class="mk3" data-mark="ok"><b>✓</b><span>기억나요</span><i>안 나와요</i></button>
         <button class="mk3" data-mark="mid"><b>△</b><span>헷갈려요</span><i>10분 뒤</i></button>
         <button class="mk3" data-mark="no"><b>✕</b><span>기억 안 나요</span><i>3분 뒤</i></button>` : `
-        <button class="mk3" data-mark="ok"><b>✓</b><span>기억나요</span><i>${okGap(c)}</i></button>
+        <button class="mk3" data-mark="ok"><b>✓</b><span>기억나요</span><i>${
+          revMode === 'ear' ? '오늘 끝' : okGap(c)}</i></button>
         <button class="mk3" data-mark="mid"><b>△</b><span>헷갈려요</span><i>잠시 뒤</i></button>
         <button class="mk3" data-mark="no"><b>✕</b><span>기억 안 나요</span><i>잠시 뒤</i></button>`}
       </div>
@@ -2369,6 +2370,15 @@ function mark(m){
   if(revMode === 'all') return markFree(m);
   const c = cardOf(openRev), t = todayStr();
   if(!c) return;
+  /* 듣기 판도 덤입니다 — 쓰기와 따로 세고, 다음 복습일은 쓰기 쪽만 정합니다 */
+  if(revMode === 'ear'){
+    const dir = dirToday(c);
+    if(m === 'ok') dir.ear = true; else delete dir.ear;
+    revLast = null; revSeen.push(c.day);
+    openRev = null;
+    save(); renderRev();
+    return;
+  }
   /* 영어 모드는 덤입니다 — 복습 횟수도, 다음 복습일도 안 건드립니다 */
   if(revLang === 'en'){
     const dir = dirToday(c);
@@ -2604,7 +2614,8 @@ function renderRev(){
   if(revMode === 'make') return renderMake(body);
   if(revMode === 'all') return renderFree(body);
   clearTimeout(freeTimer);
-  const q = revQueue();
+  /* 듣기 판은 쓰기와 따로 셉니다 — 쓰기를 다 풀어도 듣기는 남습니다 */
+  const q = revQueue(revMode === 'ear' ? 'ear' : null);
   const now  = q.filter(c => c.again !== t).length;
   const back = q.filter(c => c.again === t).length;
   const cnt = document.getElementById('revCnt');
@@ -2617,16 +2628,19 @@ function renderRev(){
       .map(c => c.due).filter(x => x > t).sort();
     const day = next[0];
     const n = day ? next.filter(x => x === day).length : 0;
-    /* 다른 쪽(한국어 ↔ 영어)에 아직 남아 있으면 그쪽을 먼저 알려줍니다 */
-    const other = revLang === 'en' ? 'ko' : 'en';
+    /* 다른 쪽에 아직 남아 있으면 그쪽을 먼저 알려줍니다
+       듣기 판에서는 「오늘(쓰기)」 쪽을, 쓰기 판에서는 반대 모드를 봅니다 */
+    const other = revMode === 'ear' ? revLang : (revLang === 'en' ? 'ko' : 'en');
+    const otherName = revMode === 'ear' ? '오늘(쓰기)'
+      : (other === 'ko' ? '한국어 모드' : '영어 모드');
     const left = dueToday(other).length;
     const when = left
-      ? `<b>${other === 'ko' ? '한국어' : '영어'} 모드</b>에 ${left}장 남아 있어요.`
+      ? `<b>${otherName}</b>에 ${left}장 남아 있어요.`
       : day
         ? `다음 복습은 <b>${+day.slice(5,7)}월 ${+day.slice(8)}일</b> · ${n}장이에요.`
         : '모든 문장을 다 외웠어요.';
     body.innerHTML = revTabs() + `<p class="lead" style="text-align:center;padding:50px 0 10px">
-        ${grow(3, 44)}<br><br>오늘 복습할 문장이 없어요.<br>
+        ${grow(3, 44)}<br><br>오늘 ${revMode === 'ear' ? '들을' : '복습할'} 문장이 없어요.<br>
         <span style="font-size:13px">${when}</span></p>`;
     wireRevTabs();
     return;
