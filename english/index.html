@@ -225,6 +225,8 @@ h2.sec{font-size:13px;color:var(--soft);font-weight:700;margin:26px 0 10px;lette
 .mkslot.ok{background:var(--okbg)}
 .mkslot.no{background:var(--nobg)}
 .mkhint{font-size:13px;color:var(--soft)}
+.mkclr{display:block;margin:-10px 0 13px auto;font-size:12.5px;font-weight:700;
+  color:var(--soft);padding:6px 13px;border-radius:999px;border:1.5px solid var(--line)}
 .swapo .pill.used{opacity:.22;pointer-events:none}
 .mkno{font-size:14px;color:var(--noink);margin:0 0 4px;line-height:1.6}
 
@@ -2074,6 +2076,7 @@ let revMode = 'due';  /* 'due' 오늘(쓰기) · 'ear' 오늘(듣기) · 'all' �
 let revLang = 'ko';   /* 'ko' 뜻 보고 영어 떠올리기 · 'en' 영문 보고 뜻 떠올리기 */
 let freeQ = null;     /* 전체 복습 판 — 기록에 안 남기고, 앱을 끄면 사라집니다 */
 let makeQ = null;     /* 문장 만들기 판 — 지금 낸 문제 하나. 기록에 안 남습니다 */
+let makeSeen = [];    /* 이번 바퀴에 맞힌 day — 오른쪽 위 숫자에 씁니다. 앱을 끄면 사라집니다 */
 let freeTimer = null;
 const FREE_MIN = { mid:10, no:3 };   /* △ 10분 뒤 · ✕ 3분 뒤 */
 
@@ -2484,7 +2487,10 @@ function makeList(){
 function makePick(){
   const list = makeList();
   if(!list.length) return null;
-  const c = list[Math.floor(Math.random() * list.length)];
+  /* 이번 바퀴에 아직 안 한 것 중에서 — 다 했으면 바퀴를 새로 시작합니다 */
+  let left = list.filter(c => !makeSeen.includes(c.day));
+  if(!left.length){ makeSeen = []; left = list; }
+  const c = left[Math.floor(Math.random() * left.length)];
   const words = byDay(c.day).en.trim().split(/\s+/);
   return { day:c.day, words, order:shuffle(words.map((w, i) => i)), picked:[] };
 }
@@ -2507,6 +2513,8 @@ function makeHTML(){
         ? makeQ.picked.map((wi, k) =>
             `<button class="pill on" data-un="${k}">${makeQ.words[wi]}</button>`).join('')
         : '<span class="mkhint">아래에서 순서대로 눌러 보세요</span>'}</div>
+    ${makeQ.picked.length && !ok
+      ? `<button class="mkclr" id="mkClr">다 빼기</button>` : ''}
 
     <div class="swapo">${makeQ.order.map(i =>
       `<button class="pill${makeQ.picked.includes(i) ? ' used' : ''}" data-mk="${i}">${
@@ -2534,6 +2542,10 @@ function wireMake(){
     const i = +b.dataset.mk;
     if(makeQ.picked.includes(i)) return;
     makeQ.picked.push(i);
+    /* 다 놓았고 맞았으면 이번 바퀴에 한 것으로 셉니다 */
+    if(makeQ.picked.length === makeQ.words.length
+       && makeSaid() === makeQ.words.join(' ')
+       && !makeSeen.includes(makeQ.day)) makeSeen.push(makeQ.day);
     renderRev();
   });
   /* 놓은 것을 누르면 — 다시 뺍니다 */
@@ -2541,6 +2553,9 @@ function wireMake(){
     makeQ.picked.splice(+b.dataset.un, 1);
     renderRev();
   });
+  const clr = document.getElementById('mkClr');
+  if(clr) clr.onclick = () => { makeQ.picked = []; renderRev(); };
+
   const nx = document.getElementById('mkNext');
   if(nx) nx.onclick = () => { makeQ = makePick(); renderRev(); };
   document.querySelectorAll('#revBody [data-speak]')
@@ -2549,7 +2564,8 @@ function wireMake(){
 function renderMake(body){
   clearTimeout(freeTimer);
   const cnt = document.getElementById('revCnt');
-  if(cnt) cnt.innerHTML = '';
+  const all = makeList().length;
+  if(cnt) cnt.innerHTML = all ? `<b>${makeSeen.length} / ${all}</b>` : '';
   if(!makeQ || !(typeof PATTERNS !== 'undefined' && PATTERNS[makeQ.day])) makeQ = makePick();
   body.innerHTML = revTabs() + (makeQ ? makeHTML()
     : `<p class="lead" style="text-align:center;padding:50px 0 10px">
@@ -3382,7 +3398,7 @@ function goMode(m){
   wireNav();
   document.getElementById('gate').classList.add('hide');
   revMode = 'due'; revLang = 'ko'; freeQ = null; revSeen = []; openRev = null;
-  makeQ = null;
+  makeQ = null; makeSeen = [];
   switchTab(m === 'video' ? 'Vid' : 'Today');
 }
 function wireNav(){
