@@ -215,8 +215,9 @@ h2.sec{font-size:13px;color:var(--soft);font-weight:700;margin:26px 0 10px;lette
 .qtools{display:flex;gap:10px;margin-top:14px}
 
 /* 듣고 쓰기 — 창 안의 듣기 단추. 뜻이 있던 자리에 들어갑니다 */
-.modal .mko .earw{display:flex;align-items:center;justify-content:center;gap:8px;
-  margin:0 0 2px;padding:14px;font-size:15px}
+.earw{display:flex;align-items:center;justify-content:center;gap:8px;
+  padding:14px;font-size:15px}
+.modal .mko .earw{margin:0 0 2px}
 
 /* 문장 만들기 — 낱말 조각을 순서대로 놓는 자리 */
 .mkslot{display:flex;flex-wrap:wrap;gap:8px;align-items:center;min-height:58px;
@@ -1896,13 +1897,16 @@ function viewReview(c, inRev){
     ${inRev ? '' : '<button class="fold corner" id="revFold">－</button>'}
     <span class="grl">${grow(c.step, 20)}</span><span class="badge">DAY ${s.day}</span>${
       c.learnedOn === todayStr() ? '<span class="fresh">오늘 배운 문장</span>' : ''}
-    ${revLang === 'en'
-      ? `<p class="en" id="revEn" style="font-size:21px;margin:16px 0 0">${wordSpans(s.en)}</p>`
-      : `<p class="en" style="font-size:21px;margin:16px 0 0">${s.ko}</p>`}
+    ${revMode === 'ear'
+      ? `<button class="btn ol earw" id="revEarB" data-speak="${esc(s.en)}"
+          style="margin:16px 0 0">${ICO.ear} 다시 듣기</button>`
+      : revLang === 'en'
+        ? `<p class="en" id="revEn" style="font-size:21px;margin:16px 0 0">${wordSpans(s.en)}</p>`
+        : `<p class="en" style="font-size:21px;margin:16px 0 0">${s.ko}</p>`}
     <div class="qtools">
       <button class="rnd mic${done.mic ? ' got' : ''}" id="revMic" title="말해보기">${ICO.mic}</button>
-      <button class="rnd key${done.key ? ' got' : ''}" id="rvKey" title="직접 써보기">${ICO.key}</button>
-      <button class="rnd" id="rvEar" title="듣고 써보기">${ICO.ear}</button>
+      <button class="rnd key${done.key ? ' got' : ''}" id="rvKey" title="${
+        revMode === 'ear' ? '듣고 써보기' : '직접 써보기'}">${ICO.key}</button>
     </div>
     <p class="tryn" id="revTry"></p>
     <div id="ansBox" class="open hide">
@@ -1914,6 +1918,8 @@ function viewReview(c, inRev){
         <button class="rnd" id="revYg" title="영상에서 보기">${ICO.tv}</button>
       </div>
       <p class="rdline${c.vid ? ' always' : ''}">${s.rd}</p>
+      ${revMode === 'ear' && revLang !== 'en'
+        ? `<p class="mkq" style="margin:11px 0 0"><b>${s.ko}</b></p>` : ''}
       ${(c.vid && atSec(s.at) >= 0)
         ? `<button class="mini" data-at="${atSec(s.at)}">▶ ${s.at} 그 자리 듣기</button>`
         : ''}
@@ -2062,7 +2068,8 @@ function viewDone(){
 const esc = s => s.replace(/"/g,'&quot;');
 
 
-let revMode = 'due';  /* 'due' 오늘 복습 · 'all' 전체 복습 */
+let revMode = 'due';  /* 'due' 오늘(쓰기) · 'ear' 오늘(듣기) · 'all' 전체 · 'make' 만들기
+                         'ear' 은 'due' 와 같은 목록·기록을 씁니다. 보여주는 법만 다릅니다 */
 let revLang = 'ko';   /* 'ko' 뜻 보고 영어 떠올리기 · 'en' 영문 보고 뜻 떠올리기 */
 let freeQ = null;     /* 전체 복습 판 — 기록에 안 남기고, 앱을 끄면 사라집니다 */
 let makeQ = null;     /* 문장 만들기 판 — 지금 낸 문제 하나. 기록에 안 남습니다 */
@@ -2233,21 +2240,18 @@ function wireToday(){
     const c = cardOf(openRev);
     if(!c) return;
     const s = byDay(c.day);
-    openType(s.en, s.ko, 'rev-' + s.day, () => {
-      markToday(c, 'key');
-      logOnce(c, 'type');
-      save(); renderToday();
-    });
+    const ear = revMode === 'ear';     /* 듣기 판에서는 뜻을 안 주고 받아씁니다 */
+    openType(s.en, s.ko, (ear ? 'ear-' : 'rev-') + s.day,
+      ear ? null : () => {
+        markToday(c, 'key');
+        logOnce(c, 'type');
+        save(); renderToday();
+      }, ear);
   };
 
-  /* 복습 카드 — 듣고 써보기. 뜻 대신 소리만 주고 받아씁니다 */
-  const rvEar = document.getElementById('rvEar');
-  if(rvEar) rvEar.onclick = () => {
-    const c = cardOf(openRev);
-    if(!c) return;
-    const s = byDay(c.day);
-    openType(s.en, s.ko, 'ear-' + s.day, null, true);
-  };
+  /* 듣기 판 — 문장 자리의 「다시 듣기」. 꾹 누르면 천천히 읽습니다 */
+  const revEarB = document.getElementById('revEarB');
+  if(revEarB) revEarB.onclick = () => speak(revEarB.dataset.speak);
 
   /* 복습 카드 — 말해보고 답 확인하기 */
   const revMic = document.getElementById('revMic');
@@ -2416,10 +2420,15 @@ function wireRest(){
 /* 모드 고르는 줄 */
 function revTabs(){
   return `<div class="rmode">
-    <button class="chip${revMode === 'due' ? ' on' : ''}" data-rmode="due">오늘 복습</button>
-    <button class="chip${revMode === 'all' ? ' on' : ''}" data-rmode="all">전체 복습</button>
+    <button class="chip${revMode === 'due' ? ' on' : ''}" data-rmode="due">${
+      appMode === 'daily' ? '오늘(쓰기)' : '오늘 복습'}</button>
     ${appMode === 'daily'
-      ? `<button class="chip${revMode === 'make' ? ' on' : ''}" data-rmode="make">문장 만들기</button>`
+      ? `<button class="chip${revMode === 'ear' ? ' on' : ''}" data-rmode="ear">오늘(듣기)</button>`
+      : ''}
+    <button class="chip${revMode === 'all' ? ' on' : ''}" data-rmode="all">${
+      appMode === 'daily' ? '전체' : '전체 복습'}</button>
+    ${appMode === 'daily'
+      ? `<button class="chip${revMode === 'make' ? ' on' : ''}" data-rmode="make">만들기</button>`
       : ''}
   </div>`;
 }
@@ -3680,6 +3689,8 @@ if(sess && sess.mode){
   /* 새로고침된 것입니다 — 하던 자리로 돌려놓습니다 */
   goMode(sess.mode);
   revMode = sess.revMode || 'due';
+  /* 영상 쪽에는 듣기·만들기 판이 없습니다 — 그대로 두면 판이 없는 자리에 갇힙니다 */
+  if(sess.mode !== 'daily' && (revMode === 'ear' || revMode === 'make')) revMode = 'due';
   revLang = sess.revLang || 'ko';
   freeQ   = sess.freeQ || null;
   switchTab(sess.tab || (sess.mode === 'video' ? 'Vid' : 'Today'));
