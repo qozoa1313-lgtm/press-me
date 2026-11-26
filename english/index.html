@@ -210,6 +210,10 @@ h2.sec{font-size:13px;color:var(--soft);font-weight:700;margin:26px 0 10px;lette
 .bd{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;align-items:baseline}
 .bd b{font-weight:700}
 .bd span{color:var(--soft);font-size:14px}
+/* 연습 도구 셋 — 문장 아래 한 줄.
+   문장과 같은 줄에 두면 문장 자리가 160px밖에 안 남아 두 줄로 깨집니다 */
+.qtools{display:flex;gap:10px;margin-top:14px}
+
 /* 듣고 쓰기 — 창 안의 듣기 단추. 뜻이 있던 자리에 들어갑니다 */
 .modal .mko .earw{display:flex;align-items:center;justify-content:center;gap:8px;
   margin:0 0 2px;padding:14px;font-size:15px}
@@ -1892,10 +1896,10 @@ function viewReview(c, inRev){
     ${inRev ? '' : '<button class="fold corner" id="revFold">－</button>'}
     <span class="grl">${grow(c.step, 20)}</span><span class="badge">DAY ${s.day}</span>${
       c.learnedOn === todayStr() ? '<span class="fresh">오늘 배운 문장</span>' : ''}
-    <div class="qline">
-      ${revLang === 'en'
-        ? `<p class="en" id="revEn" style="font-size:21px;margin:0;flex:1 1 auto">${wordSpans(s.en)}</p>`
-        : `<p class="en" style="font-size:21px;margin:0;flex:1 1 auto">${s.ko}</p>`}
+    ${revLang === 'en'
+      ? `<p class="en" id="revEn" style="font-size:21px;margin:16px 0 0">${wordSpans(s.en)}</p>`
+      : `<p class="en" style="font-size:21px;margin:16px 0 0">${s.ko}</p>`}
+    <div class="qtools">
       <button class="rnd mic${done.mic ? ' got' : ''}" id="revMic" title="말해보기">${ICO.mic}</button>
       <button class="rnd key${done.key ? ' got' : ''}" id="rvKey" title="직접 써보기">${ICO.key}</button>
       <button class="rnd" id="rvEar" title="듣고 써보기">${ICO.ear}</button>
